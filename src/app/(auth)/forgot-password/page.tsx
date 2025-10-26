@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import InputField from "@/components/ui/InputField";
 import Button from "@/components/ui/Button";
-import { useState } from "react";
-import { FormValidator } from "@/utils/FormValidator";
+import { useState, useMemo } from "react";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -15,6 +14,11 @@ export default function ForgotPasswordPage() {
     email: "",
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const isFormValid = useMemo(() => {
+    return email.trim() !== "" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }, [email]);
 
   const handleChange = (value: string) => {
     setEmail(value);
@@ -25,16 +29,9 @@ export default function ForgotPasswordPage() {
     }
 
     // Validate email field
-    const validator = new FormValidator({
-      hotelName: "",
-      email: value,
-      password: "",
-      confirmPassword: "",
-    });
-
     if (value.trim() === "") {
       setErrors((prev) => ({ ...prev, email: "" }));
-    } else if (!validator.validateEmail(value)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
       setErrors((prev) => ({
         ...prev,
         email: "Please enter a valid email address.",
@@ -44,22 +41,15 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const validator = new FormValidator({
-      hotelName: "",
-      email: email,
-      password: "",
-      confirmPassword: "",
-    });
 
     if (!email.trim()) {
       setErrors((prev) => ({ ...prev, global: "Email is required." }));
       return;
     }
 
-    if (!validator.validateEmail(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setErrors((prev) => ({
         ...prev,
         global: "Please enter a valid email address.",
@@ -67,10 +57,21 @@ export default function ForgotPasswordPage() {
       return;
     }
 
+    if (loading) return;
+
     setErrors({ global: "", email: "" });
-    setIsSubmitted(true);
-    console.log("✅ OTP sent to:", email);
-    // TODO: Send OTP to email via API
+    setLoading(true);
+
+    try {
+      // TODO: Send OTP to email via API
+      console.log("✅ OTP sent to:", email);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setIsSubmitted(true);
+    } catch (error) {
+      setErrors((prev) => ({ ...prev, global: "Failed to send OTP. Please try again." }));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleContinue = () => {
@@ -79,7 +80,7 @@ export default function ForgotPasswordPage() {
 
   if (isSubmitted) {
     return (
-      <div className="w-full max-w-md mx-auto px-6">
+      <div className="rounded-2xl p-8">
         <Link
           href="/login"
           className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-[#002968] hover:bg-gray-50 transition-colors mb-6"
@@ -100,12 +101,12 @@ export default function ForgotPasswordPage() {
         </Link>
 
         <div className="text-left mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-semibold text-gray-800 mb-4">
             Check Your Email
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-500 text-sm">
             We've sent a 6-digit OTP to{" "}
-            <span className="font-semibold">{email}</span>
+            <span className="font-semibold text-gray-700">{email}</span>
           </p>
         </div>
 
@@ -127,7 +128,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto px-6">
+    <div className="rounded-2xl p-8">
       <Link
         href="/login"
         className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-[#002968] hover:bg-gray-50 transition-colors mb-6"
@@ -148,10 +149,10 @@ export default function ForgotPasswordPage() {
       </Link>
 
       <div className="text-left mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-4xl font-semibold text-gray-800 mb-4">
           Forgot Password?
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-500 text-sm">
           No worries, we'll send you reset instructions
         </p>
       </div>
@@ -170,8 +171,23 @@ export default function ForgotPasswordPage() {
           <p className="text-red-600 text-sm">{errors.global}</p>
         )}
 
-        <Button text="Send Reset Link" onClick={handleSubmit} />
+        <Button
+          text="Send Reset Link"
+          onClick={handleSubmit}
+          loading={loading}
+          disabled={!isFormValid || loading}
+        />
       </form>
+
+      <p className="text-left text-sm text-gray-600 mt-4">
+        Remember your password?{" "}
+        <Link
+          href="/login"
+          className="text-[#002968] hover:underline font-semibold"
+        >
+          Sign in
+        </Link>
+      </p>
     </div>
   );
 }

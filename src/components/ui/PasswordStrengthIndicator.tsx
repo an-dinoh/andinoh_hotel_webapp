@@ -1,33 +1,42 @@
 "use client";
 
-export default function PasswordStrengthIndicator({
-  strength,
-}: {
-  strength: number;
-}) {
-  const colors = [
-    "bg-red-500",
-    "bg-orange-400",
-    "bg-yellow-400",
-    "bg-green-500",
+interface PasswordRequirementsProps {
+  password: string;
+}
+
+export default function PasswordRequirements({ password }: PasswordRequirementsProps) {
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSymbol = /[^A-Za-z0-9]/.test(password);
+  const hasMinLength = password.length >= 6;
+
+  const requirements = [
+    { label: "At least ONE UPPERCASE", met: hasUppercase },
+    { label: "At least ONE Symbol", met: hasSymbol },
+    { label: "At least ONE Number", met: hasNumber },
+    { label: "Minimum 6 Characters", met: hasMinLength },
   ];
-  const labels = ["Weak", "Fair", "Good", "Strong"];
 
   return (
-    <div className="mt-3">
-      <div className="flex gap-2 justify-left">
-        {[1, 2, 3, 4].map((level) => (
-          <div
-            key={level}
-            className={`h-1 w-6 rounded-full transition-colors duration-300 ${
-              strength >= level ? colors[strength - 1] : "bg-gray-300"
-            }`}
-          />
-        ))}
-      </div>
-      <p className="text-xs mt-2 text-gray-600 text-left font-medium">
-        {strength > 0 ? labels[strength - 1] : ""}
-      </p>
+   <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+      {requirements.map((req) => (
+        <div key={req.label} className="flex items-center space-x-2">
+          <span
+            className={`w-4 h-4 rounded-full border-1 flex items-center justify-center
+              ${req.met ? "border-green-600" : "border-gray-400"}`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full 
+                ${req.met ? "bg-green-600" : "bg-transparent"}`}
+            />
+          </span>
+          <span
+            className={`text-xs text-[#5C5B59]`}
+          >
+            {req.label}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }

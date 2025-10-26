@@ -24,7 +24,9 @@ export default function InputField({
 
   return (
     <div className="w-full">
-      <label className="block text-gray-700 text-xs sm:text-sm mb-1">{label}</label>
+      <label className="block text-[#0B0A07] text-xs sm:text-sm mb-1">
+        {label}
+      </label>
 
       <div className="relative">
         <input
@@ -32,9 +34,14 @@ export default function InputField({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className={`w-full border border-gray-400 rounded-sm px-2.5 py-2 sm:px-3 sm:py-2.5 pr-9 text-xs sm:text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#002968] focus:border-transparent ${
-            error ? "border-red-500 focus:ring-red-500" : "border-gray-400"
-          }`}
+          className={`w-full rounded-xl border px-3 py-2 pr-9 text-sm text-gray-800 
+    focus:outline-none focus:ring-1 focus:border-transparent 
+    placeholder:text-[#8F8E8D] placeholder:text-sm
+    ${
+      error
+        ? "border-red-500 focus:ring-red-500"
+        : "border-[#D3D9DD] focus:ring-[#8E9397]"
+    }`}
         />
 
         {isPassword && (
@@ -43,7 +50,9 @@ export default function InputField({
             onClick={() => setShowPassword((prev) => !prev)}
             className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
           >
-            {showPassword ? <EyeOff size={16} className="sm:w-[18px] sm:h-[18px]" /> : <Eye size={16} className="sm:w-[18px] sm:h-[18px]" />}
+            <span className="text-[#0B0A07] text-xs sm:text-xm font-semibold cursor-pointer select-none">
+              {showPassword ? "Hide" : "Show"}
+            </span>
           </button>
         )}
       </div>

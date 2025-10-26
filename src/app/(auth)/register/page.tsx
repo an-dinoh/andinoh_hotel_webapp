@@ -1,19 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import InputField from "@/components/ui/InputField";
 import Button from "@/components/ui/Button";
-import { useState } from "react";
-import PasswordStrengthIndicator from "@/components/ui/PasswordStrengthIndicator";
+import PasswordRequirements from "@/components/ui/PasswordStrengthIndicator";
+import TermsAndConditions from "@/components/ui/TermsAndConditions";
+import { useState, useMemo } from "react";
 import { FormValidator, FormState } from "@/utils/FormValidator";
+import { authService } from "@/services/auth.service";
 
+export default function RegisterPage() {
+  const router = useRouter();
 
-export default function ResgisterPage() {
   const [form, setForm] = useState<FormState>({
     hotelName: "",
+    fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
+    hotelAddress: "",
+    hotelLicenseNumber: "",
   });
 
   const [errors, setErrors] = useState({
@@ -23,11 +30,12 @@ export default function ResgisterPage() {
   });
 
   const [emailError, setEmailError] = useState("");
-
   const [passwordStrength, setPasswordStrength] = useState(0);
-
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
+  // ✅ Handles field changes
   const handleChange = (field: keyof FormState, value: string) => {
     const updatedForm = { ...form, [field]: value };
     setForm(updatedForm);
@@ -46,20 +54,63 @@ export default function ResgisterPage() {
     if (field === "password") {
       setPasswordStrength(validator.getPasswordStrength(value));
     }
+
+    if (errors.global) {
+      setErrors((prev) => ({ ...prev, global: "" }));
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const isFormValid = useMemo(() => {
+    const allFilled =
+      form.hotelName.trim() &&
+      form.email.trim() &&
+      form.password.trim() &&
+      form.confirmPassword.trim() &&
+      form.hotelLicenseNumber.trim();
+
+    const passwordsMatch = form.password === form.confirmPassword;
+    return allFilled && passwordsMatch && acceptedTerms;
+  }, [form, acceptedTerms]);
+
+  // ✅ Form submission
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const validator = new FormValidator(form);
-    const formErrors = validator.validateForm();
-
-    if (formErrors.global) {
-      setErrors((prev) => ({ ...prev, global: formErrors.global || "" }));
+    if (!isFormValid) {
+      setErrors((prev) => ({
+        ...prev,
+        global: "Please fill all fields and accept the Terms.",
+      }));
       return;
     }
 
-    console.log("✅ Form submitted:", form);
+    if (loading) return;
+    setLoading(true);
+
+    try {
+      const response = await authService.register({
+        email: form.email,
+        password: form.password,
+        role: "hotel",
+        hotel_name: form.hotelName,
+        hotel_license_number: form.hotelLicenseNumber || "PENDING",
+        phone_number: "",
+        hotel_address: form.hotelAddress || "",
+      } as any);
+
+      const token = (response as any).access_token;
+      const user = (response as any).user;
+
+      authService.saveAuth(token, user);
+      router.push("/dashboard");
+    } catch (error: any) {
+      setErrors((prev) => ({
+        ...prev,
+        global: error.message || "Registration failed. Please try again.",
+      }));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,23 +119,23 @@ export default function ResgisterPage() {
         <h1 className="text-4xl font-semibold text-gray-800 mb-4">
           Register Your Hotel
         </h1>
-        <p className="text-gray-500 font-regular text-sm">
+        <p className="text-gray-500 text-sm">
           Create your hotel account to manage bookings, rooms, and staff
           effortlessly.
         </p>
       </div>
 
-      <form className="space-y-5">
+      <form className="space-y-5" onSubmit={handleSubmit}>
         <InputField
           label="Hotel Name"
-          placeholder="Enter hotel name"
+          placeholder="e.g., Grand View"
           value={form.hotelName}
           onChange={(e) => handleChange("hotelName", e.target.value)}
         />
 
         <InputField
-          label="Official Email"
-          placeholder="Enter hotel email"
+          label="Email Address"
+          placeholder="e.g., hotel@example.com"
           value={form.email}
           onChange={(e) => {
             const email = e.target.value;
@@ -101,6 +152,21 @@ export default function ResgisterPage() {
           }}
           error={emailError}
         />
+
+        {/* <InputField
+//           label="Hotel Address"
+//           placeholder="Enter hotel address"
+//           value={form.hotelAddress}
+//           onChange={(e) => handleChange("hotelAddress", e.target.value)}
+//         /> */}
+
+        <InputField
+          label="Hotel License Number"
+          placeholder="Enter license number"
+          value={form.hotelLicenseNumber}
+          onChange={(e) => handleChange("hotelLicenseNumber", e.target.value)}
+        />
+
         <InputField
           label="Password"
           type="password"
@@ -113,9 +179,8 @@ export default function ResgisterPage() {
             setPasswordStrength(validator.getPasswordStrength(value));
           }}
         />
-        {form.password && (
-          <PasswordStrengthIndicator strength={passwordStrength} />
-        )}
+
+        <PasswordRequirements password={form.password} />
 
         <InputField
           label="Confirm Password"
@@ -137,8 +202,20 @@ export default function ResgisterPage() {
           error={confirmPasswordError}
         />
 
-        <Button text="Register Hotel" onClick={handleSubmit} />
+        {/* ✅ Terms Section */}
+        <TermsAndConditions
+          accepted={acceptedTerms}
+          onChange={setAcceptedTerms}
+        />
+
+        <Button
+          text="Register Hotel"
+          onClick={handleSubmit}
+          loading={loading}
+          disabled={!isFormValid || loading} // ✅ Disable until valid
+        />
       </form>
+
       {errors.global && (
         <p className="text-red-600 text-sm mt-2">{errors.global}</p>
       )}
@@ -147,7 +224,7 @@ export default function ResgisterPage() {
         Already have an account?{" "}
         <Link
           href="/login"
-          className="text-[#002968] hover:underline font-sm font-semibold"
+          className="text-[#002968] hover:underline font-semibold"
         >
           Log in
         </Link>

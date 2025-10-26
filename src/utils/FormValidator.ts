@@ -3,6 +3,9 @@ export interface FormState {
   email: string;
   password: string;
   confirmPassword: string;
+  hotelAddress?: string;
+  hotelLicenseNumber: string;
+  fullName?: string;
 }
 
 export interface FormErrors {

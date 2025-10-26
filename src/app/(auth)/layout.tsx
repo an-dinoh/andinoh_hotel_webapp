@@ -6,7 +6,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="h-screen flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center relative overflow-y-auto py-8">
       {/* Top-left logo */}
       <div className="absolute top-4 left-4 sm:top-8 sm:left-8 md:top-14 md:left-14">
         <Image
@@ -31,7 +31,7 @@ export default function AuthLayout({
 
       <div className="absolute top-1 -right-10 w-32 h-32 sm:-right-20 sm:w-40 sm:h-40 md:-right-30 md:w-60 md:h-60">
         <Image
-          src="/leaf-off.png"
+          src="/leaf.png"
           alt="Decorative Leaf"
           fill
           className="object-contain"
@@ -39,8 +39,8 @@ export default function AuthLayout({
       </div>
 
       {/* Centered content */}
-      <div className="w-full px-4 sm:px-6 md:px-0 lg:w-[30%] relative z-10">
-        <div className="max-w-md w-full mx-auto">{children}</div>
+      <div className="w-full px-4 sm:px-6 md:px-0 lg:w-[90%] relative z-10">
+        <div className="max-w-xl w-full mx-auto">{children}</div>
       </div>
     </div>
   );

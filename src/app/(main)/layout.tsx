@@ -1,4 +1,4 @@
-import Navbar from "@/components/Navbar";
+import Sidebar from "@/components/Sidebar";
 
 export default function MainLayout({
   children,
@@ -6,9 +6,11 @@ export default function MainLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <>
-      <Navbar />
-      {children}
-    </>
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto">
+        {children}
+      </main>
+    </div>
   );
 }

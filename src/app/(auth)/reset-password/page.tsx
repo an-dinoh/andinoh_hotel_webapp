@@ -4,7 +4,7 @@ import Link from "next/link";
 import InputField from "@/components/ui/InputField";
 import Button from "@/components/ui/Button";
 import PasswordStrengthIndicator from "@/components/ui/PasswordStrengthIndicator";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { FormValidator } from "@/utils/FormValidator";
 
@@ -26,6 +26,16 @@ export default function ResetPasswordPage() {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const isFormValid = useMemo(() => {
+    return (
+      form.password.trim() !== "" &&
+      form.confirmPassword.trim() !== "" &&
+      form.password === form.confirmPassword &&
+      passwordStrength >= 4
+    );
+  }, [form.password, form.confirmPassword, passwordStrength]);
 
   useEffect(() => {
     // Check if user came from OTP verification
@@ -76,7 +86,7 @@ export default function ResetPasswordPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const validator = new FormValidator({
@@ -84,6 +94,7 @@ export default function ResetPasswordPage() {
       email: email || "",
       password: form.password,
       confirmPassword: form.confirmPassword,
+      hotelLicenseNumber: "",
     });
 
     const formErrors = validator.validateForm();
@@ -93,15 +104,26 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    if (loading) return;
+
     setErrors({ global: "", confirmPassword: "" });
-    setIsSubmitted(true);
-    console.log("✅ Password reset successfully for:", email);
-    // TODO: Call API to reset password
+    setLoading(true);
+
+    try {
+      // TODO: Call API to reset password
+      console.log("✅ Password reset successfully for:", email);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setIsSubmitted(true);
+    } catch (error) {
+      setErrors((prev) => ({ ...prev, global: "Failed to reset password. Please try again." }));
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isVerified) {
     return (
-      <div className="w-full max-w-md mx-auto px-6">
+      <div className="rounded-2xl p-8">
         <Link
           href="/login"
           className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-[#002968] hover:bg-gray-50 transition-colors mb-6"
@@ -137,10 +159,10 @@ export default function ResetPasswordPage() {
               />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-semibold text-gray-800 mb-4">
             Access Denied
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-500 text-sm">
             Please verify your OTP before resetting your password.
           </p>
         </div>
@@ -154,7 +176,7 @@ export default function ResetPasswordPage() {
 
   if (isSubmitted) {
     return (
-      <div className="w-full max-w-md mx-auto px-6">
+      <div className="rounded-2xl p-8">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
@@ -171,10 +193,10 @@ export default function ResetPasswordPage() {
               />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-semibold text-gray-800 mb-4">
             Password Reset Successfully
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-500 text-sm">
             Your password has been reset. You can now sign in with your new
             password.
           </p>
@@ -188,7 +210,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto px-6">
+    <div className="rounded-2xl p-8">
       <Link
         href="/verify-otp"
         className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-[#002968] hover:bg-gray-50 transition-colors mb-6"
@@ -209,12 +231,12 @@ export default function ResetPasswordPage() {
       </Link>
 
       <div className="text-left mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-4xl font-semibold text-gray-800 mb-4">
           Reset Your Password
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-500 text-sm">
           Enter your new password for{" "}
-          <span className="font-semibold">{email}</span>
+          <span className="font-semibold text-gray-700">{email}</span>
         </p>
       </div>
 
@@ -228,7 +250,7 @@ export default function ResetPasswordPage() {
         />
 
         {form.password && (
-          <PasswordStrengthIndicator strength={passwordStrength} />
+          <PasswordStrengthIndicator password={form.password} />
         )}
 
         <InputField
@@ -244,7 +266,12 @@ export default function ResetPasswordPage() {
           <p className="text-red-600 text-sm">{errors.global}</p>
         )}
 
-        <Button text="Reset Password" onClick={handleSubmit} />
+        <Button
+          text="Reset Password"
+          onClick={handleSubmit}
+          loading={loading}
+          disabled={!isFormValid || loading}
+        />
       </form>
     </div>
   );

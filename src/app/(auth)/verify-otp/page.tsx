@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/ui/Button";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 
 export default function VerifyOTPPage() {
   const router = useRouter();
@@ -14,7 +14,12 @@ export default function VerifyOTPPage() {
   const [error, setError] = useState("");
   const [isResending, setIsResending] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [loading, setLoading] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const isFormValid = useMemo(() => {
+    return otp.every((digit) => digit !== "");
+  }, [otp]);
 
   useEffect(() => {
     if (!email) {
@@ -67,7 +72,7 @@ export default function VerifyOTPPage() {
     inputRefs.current[nextIndex]?.focus();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const otpValue = otp.join("");
@@ -77,19 +82,31 @@ export default function VerifyOTPPage() {
       return;
     }
 
-    // TODO: Verify OTP with API
-    console.log("✅ Verifying OTP:", otpValue);
+    if (loading) return;
 
-    // Simulate OTP verification (replace with actual API call)
-    if (otpValue === "123456") {
-      // Valid OTP - redirect to reset password
-      router.push(
-        `/reset-password?email=${encodeURIComponent(email)}&verified=true`
-      );
-    } else {
-      setError("Invalid OTP. Please try again.");
-      setOtp(["", "", "", "", "", ""]);
-      inputRefs.current[0]?.focus();
+    setLoading(true);
+    setError("");
+
+    try {
+      // TODO: Verify OTP with API
+      console.log("✅ Verifying OTP:", otpValue);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Simulate OTP verification (replace with actual API call)
+      if (otpValue === "123456") {
+        // Valid OTP - redirect to reset password
+        router.push(
+          `/reset-password?email=${encodeURIComponent(email)}&verified=true`
+        );
+      } else {
+        setError("Invalid OTP. Please try again.");
+        setOtp(["", "", "", "", "", ""]);
+        inputRefs.current[0]?.focus();
+      }
+    } catch (error) {
+      setError("Verification failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -102,7 +119,7 @@ export default function VerifyOTPPage() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto px-6">
+    <div className="rounded-2xl p-8">
       <Link
         href="/forgot-password"
         className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-[#002968] hover:bg-gray-50 transition-colors mb-6"
@@ -123,10 +140,10 @@ export default function VerifyOTPPage() {
       </Link>
 
       <div className="text-left mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Verify OTP</h1>
-        <p className="text-gray-600">
+        <h1 className="text-4xl font-semibold text-gray-800 mb-4">Verify OTP</h1>
+        <p className="text-gray-500 text-sm">
           Enter the 6-digit code sent to{" "}
-          <span className="font-semibold">{email}</span>
+          <span className="font-semibold text-gray-700">{email}</span>
         </p>
       </div>
 
@@ -157,10 +174,15 @@ export default function VerifyOTPPage() {
 
         {error && <p className="text-red-600 text-sm text-center">{error}</p>}
 
-        <Button text="Verify OTP" onClick={handleSubmit} />
+        <Button
+          text="Verify OTP"
+          onClick={handleSubmit}
+          loading={loading}
+          disabled={!isFormValid || loading}
+        />
       </form>
 
-      <div className="mt-6 text-left">
+      <div className="mt-4 text-left">
         <p className="text-sm text-gray-600">
           Didn't receive the code?{" "}
           {resendTimer > 0 ? (

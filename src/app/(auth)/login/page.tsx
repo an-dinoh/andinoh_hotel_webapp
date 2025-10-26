@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import InputField from "@/components/ui/InputField";
 import Button from "@/components/ui/Button";
-import { useState } from "react";
-import { FormValidator } from "@/utils/FormValidator";
+import { useState, useMemo } from "react";
+import { authService } from "@/services/auth.service";
 
 interface LoginFormState {
   email: string;
@@ -12,6 +13,7 @@ interface LoginFormState {
 }
 
 export default function LoginPage() {
+  const router = useRouter();
   const [form, setForm] = useState<LoginFormState>({
     email: "",
     password: "",
@@ -22,7 +24,11 @@ export default function LoginPage() {
     email: "",
   });
 
-  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const isFormValid = useMemo(() => {
+    return form.email.trim() !== "" && form.password.trim() !== "";
+  }, [form.email, form.password]);
 
   const handleChange = (field: keyof LoginFormState, value: string) => {
     const updatedForm = { ...form, [field]: value };
@@ -35,16 +41,9 @@ export default function LoginPage() {
 
     // Validate email field
     if (field === "email") {
-      const validator = new FormValidator({
-        hotelName: "",
-        email: value,
-        password: "",
-        confirmPassword: "",
-      });
-
       if (value.trim() === "") {
         setErrors((prev) => ({ ...prev, email: "" }));
-      } else if (!validator.validateEmail(value)) {
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
         setErrors((prev) => ({
           ...prev,
           email: "Please enter a valid email address.",
@@ -55,22 +54,15 @@ export default function LoginPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const validator = new FormValidator({
-      hotelName: "",
-      email: form.email,
-      password: "",
-      confirmPassword: "",
-    });
 
     if (!form.email.trim()) {
       setErrors((prev) => ({ ...prev, global: "Email is required." }));
       return;
     }
 
-    if (!validator.validateEmail(form.email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       setErrors((prev) => ({
         ...prev,
         global: "Please enter a valid email address.",
@@ -84,14 +76,66 @@ export default function LoginPage() {
     }
 
     setErrors({ global: "", email: "" });
-    console.log("✅ Login form submitted:", { ...form, rememberMe });
+
+    // Prevent double submission
+    if (loading) return;
+
+    setLoading(true);
+
+    try {
+      const response = await authService.login({
+        email: form.email,
+        password: form.password,
+      });
+
+      // API client unwraps response.data.data, so we get { access_token, user, ... }
+      const token = (response as any).access_token;
+      const user = (response as any).user;
+
+      authService.saveAuth(token, user);
+
+      // Redirect to dashboard
+      router.push("/dashboard");
+    } catch (error: any) {
+      console.error("❌ Login error:", error);
+
+      // Extract the actual error message from the API response
+      let errorMessage = "Invalid email or password. Please try again.";
+
+      if (error?.response?.data) {
+        const responseData = error.response.data;
+
+        if (typeof responseData === "string") {
+          errorMessage = responseData;
+        } else if (responseData.message) {
+          errorMessage = responseData.message;
+        } else if (responseData.error) {
+          errorMessage = responseData.error;
+        } else if (responseData.detail) {
+          errorMessage = responseData.detail;
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      setErrors((prev) => ({
+        ...prev,
+        global: errorMessage,
+      }));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="w-full max-w-md mx-auto px-6">
+    <div className="rounded-2xl p-8">
       <div className="text-left mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-        <p className="text-gray-600">Sign in to your account</p>
+        <h1 className="text-4xl font-semibold text-gray-800 mb-4">
+          Welcome Back
+        </h1>
+        <p className="text-gray-500 text-sm">
+          Sign in to your account to manage your hotel
+        </p>
       </div>
 
       <form className="space-y-5" onSubmit={handleSubmit}>
@@ -111,36 +155,7 @@ export default function LoginPage() {
           onChange={(e) => handleChange("password", e.target.value)}
         />
 
-        <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="
-      appearance-none 
-      w-4 h-4 
-      border border-gray-400 
-      rounded-sm 
-      checked:bg-[#002968] 
-      checked:border-[#002968] 
-      relative
-      transition-colors duration-200
-      before:content-[''] 
-      before:absolute 
-      before:inset-0 
-      before:m-auto 
-      before:w-[6px] before:h-[10px] 
-      before:border-b-2 before:border-r-2 
-      before:border-white 
-      before:rotate-45 
-      checked:before:block 
-      before:hidden
-    "
-            />
-            <span className="ml-2 text-sm text-gray-700">Remember me</span>
-          </label>
-
+        <div className="flex flex-row-reverse items-center justify-between text-sm">
           <Link
             href="/forgot-password"
             className="text-[#002968] hover:underline font-sm font-medium"
@@ -153,14 +168,19 @@ export default function LoginPage() {
           <p className="text-red-600 text-sm">{errors.global}</p>
         )}
 
-        <Button text="Sign In" onClick={handleSubmit} />
+        <Button
+          text="Sign In"
+          onClick={handleSubmit}
+          loading={loading}
+          disabled={!isFormValid || loading}
+        />
       </form>
 
-      <p className="text-left text-sm text-gray-600 mt-6">
+      <p className="text-left text-sm text-gray-600 mt-4">
         Don't have an account?{" "}
         <Link
           href="/register"
-          className="text-[#002968] hover:underline font-sm font-semibold"
+          className="text-[#002968] hover:underline font-semibold"
         >
           Sign up
         </Link>
