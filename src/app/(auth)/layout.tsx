@@ -7,18 +7,6 @@ export default function AuthLayout({
 }) {
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-y-auto py-8">
-      {/* Top-left logo */}
-      <div className="absolute top-4 left-4 sm:top-8 sm:left-8 md:top-14 md:left-14">
-        <Image
-          className="light:invert w-20 h-auto sm:w-28 md:w-[140px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={140}
-          height={30}
-          priority
-        />
-      </div>
-
       {/* Decorative leaf */}
       <div className="hidden md:block absolute -left-90 top-1/6 w-260 h-260">
         <Image

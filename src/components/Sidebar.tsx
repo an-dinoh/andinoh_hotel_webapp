@@ -10,7 +10,6 @@ import {
   Users,
   BarChart3,
   Settings,
-  LogOut,
   ChevronLeft,
   Menu,
   Building2,
@@ -20,14 +19,21 @@ import {
 import { useState, useEffect } from "react";
 import { authService } from "@/services/auth.service";
 
+import LogoutIcon from "@/icons/LogoutIcon";
+import BookingIcon from "@/icons/BookingIcon";
+import PeopleIcon from "@/icons/PeopleIcon";
+import SettingIcon from "@/icons/SettingIcon";
+import CalendarIcon from "@/icons/CalendarIcon";
+import DashboardIcon from "@/icons/DashboardIcon";
+
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, badge: null },
+  { name: "Dashboard", href: "/dashboard", icon: DashboardIcon, badge: null },
   { name: "My Hotel", href: "/my_hotel", icon: Building2, badge: null },
-  { name: "Rooms", href: "/rooms", icon: Bed, badge: null },
-  { name: "Bookings", href: "/bookings", icon: Calendar, badge: "3" },
-  { name: "Staff", href: "/staff", icon: Users, badge: null },
+  { name: "Rooms", href: "/rooms", icon: BookingIcon, badge: null },
+  { name: "Bookings", href: "/bookings", icon: CalendarIcon, badge: "3" },
+  { name: "Staff", href: "/staff", icon: PeopleIcon, badge: null },
   { name: "Analytics", href: "/analytics", icon: BarChart3, badge: null },
-  { name: "Settings", href: "/settings", icon: Settings, badge: null },
+  { name: "Settings", href: "/settings", icon: SettingIcon, badge: null },
 ];
 
 export default function Sidebar() {
@@ -72,7 +78,9 @@ export default function Sidebar() {
         <div className="mx-4 mt-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700/50 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg">
-              {user.full_name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || "U"}
+              {user.full_name?.charAt(0)?.toUpperCase() ||
+                user.email?.charAt(0)?.toUpperCase() ||
+                "U"}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-white truncate">
@@ -85,9 +93,10 @@ export default function Sidebar() {
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="px-3 py-4 mb-8 space-y-1 overflow-y-auto flex-shrink-0"> 
         {navigation.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+          const isActive =
+            pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.name}
@@ -95,7 +104,7 @@ export default function Sidebar() {
               onClick={() => setMobileOpen(false)}
               className={`group relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 ${
                 isActive
-                  ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/25"
+                  ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white"
                   : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
               }`}
             >
@@ -105,8 +114,11 @@ export default function Sidebar() {
               )}
 
               <item.icon
-                size={20}
-                className={`${isActive ? "text-white" : "text-gray-400 group-hover:text-white"} transition-colors`}
+                className={`w-5 h-5 ${
+                  isActive
+                    ? "text-white"
+                    : "text-gray-400 group-hover:text-white"
+                } transition-colors`}
               />
 
               {!collapsed && (
@@ -135,23 +147,26 @@ export default function Sidebar() {
         })}
       </nav>
 
+      {/* Divider */}
+      <div className="mx-3 border-t border-gray-800"></div>
+
       {/* Bottom Section */}
-      <div className="p-4 border-t border-gray-800 space-y-2">
+      <div className="px-3 pb-4 pt-2 space-y-1">
         {/* Collapse Button (Desktop) */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="hidden lg:flex items-center justify-center gap-2 px-3 py-2.5 w-full rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-white transition-all"
+          className="hidden lg:flex items-center gap-3 px-3 py-3 w-full rounded-xl text-gray-300 hover:bg-gray-800/50 hover:text-white transition-all"
         >
-          {collapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
-          {!collapsed && <span className="text-sm font-medium">Collapse</span>}
+          {collapsed ? <Menu className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+          {!collapsed && <span className="font-medium">Collapse</span>}
         </button>
 
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className="flex items-center justify-center gap-3 px-3 py-2.5 w-full rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all group"
+          className="flex items-center gap-3 px-3 py-3 w-full rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all group"
         >
-          <LogOut size={20} className="group-hover:rotate-180 transition-transform duration-500" />
+          <LogoutIcon className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
           {!collapsed && <span className="font-medium">Logout</span>}
         </button>
       </div>
