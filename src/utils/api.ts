@@ -63,14 +63,15 @@ class ApiClient {
         console.error('❌ API Error Status:', error?.response?.status);
         console.error('❌ API Error Message:', error?.message);
 
-        if (error.response?.status === 401) {
-          // Unauthorized - redirect to login
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            window.location.href = '/login';
-          }
-        }
+        // DISABLED FOR UI DEVELOPMENT - Re-enable when implementing authentication
+        // if (error.response?.status === 401) {
+        //   // Unauthorized - redirect to login
+        //   if (typeof window !== 'undefined') {
+        //     localStorage.removeItem('token');
+        //     localStorage.removeItem('user');
+        //     window.location.href = '/login';
+        //   }
+        // }
 
         // Handle 404 errors
         if (error.response?.status === 404) {
