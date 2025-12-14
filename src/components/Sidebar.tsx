@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Hotel, ChevronLeft, Menu, Building2 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -77,16 +78,32 @@ export default function Sidebar() {
       <div className="h-[80px] flex items-center overflow-hidden">
         {!collapsed ? (
           <div className="flex items-center gap-3 pl-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-              <Hotel className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 bg-white border-1 border-[#0F75BD] rounded-xl flex items-center justify-center p-1.5">
+              <Image
+                src="/logos/ANDINOH.svg"
+                alt="Andinoh"
+                width={32}
+                height={32}
+                priority
+                className="w-full h-full object-contain"
+              />
             </div>
             <div className="leading-tight">
-              <h1 className="font-bold text-lg text-[#5C5B59]">HotelMS</h1>
-              <p className="text-xs text-[#5C5B59]">Management Suite</p>
+              <h1 className="font-bold text-lg text-[#0B0A07]">Andinoh</h1>
+              <p className="text-xs text-[#5C5B59]">Management</p>
             </div>
           </div>
         ) : (
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-centermx-auto" />
+          <div className="w-10 h-10 bg-white border-2 border-[#0F75BD] rounded-xl flex items-center justify-center mx-auto p-1.5">
+            <Image
+              src="/logos/ANDINOH.svg"
+              alt="Andinoh"
+              width={32}
+              height={32}
+              priority
+              className="w-full h-full object-contain"
+            />
+          </div>
         )}
       </div>
 
@@ -95,7 +112,7 @@ export default function Sidebar() {
 
       {/* Navigation */}
 
-      <nav className="px-3 pt-8 px-2 space-y-3 overflow-y-auto flex-shrink-0">
+      <nav className="px-4 pt-8 space-y-3 overflow-y-auto flex-shrink-0">
         {navigationMain.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
@@ -110,15 +127,15 @@ export default function Sidebar() {
                 collapsed ? "px-2" : "px-5"
               } py-3 rounded-xl transition-all duration-300 ease-in-out ${
                 isActive
-                  ? "bg-[#002968] text-white"
-                  : "text-gray-300 hover:bg-[#B3B3B2]/20 hover:text-white"
+                  ? "bg-[#0F75BD] text-white"
+                  : "text-gray-300 hover:bg-[#EEF0F2] hover:text-[#0F75BD]"
               }`}
             >
               <item.icon
                 className={`w-5 h-5 font-medium transition-all duration-300 ${
                   isActive
                     ? "text-white"
-                    : "text-[#5C5B59] group-hover:text-[#B3B3B2]"
+                    : "text-[#5C5B59] group-hover:text-[#0F75BD]"
                 }`}
               />
 
@@ -154,10 +171,10 @@ export default function Sidebar() {
       </nav>
 
       {/* Divider */}
-      <div className="mx-3 my-6 border-t border-[#E5E7EB] space-y-3"></div>
+      <div className="mx-4 my-6 border-t border-[#E5E7EB] space-y-3"></div>
 
       {/* Secondary Navigation */}
-      <nav className="px-3 px-2 space-y-3 overflow-y-auto flex-shrink-0">
+      <nav className="px-4 space-y-3 overflow-y-auto flex-shrink-0">
         {navigationSecondary.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
@@ -172,15 +189,15 @@ export default function Sidebar() {
                 collapsed ? "px-2" : "px-5"
               } py-3 rounded-xl transition-all duration-300 ease-in-out ${
                 isActive
-                  ? "bg-[#002968] text-white text-sm"
-                  : "text-gray-300 hover:bg-[#B3B3B2]/20 hover:text-white"
+                  ? "bg-[#0F75BD] text-white text-sm"
+                  : "text-gray-300 hover:bg-[#EEF0F2] hover:text-[#0F75BD]"
               }`}
             >
               <item.icon
                 className={`w-5 h-5 font-medium transition-all duration-300 ${
                   isActive
                     ? "text-white"
-                    : "text-[#5C5B59] group-hover:text-[#B3B3B2]"
+                    : "text-[#5C5B59] group-hover:text-[#0F75BD]"
                 }`}
               />
 
@@ -215,10 +232,10 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="mx-3 my-10 border-t border-[#E5E7EB]"></div>
+      <div className="mx-4 my-10 border-t border-[#E5E7EB]"></div>
 
       {/* Bottom Section */}
-      <div className="px-3 pb-4 pt-2 space-y-1">
+      <div className="px-4 pb-4 pt-2 space-y-1">
         {/* Logout Button */}
         <button
           onClick={handleLogout}
@@ -244,7 +261,7 @@ export default function Sidebar() {
       {/* Desktop Sidebar */}
       <aside
         className={`hidden lg:block bg-white transition-all duration-300 border-l border-gray-200 ${
-          collapsed ? "w-20" : "w-56"
+          collapsed ? "w-20" : "w-[244px]"
         }`}
       >
         <div className="h-screen sticky top-0">
@@ -272,7 +289,7 @@ export default function Sidebar() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed bottom-6 right-6 bg-gradient-to-r from-blue-600 to-blue-500 text-white p-4 rounded-full shadow-2xl shadow-blue-500/50 z-30 hover:shadow-blue-500/70 hover:scale-110 transition-all duration-200"
+        className="lg:hidden fixed bottom-6 right-6 bg-gradient-to-r from-[#0F75BD] to-[#002968] text-white p-4 rounded-full shadow-2xl shadow-[#0F75BD]/50 z-30 hover:shadow-[#0F75BD]/70 hover:scale-110 transition-all duration-200"
       >
         <Menu size={24} />
       </button>

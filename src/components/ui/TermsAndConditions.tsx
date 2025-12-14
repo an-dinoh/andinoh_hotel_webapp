@@ -25,7 +25,7 @@ export default function TermsAndConditions({
           href="/terms"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#002968] hover:underline font-semibold"
+          className="text-[#002968] hover:underline font-medium"
         >
           Terms of Service
         </a>{" "}
@@ -34,7 +34,7 @@ export default function TermsAndConditions({
           href="/privacy"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#002968] font-semibold hover:underline"
+          className="text-[#002968] font-medium hover:underline"
         >
           Privacy Policy
         </a>
