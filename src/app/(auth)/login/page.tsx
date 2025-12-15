@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import InputField from "@/components/ui/InputField";
 import Button from "@/components/ui/Button";
 import { useState, useMemo } from "react";
-import { authService } from "@/services/auth.service";
 
 interface LoginFormState {
   email: string;
@@ -82,49 +81,17 @@ export default function LoginPage() {
 
     setLoading(true);
 
-    try {
-      const response = await authService.login({
-        email: form.email,
-        password: form.password,
-      });
+    // Simulate loading delay for better UX
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // API client unwraps response.data.data, so we get { access_token, user, ... }
-      const token = (response as any).access_token;
-      const user = (response as any).user;
+    // Save dummy token to localStorage
+    localStorage.setItem('token', 'dummy-token');
+    localStorage.setItem('user', JSON.stringify({ email: form.email }));
 
-      authService.saveAuth(token, user);
+    // Redirect to dashboard
+    router.push("/dashboard");
 
-      // Redirect to dashboard
-      router.push("/dashboard");
-    } catch (error: any) {
-      console.error("❌ Login error:", error);
-
-      // Extract the actual error message from the API response
-      let errorMessage = "Invalid email or password. Please try again.";
-
-      if (error?.response?.data) {
-        const responseData = error.response.data;
-
-        if (typeof responseData === "string") {
-          errorMessage = responseData;
-        } else if (responseData.message) {
-          errorMessage = responseData.message;
-        } else if (responseData.error) {
-          errorMessage = responseData.error;
-        } else if (responseData.detail) {
-          errorMessage = responseData.detail;
-        }
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
-
-      setErrors((prev) => ({
-        ...prev,
-        global: errorMessage,
-      }));
-    } finally {
-      setLoading(false);
-    }
+    setLoading(false);
   };
 
   return (

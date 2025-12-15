@@ -8,7 +8,6 @@ import PasswordRequirements from "@/components/ui/PasswordStrengthIndicator";
 import TermsAndConditions from "@/components/ui/TermsAndConditions";
 import { useState, useMemo } from "react";
 import { FormValidator, FormState } from "@/utils/FormValidator";
-import { authService } from "@/services/auth.service";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -87,30 +86,20 @@ export default function RegisterPage() {
     if (loading) return;
     setLoading(true);
 
-    try {
-      const response = await authService.register({
-        email: form.email,
-        password: form.password,
-        role: "hotel",
-        hotel_name: form.hotelName,
-        hotel_license_number: form.hotelLicenseNumber || "PENDING",
-        phone_number: "",
-        hotel_address: form.hotelAddress || "",
-      } as any);
+    // Simulate loading delay for better UX
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-      const token = (response as any).access_token;
-      const user = (response as any).user;
+    // Save dummy token to localStorage
+    localStorage.setItem('token', 'dummy-token');
+    localStorage.setItem('user', JSON.stringify({
+      email: form.email,
+      hotelName: form.hotelName
+    }));
 
-      authService.saveAuth(token, user);
-      router.push("/dashboard");
-    } catch (error: any) {
-      setErrors((prev) => ({
-        ...prev,
-        global: error.message || "Registration failed. Please try again.",
-      }));
-    } finally {
-      setLoading(false);
-    }
+    // Redirect to dashboard
+    router.push("/dashboard");
+
+    setLoading(false);
   };
 
   return (

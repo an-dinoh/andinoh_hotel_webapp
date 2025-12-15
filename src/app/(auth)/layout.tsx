@@ -6,29 +6,46 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-y-auto py-8">
-      {/* Decorative leaf */}
-      <div className="hidden md:block absolute -left-90 top-1/6 w-260 h-260">
-        <Image
-          src="/leaf.png"
-          alt="Decorative Leaf"
-          fill
-          className="object-contain"
-        />
+    <div className="min-h-screen flex">
+      {/* Left side - Blue container with big flowers */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#0F75BD] relative items-center justify-center overflow-hidden">
+        {/* Large flower flowing from top-left */}
+        <div className="absolute -top-[250px] -left-[150px] transform rotate-[15deg]">
+          <div className="relative w-[1000px] h-[1000px] opacity-18">
+            <Image
+              src="/leaf.png"
+              alt="Decorative Flower"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+        </div>
+
+        {/* Smaller flower flowing from bottom-right in opposite direction */}
+        <div className="absolute -bottom-[150px] -right-[100px] transform rotate-[160deg] scale-x-[-1]">
+          <div className="relative w-[650px] h-[650px] opacity-20">
+            <Image
+              src="/leaf.png"
+              alt="Decorative Flower"
+              fill
+              className="object-contain"
+            />
+          </div>
+        </div>
+
+        {/* Hotel branding text */}
+        <div className="relative z-10 text-white text-center px-12">
+          <h1 className="text-5xl font-bold mb-4">Welcome to Andinoh</h1>
+          <p className="text-xl opacity-90">Manage your hotel with ease</p>
+        </div>
       </div>
 
-      <div className="absolute top-1 -right-10 w-32 h-32 sm:-right-20 sm:w-40 sm:h-40 md:-right-30 md:w-60 md:h-60">
-        <Image
-          src="/leaf.png"
-          alt="Decorative Leaf"
-          fill
-          className="object-contain"
-        />
-      </div>
-
-      {/* Centered content */}
-      <div className="w-full px-4 sm:px-6 md:px-0 lg:w-[90%] relative z-10">
-        <div className="max-w-xl w-full mx-auto">{children}</div>
+      {/* Right side - Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center bg-white px-4 sm:px-6 md:px-8 py-8 overflow-y-auto">
+        <div className="w-full max-w-md">
+          {children}
+        </div>
       </div>
     </div>
   );
