@@ -1,11 +1,13 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/ui/Button";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 
-export default function VerifyOTPPage() {
+function VerifyOTPForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
@@ -199,5 +201,17 @@ export default function VerifyOTPPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function VerifyOTPPage() {
+  return (
+    <Suspense fallback={
+      <div className="rounded-2xl p-8 text-center">
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    }>
+      <VerifyOTPForm />
+    </Suspense>
   );
 }
