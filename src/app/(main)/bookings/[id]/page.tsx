@@ -27,9 +27,6 @@ import {
   Home,
   Star,
   MessageSquare,
-  Wifi,
-  Coffee,
-  Utensils,
 } from "lucide-react";
 import { Booking, BookingStatus } from "@/types/hotel.types";
 
@@ -50,6 +47,7 @@ export default function BookingDetailPage() {
     if (bookingId) {
       fetchBooking();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
 
   const fetchBooking = () => {
@@ -178,7 +176,7 @@ export default function BookingDetailPage() {
                 <AlertCircle className="w-10 h-10 text-[#0F75BD]" />
               </div>
               <h2 className="text-xl font-semibold text-[#1A1A1A] mb-2">Booking Not Found</h2>
-              <p className="text-[#5C5B59] text-sm mb-6">The booking you're looking for doesn't exist.</p>
+              <p className="text-[#5C5B59] text-sm mb-6">The booking you&apos;re looking for doesn&apos;t exist.</p>
               <button
                 onClick={() => router.push("/bookings")}
                 className="px-6 py-3 bg-[#0F75BD] text-white rounded-xl hover:bg-[#0050C8] transition-colors font-medium"
@@ -193,7 +191,6 @@ export default function BookingDetailPage() {
   }
 
   const statusConfig = getStatusConfig(booking.booking_status);
-  const StatusIcon = statusConfig.icon;
 
   const canCheckIn = booking.booking_status === "confirmed";
   const canCheckOut = booking.booking_status === "checked_in";

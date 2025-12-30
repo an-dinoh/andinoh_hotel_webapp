@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import { TabType } from "@/types/staff.types";
@@ -12,7 +12,7 @@ import RolesList from "@/components/staff/RolesList";
 import CreateUserModal from "@/components/staff/CreateUserModal";
 import CreateAdminModal from "@/components/staff/CreateAdminModal";
 
-export default function StaffPage() {
+function StaffContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab") as TabType | null;
 
@@ -156,5 +156,13 @@ export default function StaffPage() {
       <CreateUserModal isOpen={showCreateUserModal} onClose={() => setShowCreateUserModal(false)} />
       <CreateAdminModal isOpen={showCreateAdminModal} onClose={() => setShowCreateAdminModal(false)} />
     </div>
+  );
+}
+
+export default function StaffPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <StaffContent />
+    </Suspense>
   );
 }

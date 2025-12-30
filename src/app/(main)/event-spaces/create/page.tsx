@@ -4,15 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  ChevronDown,
-  PartyPopper,
   Users,
   Maximize2,
-  Zap,
-  CheckCircle2,
-  Calendar,
   Ruler,
-  Building,
   Banknote,
 } from "lucide-react";
 import { EventSpaceType, SetupStyle } from "@/types/hotel.types";

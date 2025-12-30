@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Edit, Trash2, Eye, ChevronDown, Sparkles, Users, Maximize2, Calendar, Banknote, Zap, PartyPopper } from "lucide-react";
+import { Plus, Search, Eye, ChevronDown, Sparkles, Users, Maximize2, Calendar, Banknote, Zap, PartyPopper } from "lucide-react";
 import Image from "next/image";
 import Loading from "@/components/ui/Loading";
 import { EventSpace, EventSpaceType } from "@/types/hotel.types";
