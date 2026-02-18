@@ -46,7 +46,7 @@ export default function InputField({
           </div>
         )}
         <input
-          type={isPassword && !showPassword ? "password" : type}
+          type={isPassword ? (showPassword ? "text" : "password") : type}
           placeholder={placeholder}
           value={value}
           onChange={onChange}
@@ -55,11 +55,10 @@ export default function InputField({
           className={`w-full rounded-xl border ${icon ? "pl-10" : "px-3"} ${isPassword ? "pr-14" : "pr-3"} py-2 text-sm text-gray-800
     focus:outline-none focus:ring-1 focus:border-transparent
     placeholder:text-[#8F8E8D] placeholder:text-sm
-    ${
-      error
-        ? "border-red-500 focus:ring-red-500"
-        : "border-[#D3D9DD] focus:ring-[#8E9397]"
-    }`}
+    ${error
+              ? "border-red-500 focus:ring-red-500"
+              : "border-[#D3D9DD] focus:ring-[#0F75BD] focus:border-[#0F75BD]"
+            }`}
         />
 
         {isPassword && (

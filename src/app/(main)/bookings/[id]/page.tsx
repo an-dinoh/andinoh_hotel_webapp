@@ -6,6 +6,9 @@ export const revalidate = 0;
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
+import { hotelService } from "@/services/hotel.service";
+import { authService } from "@/services/auth.service";
+import { toast } from "react-hot-toast";
 import {
   ChevronDown,
   Calendar,
@@ -53,83 +56,70 @@ export default function BookingDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
 
-  const fetchBooking = () => {
-    // Mock data - replace with actual API call
-    const mockBookings: Booking[] = [
-      {
-        id: "1",
-        hotel: "hotel-1",
-        room: "room-1",
-        customer_name: "John Doe",
-        customer_email: "john.doe@example.com",
-        customer_phone: "+234 801 234 5678",
-        booking_reference: "BK-2024-001",
-        check_in_date: "2024-12-20",
-        check_out_date: "2024-12-23",
-        number_of_nights: 3,
-        number_of_adults: 2,
-        number_of_children: 0,
-        total_amount: "450000",
-        amount_paid: "450000",
-        balance_due: "0",
-        booking_status: "confirmed",
-        payment_status: "paid",
-        booking_source: "online",
-        special_requests: "Late check-in requested. Prefer higher floor with city view.",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: "2",
-        hotel: "hotel-1",
-        room: "room-2",
-        customer_name: "Sarah Johnson",
-        customer_email: "sarah.j@example.com",
-        customer_phone: "+234 802 345 6789",
-        booking_reference: "BK-2024-002",
-        check_in_date: "2024-12-18",
-        check_out_date: "2024-12-22",
-        number_of_nights: 4,
-        number_of_adults: 2,
-        number_of_children: 1,
-        total_amount: "800000",
-        amount_paid: "400000",
-        balance_due: "400000",
-        booking_status: "checked_in",
-        payment_status: "partial",
-        booking_source: "walk_in",
-        special_requests: "Baby cot required. Extra towels please.",
-        checked_in_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: "3",
-        hotel: "hotel-1",
-        room: "room-3",
-        customer_name: "Michael Brown",
-        customer_email: "m.brown@example.com",
-        customer_phone: "+234 803 456 7890",
-        booking_reference: "BK-2024-003",
-        check_in_date: "2024-12-25",
-        check_out_date: "2024-12-28",
-        number_of_nights: 3,
-        number_of_adults: 1,
-        number_of_children: 0,
-        total_amount: "300000",
-        amount_paid: "0",
-        balance_due: "300000",
-        booking_status: "pending",
-        payment_status: "pending",
-        booking_source: "phone",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ];
+  const fetchBooking = async () => {
+    try {
+      const data = await hotelService.getBooking(bookingId);
+      setBooking(data);
+    } catch (error: any) {
+      console.error("Error fetching booking:", error);
+      toast.error(error.message || "Failed to fetch booking details");
+    }
+  };
 
-    const foundBooking = mockBookings.find((b) => b.id === bookingId);
-    if (foundBooking) {
-      setBooking(foundBooking);
+  const handleCheckIn = async () => {
+    try {
+      const user = authService.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      await hotelService.checkIn(bookingId, {
+        staff_id: user.id,
+        actual_check_in_time: new Date().toISOString()
+      });
+
+      toast.success("Guest checked in successfully");
+      setShowCheckInModal(false);
+      fetchBooking();
+    } catch (error: any) {
+      toast.error(error.message || "Check-in failed");
+    }
+  };
+
+  const handleCheckOut = async () => {
+    try {
+      const user = authService.getUser();
+      if (!user) throw new Error("User not authenticated");
+
+      await hotelService.checkOut(bookingId, {
+        staff_id: user.id,
+        actual_check_out_time: new Date().toISOString()
+      });
+
+      toast.success("Guest checked out successfully");
+      setShowCheckOutModal(false);
+      fetchBooking();
+    } catch (error: any) {
+      toast.error(error.message || "Check-out failed");
+    }
+  };
+
+  const handleCancelBooking = async () => {
+    try {
+      await hotelService.cancelBooking(bookingId);
+      toast.success("Booking cancelled successfully");
+      setShowCancelModal(false);
+      fetchBooking();
+    } catch (error: any) {
+      toast.error(error.message || "Cancellation failed");
+    }
+  };
+
+  const handleProcessPayment = async (data: { amount: number; payment_method: string; transaction_id: string }) => {
+    try {
+      await hotelService.processPayment(bookingId, data);
+      toast.success("Payment processed successfully");
+      fetchBooking();
+    } catch (error: any) {
+      toast.error(error.message || "Payment processing failed");
     }
   };
 
@@ -272,11 +262,10 @@ export default function BookingDetailPage() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center gap-2 px-6 py-4 font-semibold transition-all ${
-                        activeTab === tab.id
+                      className={`flex items-center gap-2 px-6 py-4 font-semibold transition-all ${activeTab === tab.id
                           ? "text-[#0F75BD] border-b-2 border-[#0F75BD]"
                           : "text-[#5C5B59] hover:text-[#0F75BD]"
-                      }`}
+                        }`}
                     >
                       <Icon className="w-5 h-5" />
                       {tab.label}
@@ -558,9 +547,8 @@ export default function BookingDetailPage() {
                     <div className="flex justify-between items-center pt-2">
                       <span className="text-sm font-semibold text-gray-700 uppercase">Balance Due</span>
                       <span
-                        className={`text-3xl font-bold ${
-                          parseFloat(booking.balance_due || "0") > 0 ? "text-orange-600" : "text-green-600"
-                        }`}
+                        className={`text-3xl font-bold ${parseFloat(booking.balance_due || "0") > 0 ? "text-orange-600" : "text-green-600"
+                          }`}
                       >
                         ₦{parseFloat(booking.balance_due || "0").toLocaleString()}
                       </span>

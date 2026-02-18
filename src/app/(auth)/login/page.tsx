@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import InputField from "@/components/ui/InputField";
 import Button from "@/components/ui/Button";
 import { useState, useMemo } from "react";
+import { authService } from "@/services/auth.service";
+import { toast } from "react-hot-toast";
 
 interface LoginFormState {
   email: string;
@@ -35,20 +37,20 @@ export default function LoginPage() {
 
     // Clear global error when user types
     if (errors.global) {
-      setErrors((prev) => ({ ...prev, global: "" }));
+      setErrors((prev: any) => ({ ...prev, global: "" }));
     }
 
     // Validate email field
     if (field === "email") {
       if (value.trim() === "") {
-        setErrors((prev) => ({ ...prev, email: "" }));
+        setErrors((prev: any) => ({ ...prev, email: "" }));
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        setErrors((prev) => ({
+        setErrors((prev: any) => ({
           ...prev,
           email: "Please enter a valid email address.",
         }));
       } else {
-        setErrors((prev) => ({ ...prev, email: "" }));
+        setErrors((prev: any) => ({ ...prev, email: "" }));
       }
     }
   };
@@ -57,12 +59,12 @@ export default function LoginPage() {
     e.preventDefault();
 
     if (!form.email.trim()) {
-      setErrors((prev) => ({ ...prev, global: "Email is required." }));
+      setErrors((prev: any) => ({ ...prev, global: "Email is required." }));
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      setErrors((prev) => ({
+      setErrors((prev: any) => ({
         ...prev,
         global: "Please enter a valid email address.",
       }));
@@ -70,7 +72,7 @@ export default function LoginPage() {
     }
 
     if (!form.password.trim()) {
-      setErrors((prev) => ({ ...prev, global: "Password is required." }));
+      setErrors((prev: any) => ({ ...prev, global: "Password is required." }));
       return;
     }
 
@@ -81,17 +83,31 @@ export default function LoginPage() {
 
     setLoading(true);
 
-    // Simulate loading delay for better UX
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      const response = await authService.login({
+        email: form.email,
+        password: form.password,
+      });
 
-    // Save dummy token to localStorage
-    localStorage.setItem('token', 'dummy-token');
-    localStorage.setItem('user', JSON.stringify({ email: form.email }));
+      if (response && response.access_token) {
+        // Save auth data
+        authService.saveAuth(response.access_token, response.user);
 
-    // Redirect to dashboard
-    router.push("/dashboard");
+        toast.success("Login successful!");
 
-    setLoading(false);
+        // Redirect to dashboard
+        router.push("/dashboard");
+      } else {
+        throw new Error("Invalid response from server");
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      const errorMessage = error.response?.data?.message || error.message || "Failed to log in. Please check your credentials.";
+      setErrors((prev: any) => ({ ...prev, global: errorMessage }));
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

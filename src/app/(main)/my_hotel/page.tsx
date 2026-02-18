@@ -22,6 +22,7 @@ import {
 import Loading from "@/components/ui/Loading";
 import { hotelService } from "@/services/hotel.service";
 import { Hotel as HotelType, HotelType as HotelCategory } from "@/types/hotel.types";
+import { toast } from "react-hot-toast";
 
 export default function MyHotelPage() {
   const [loading, setLoading] = useState(true);
@@ -53,31 +54,7 @@ export default function MyHotelPage() {
   const fetchHotel = async () => {
     try {
       setLoading(true);
-
-      // Mock data for UI development
-      const data: HotelType = {
-        id: "1",
-        owner_id: "owner-1",
-        name: "Grand Plaza Hotel",
-        description: "A luxurious 5-star hotel in the heart of the city offering world-class amenities and exceptional service.",
-        hotel_type: "luxury",
-        star_rating: 5,
-        address: "123 Main Street",
-        city: "New York",
-        state: "NY",
-        country: "USA",
-        postal_code: "10001",
-        phone: "+1 (555) 123-4567",
-        email: "info@grandplaza.com",
-        website: "https://grandplaza.com",
-        check_in_time: "15:00:00",
-        check_out_time: "11:00:00",
-        total_rooms: 150,
-        is_active: true,
-        is_verified: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      const data = await hotelService.getMyHotel();
 
       setHotel(data);
       setForm({
@@ -104,8 +81,10 @@ export default function MyHotelPage() {
         error.message?.includes("404") ||
         error.message?.includes("not found")
       ) {
-        console.log("ℹ️ No hotel found - entering creation mode");
+        toast.error("Hotel profile not found. Please create one.");
         setEditing(true);
+      } else {
+        toast.error(error.message || "Failed to fetch hotel information");
       }
     } finally {
       setLoading(false);
@@ -115,21 +94,15 @@ export default function MyHotelPage() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      console.log("💾 Saving hotel data:", form);
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const updatedHotel = await hotelService.updateHotel(form);
 
-      // Update local state with form data
-      if (hotel) {
-        setHotel({ ...hotel, ...form });
-      }
-
+      setHotel(updatedHotel);
       setEditing(false);
-      console.log("✅ Hotel data saved successfully");
+      toast.success("Hotel information updated successfully!");
     } catch (error: any) {
       console.error("Error saving hotel:", error);
-      alert("Failed to save hotel information");
+      toast.error(error.message || "Failed to save hotel information");
     } finally {
       setSaving(false);
     }

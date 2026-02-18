@@ -2,22 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Plus,
-  Search,
-  Calendar as CalendarIcon,
-  LogIn,
-  LogOut,
-  CheckCircle,
-  XCircle,
-  Clock,
-  ChevronDown,
-} from "lucide-react";
+import { Plus, Search, Calendar as CalendarIcon, LogIn, LogOut, CheckCircle, XCircle, Clock, ChevronDown, Loader2 } from "lucide-react";
 import { Booking, BookingStatus } from "@/types/hotel.types";
+import { hotelService } from "@/services/hotel.service";
+import { toast } from "react-hot-toast";
 
 export default function BookingsPage() {
   const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<BookingStatus | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,282 +22,15 @@ export default function BookingsPage() {
 
   const fetchBookings = async () => {
     try {
-      // Mock data for UI development
-      // TODO: Replace with actual API call when integrating backend
-      const mockBookings: Booking[] = [
-        {
-          id: "1",
-          hotel: "hotel-1",
-          room: "room-1",
-          customer_name: "John Doe",
-          customer_email: "john.doe@example.com",
-          customer_phone: "+234 801 234 5678",
-          booking_reference: "BK-2024-001",
-          check_in_date: "2024-12-20",
-          check_out_date: "2024-12-23",
-          number_of_nights: 3,
-          number_of_adults: 2,
-          number_of_children: 0,
-          total_amount: "450000",
-          amount_paid: "450000",
-          balance_due: "0",
-          booking_status: "confirmed",
-          payment_status: "paid",
-          booking_source: "online",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "2",
-          hotel: "hotel-1",
-          room: "room-2",
-          customer_name: "Sarah Johnson",
-          customer_email: "sarah.j@example.com",
-          customer_phone: "+234 802 345 6789",
-          booking_reference: "BK-2024-002",
-          check_in_date: "2024-12-18",
-          check_out_date: "2024-12-22",
-          number_of_nights: 4,
-          number_of_adults: 2,
-          number_of_children: 1,
-          total_amount: "800000",
-          amount_paid: "400000",
-          balance_due: "400000",
-          booking_status: "checked_in",
-          payment_status: "partial",
-          booking_source: "walk_in",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "3",
-          hotel: "hotel-1",
-          room: "room-3",
-          customer_name: "Michael Brown",
-          customer_email: "m.brown@example.com",
-          customer_phone: "+234 803 456 7890",
-          booking_reference: "BK-2024-003",
-          check_in_date: "2024-12-25",
-          check_out_date: "2024-12-28",
-          number_of_nights: 3,
-          number_of_adults: 1,
-          number_of_children: 0,
-          total_amount: "300000",
-          amount_paid: "0",
-          balance_due: "300000",
-          booking_status: "pending",
-          payment_status: "pending",
-          booking_source: "phone",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "4",
-          hotel: "hotel-1",
-          room: "room-4",
-          customer_name: "Emily Davis",
-          customer_email: "emily.d@example.com",
-          customer_phone: "+234 804 567 8901",
-          booking_reference: "BK-2024-004",
-          check_in_date: "2024-12-15",
-          check_out_date: "2024-12-17",
-          number_of_nights: 2,
-          number_of_adults: 2,
-          number_of_children: 0,
-          total_amount: "400000",
-          amount_paid: "400000",
-          balance_due: "0",
-          booking_status: "checked_out",
-          payment_status: "paid",
-          booking_source: "email",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "5",
-          hotel: "hotel-1",
-          room: "room-5",
-          customer_name: "David Wilson",
-          customer_email: "d.wilson@example.com",
-          customer_phone: "+234 805 678 9012",
-          booking_reference: "BK-2024-005",
-          check_in_date: "2024-12-30",
-          check_out_date: "2025-01-02",
-          number_of_nights: 3,
-          number_of_adults: 3,
-          number_of_children: 2,
-          total_amount: "600000",
-          amount_paid: "300000",
-          balance_due: "300000",
-          booking_status: "confirmed",
-          payment_status: "partial",
-          booking_source: "online",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "6",
-          hotel: "hotel-1",
-          room: "room-6",
-          customer_name: "Linda Martinez",
-          customer_email: "linda.m@example.com",
-          customer_phone: "+234 806 789 0123",
-          booking_reference: "BK-2024-006",
-          check_in_date: "2024-12-19",
-          check_out_date: "2024-12-21",
-          number_of_nights: 2,
-          number_of_adults: 2,
-          number_of_children: 1,
-          total_amount: "350000",
-          amount_paid: "350000",
-          balance_due: "0",
-          booking_status: "confirmed",
-          payment_status: "paid",
-          booking_source: "online",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "7",
-          hotel: "hotel-1",
-          room: "room-7",
-          customer_name: "Robert Anderson",
-          customer_email: "r.anderson@example.com",
-          customer_phone: "+234 807 890 1234",
-          booking_reference: "BK-2024-007",
-          check_in_date: "2024-12-16",
-          check_out_date: "2024-12-18",
-          number_of_nights: 2,
-          number_of_adults: 1,
-          number_of_children: 0,
-          total_amount: "250000",
-          amount_paid: "250000",
-          balance_due: "0",
-          booking_status: "checked_out",
-          payment_status: "paid",
-          booking_source: "phone",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "8",
-          hotel: "hotel-1",
-          room: "room-8",
-          customer_name: "Patricia Thomas",
-          customer_email: "p.thomas@example.com",
-          customer_phone: "+234 808 901 2345",
-          booking_reference: "BK-2024-008",
-          check_in_date: "2024-12-24",
-          check_out_date: "2024-12-27",
-          number_of_nights: 3,
-          number_of_adults: 2,
-          number_of_children: 0,
-          total_amount: "480000",
-          amount_paid: "0",
-          balance_due: "480000",
-          booking_status: "pending",
-          payment_status: "pending",
-          booking_source: "email",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "9",
-          hotel: "hotel-1",
-          room: "room-9",
-          customer_name: "James Rodriguez",
-          customer_email: "j.rodriguez@example.com",
-          customer_phone: "+234 809 012 3456",
-          booking_reference: "BK-2024-009",
-          check_in_date: "2024-12-21",
-          check_out_date: "2024-12-24",
-          number_of_nights: 3,
-          number_of_adults: 2,
-          number_of_children: 2,
-          total_amount: "550000",
-          amount_paid: "550000",
-          balance_due: "0",
-          booking_status: "confirmed",
-          payment_status: "paid",
-          booking_source: "online",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "10",
-          hotel: "hotel-1",
-          room: "room-10",
-          customer_name: "Maria Garcia",
-          customer_email: "m.garcia@example.com",
-          customer_phone: "+234 810 123 4567",
-          booking_reference: "BK-2024-010",
-          check_in_date: "2024-12-14",
-          check_out_date: "2024-12-16",
-          number_of_nights: 2,
-          number_of_adults: 1,
-          number_of_children: 0,
-          total_amount: "280000",
-          amount_paid: "280000",
-          balance_due: "0",
-          booking_status: "checked_out",
-          payment_status: "paid",
-          booking_source: "walk_in",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "11",
-          hotel: "hotel-1",
-          room: "room-11",
-          customer_name: "Christopher Lee",
-          customer_email: "c.lee@example.com",
-          customer_phone: "+234 811 234 5678",
-          booking_reference: "BK-2024-011",
-          check_in_date: "2024-12-28",
-          check_out_date: "2024-12-31",
-          number_of_nights: 3,
-          number_of_adults: 4,
-          number_of_children: 1,
-          total_amount: "720000",
-          amount_paid: "360000",
-          balance_due: "360000",
-          booking_status: "confirmed",
-          payment_status: "partial",
-          booking_source: "online",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "12",
-          hotel: "hotel-1",
-          room: "room-12",
-          customer_name: "Nancy White",
-          customer_email: "n.white@example.com",
-          customer_phone: "+234 812 345 6789",
-          booking_reference: "BK-2024-012",
-          check_in_date: "2024-12-13",
-          check_out_date: "2024-12-15",
-          number_of_nights: 2,
-          number_of_adults: 2,
-          number_of_children: 0,
-          total_amount: "320000",
-          amount_paid: "320000",
-          balance_due: "0",
-          booking_status: "checked_out",
-          payment_status: "paid",
-          booking_source: "phone",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ];
-
-      setBookings(mockBookings);
-      // When integrating with API, replace above with:
-      // const response = await hotelService.getBookings();
-      // setBookings(response.data);
-    } catch (error) {
+      setLoading(true);
+      const data = await hotelService.getBookings();
+      setBookings(data || []);
+    } catch (error: any) {
       console.error("Error fetching bookings:", error);
+      toast.error(error.message || "Failed to fetch bookings");
       setBookings([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -440,7 +166,11 @@ export default function BookingsPage() {
         </div>
 
         {/* Bookings List */}
-        {filteredBookings.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 text-[#0F75BD] animate-spin" />
+          </div>
+        ) : filteredBookings.length === 0 ? (
           <div className="bg-[#FAFAFB] border border-[#E5E7EB] rounded-3xl p-16 text-center">
             <div className="w-16 h-16 bg-[#0F75BD]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <CalendarIcon className="w-8 h-8 text-[#0F75BD]" />
@@ -601,11 +331,10 @@ export default function BookingsPage() {
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`px-2 py-1 rounded-lg font-medium transition-colors ${
-                          currentPage === pageNum
+                        className={`px-2 py-1 rounded-lg font-medium transition-colors ${currentPage === pageNum
                             ? "bg-[#0F75BD] text-white"
                             : "hover:bg-[#FAFAFB] text-[#1A1A1A] font-regular"
-                        }`}
+                          }`}
                       >
                         {pageNum}
                       </button>

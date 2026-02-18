@@ -14,27 +14,27 @@ class AuthService {
   // ==================== AUTHENTICATION ====================
 
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>('/auth/api/auth/register', data);
+    return apiClient.post<AuthResponse>('auth/register/', data);
   }
 
   async login(data: LoginRequest): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>('/auth/api/auth/login', data);
+    return apiClient.post<AuthResponse>('auth/login/', data);
   }
 
   async getCurrentUser(): Promise<User> {
-    return apiClient.get<User>('/auth/api/auth/me');
+    return apiClient.get<User>('auth/me/');
   }
 
   async forgotPassword(data: ForgotPasswordRequest): Promise<MessageResponse> {
-    return apiClient.post<MessageResponse>('/auth/api/auth/forgot-password', data);
+    return apiClient.post<MessageResponse>('auth/forgot-password/', data);
   }
 
   async verifyOtp(data: VerifyOtpRequest): Promise<MessageResponse> {
-    return apiClient.post<MessageResponse>('/auth/api/auth/verify-otp', data);
+    return apiClient.post<MessageResponse>('auth/verify-otp/', data);
   }
 
   async resetPassword(data: ResetPasswordRequest): Promise<MessageResponse> {
-    return apiClient.post<MessageResponse>('/auth/api/auth/reset-password', data);
+    return apiClient.post<MessageResponse>('auth/reset-password/', data);
   }
 
   // ==================== TOKEN MANAGEMENT ====================

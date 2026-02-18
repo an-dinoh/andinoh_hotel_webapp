@@ -5,7 +5,6 @@ export interface FormState {
   confirmPassword: string;
   hotelAddress?: string;
   hotelLicenseNumber: string;
-  fullName?: string;
 }
 
 export interface FormErrors {

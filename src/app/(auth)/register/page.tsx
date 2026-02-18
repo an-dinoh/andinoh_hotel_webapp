@@ -9,16 +9,17 @@ import TermsAndConditions from "@/components/ui/TermsAndConditions";
 import { useState, useMemo } from "react";
 import { FormValidator, FormState } from "@/utils/FormValidator";
 
+import { authService } from "@/services/auth.service";
+import { toast } from "react-hot-toast";
+
 export default function RegisterPage() {
   const router = useRouter();
 
   const [form, setForm] = useState<FormState>({
     hotelName: "",
-    fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
-    hotelAddress: "",
     hotelLicenseNumber: "",
   });
 
@@ -42,16 +43,16 @@ export default function RegisterPage() {
     const fieldError = validator.validateField(field, value);
 
     if (field === "email") {
-      setErrors((prev) => ({ ...prev, email: fieldError }));
+      setErrors((prev: any) => ({ ...prev, email: fieldError }));
     }
 
     if (field === "confirmPassword") {
-      setErrors((prev) => ({ ...prev, confirmPassword: fieldError }));
+      setErrors((prev: any) => ({ ...prev, confirmPassword: fieldError }));
     }
 
 
     if (errors.global) {
-      setErrors((prev) => ({ ...prev, global: "" }));
+      setErrors((prev: any) => ({ ...prev, global: "" }));
     }
   };
 
@@ -72,7 +73,7 @@ export default function RegisterPage() {
     e.preventDefault();
 
     if (!isFormValid) {
-      setErrors((prev) => ({
+      setErrors((prev: any) => ({
         ...prev,
         global: "Please fill all fields and accept the Terms.",
       }));
@@ -82,20 +83,33 @@ export default function RegisterPage() {
     if (loading) return;
     setLoading(true);
 
-    // Simulate loading delay for better UX
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      const response = await authService.register({
+        email: form.email,
+        password: form.password,
+        hotel_name: form.hotelName,
+        hotel_license_number: form.hotelLicenseNumber,
+      } as any);
 
-    // Save dummy token to localStorage
-    localStorage.setItem('token', 'dummy-token');
-    localStorage.setItem('user', JSON.stringify({
-      email: form.email,
-      hotelName: form.hotelName
-    }));
+      if (response && response.access_token) {
+        // Save auth data
+        authService.saveAuth(response.access_token, response.user);
 
-    // Redirect to dashboard
-    router.push("/dashboard");
+        toast.success("Account created successfully!");
 
-    setLoading(false);
+        // Redirect to dashboard
+        router.push("/dashboard");
+      } else {
+        throw new Error("Invalid response from server");
+      }
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      const errorMessage = error.response?.data?.message || error.message || "Failed to register. Please try again.";
+      setErrors((prev: any) => ({ ...prev, global: errorMessage }));
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -138,12 +152,6 @@ export default function RegisterPage() {
           error={emailError}
         />
 
-        {/* <InputField
-//           label="Hotel Address"
-//           placeholder="Enter hotel address"
-//           value={form.hotelAddress}
-//           onChange={(e) => handleChange("hotelAddress", e.target.value)}
-//         /> */}
 
         <InputField
           label="Hotel License Number"

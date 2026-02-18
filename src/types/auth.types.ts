@@ -51,16 +51,12 @@ export interface User {
 }
 
 export interface AuthResponse {
-  error: boolean;
-  data: {
-    access_token: string;
-    refresh_token: string;
-    expires_in: number;
-    token_type: string;
-    user: User;
-    email_confirmation_required: boolean;
-  };
-  message: string;
+  access_token: string;
+  refresh_token: string;
+  expires_in?: number;
+  token_type?: string;
+  user: User;
+  email_confirmation_required?: boolean;
 }
 
 export interface MessageResponse {

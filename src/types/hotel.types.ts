@@ -47,7 +47,7 @@ export interface CreateHotelRequest {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface UpdateHotelRequest extends Partial<CreateHotelRequest> {}
+export interface UpdateHotelRequest extends Partial<CreateHotelRequest> { }
 
 // Room Types
 export type RoomType = 'standard' | 'deluxe' | 'suite' | 'presidential' | 'family' | 'twin' | 'single' | 'double' | 'triple' | 'quad';
@@ -98,7 +98,7 @@ export interface CreateRoomRequest {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface UpdateRoomRequest extends Partial<CreateRoomRequest> {}
+export interface UpdateRoomRequest extends Partial<CreateRoomRequest> { }
 
 export interface RoomFilters {
   room_type?: RoomType;
@@ -161,7 +161,7 @@ export interface CreateBookingRequest {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface UpdateBookingRequest extends Partial<CreateBookingRequest> {}
+export interface UpdateBookingRequest extends Partial<CreateBookingRequest> { }
 
 export interface BookingFilters {
   booking_status?: BookingStatus;
@@ -185,7 +185,7 @@ export interface CheckOutRequest {
 }
 
 // Staff Types
-export type StaffRole = 'owner' | 'manager' | 'receptionist' | 'front_desk_manager' | 'housekeeping' | 'maintenance' | 'other';
+export type StaffRole = 'owner' | 'manager' | 'receptionist' | 'front_desk_manager' | 'housekeeping' | 'maintenance' | 'other' | 'hotel_owner' | 'hotel_admin' | 'hotel_manager' | 'hotel_staff';
 export type Department = 'front_office' | 'housekeeping' | 'maintenance' | 'management' | 'other';
 export type InvitationStatus = 'pending' | 'registered' | 'active' | 'suspended' | 'terminated';
 
@@ -429,7 +429,7 @@ export interface CreateEventSpaceRequest {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface UpdateEventSpaceRequest extends Partial<CreateEventSpaceRequest> {}
+export interface UpdateEventSpaceRequest extends Partial<CreateEventSpaceRequest> { }
 
 export interface EventSpaceFilters {
   space_type?: EventSpaceType;

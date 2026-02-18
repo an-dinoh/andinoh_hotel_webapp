@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { GlobalErrorBoundary } from "@/components/ui/GlobalErrorBoundary";
 
 const rational = localFont({
   src: [
@@ -82,9 +83,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${rational.variable} ${rational.className} antialiased`}>
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${rational.variable} ${rational.className} antialiased`} suppressHydrationWarning={true}>
+        <GlobalErrorBoundary>
+          {children}
+        </GlobalErrorBoundary>
       </body>
     </html>
   );

@@ -6,6 +6,9 @@ import { Plus, Search, Eye, ChevronDown, Sparkles, Users, Maximize2, Calendar, B
 import Image from "next/image";
 import Loading from "@/components/ui/Loading";
 import { EventSpace, EventSpaceType } from "@/types/hotel.types";
+import { hotelService } from "@/services/hotel.service";
+import { toast } from "react-hot-toast";
+import ErrorState from "@/components/ui/ErrorState";
 
 type EventSpaceDetailTab = "pictures" | "videos" | "reviews" | "3d-tour" | "equipment";
 
@@ -19,6 +22,7 @@ export default function EventSpacesPage() {
   const [sortBy, setSortBy] = useState("newly_added");
   const [selectedSpace, setSelectedSpace] = useState<EventSpace | null>(null);
   const [activeTab, setActiveTab] = useState<EventSpaceDetailTab>("pictures");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEventSpaces();
@@ -27,94 +31,18 @@ export default function EventSpacesPage() {
   const fetchEventSpaces = async () => {
     try {
       setLoading(true);
+      setError(null);
+      const filters: any = {};
+      if (filterType !== "all") {
+        filters.space_type = filterType;
+      }
 
-      // Mock data for UI development
-      const mockSpaces: EventSpace[] = [
-        {
-          id: "1",
-          title: "Grand Ballroom",
-          description: "Elegant ballroom perfect for weddings, galas, and large corporate events. Features crystal chandeliers, high ceilings, and a built-in stage.",
-          space_type: "ballroom",
-          space_size: 5000,
-          max_capacity_theater: 500,
-          max_capacity_banquet: 350,
-          max_capacity_cocktail: 600,
-          min_capacity: 100,
-          base_rate_per_hour: "500",
-          base_rate_half_day: "2500",
-          base_rate_full_day: "4500",
-          weekend_rate_multiplier: 1.5,
-          has_natural_light: false,
-          has_audio_visual: true,
-          has_stage: true,
-          has_dance_floor: true,
-          has_kitchen_access: true,
-          has_outdoor_access: false,
-          ceiling_height: 20,
-          floor_level: "Ground Floor",
-          is_available: true,
-          total_spaces: 1,
-          hotel: "",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "2",
-          title: "Executive Boardroom",
-          description: "Premium boardroom designed for high-level meetings and presentations. Equipped with state-of-the-art technology and comfortable seating.",
-          space_type: "boardroom",
-          space_size: 800,
-          max_capacity_theater: 40,
-          max_capacity_banquet: 24,
-          max_capacity_cocktail: 50,
-          min_capacity: 10,
-          base_rate_per_hour: "150",
-          base_rate_half_day: "600",
-          base_rate_full_day: "1000",
-          has_natural_light: true,
-          has_audio_visual: true,
-          has_stage: false,
-          has_dance_floor: false,
-          has_kitchen_access: false,
-          has_outdoor_access: false,
-          ceiling_height: 12,
-          floor_level: "10th Floor",
-          is_available: true,
-          total_spaces: 2,
-          hotel: "",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: "3",
-          title: "Rooftop Terrace",
-          description: "Stunning outdoor venue with panoramic city views. Ideal for cocktail receptions, product launches, and intimate gatherings.",
-          space_type: "rooftop_terrace",
-          space_size: 3000,
-          max_capacity_theater: 150,
-          max_capacity_banquet: 100,
-          max_capacity_cocktail: 200,
-          min_capacity: 30,
-          base_rate_per_hour: "400",
-          base_rate_half_day: "2000",
-          base_rate_full_day: "3500",
-          weekend_rate_multiplier: 1.3,
-          has_natural_light: true,
-          has_audio_visual: true,
-          has_stage: false,
-          has_dance_floor: false,
-          has_kitchen_access: true,
-          has_outdoor_access: true,
-          ceiling_height: 0,
-          floor_level: "Rooftop",
-          is_available: false,
-          total_spaces: 1,
-          hotel: "",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ];
-      setEventSpaces(mockSpaces);
+      const data = await hotelService.getEventSpaces(filters);
+      setEventSpaces(data || []);
+    } catch (err: any) {
+      console.error("Error fetching event spaces:", err);
+      setError(err.message || "Failed to fetch event spaces");
+      setEventSpaces([]);
     } finally {
       setLoading(false);
     }
@@ -131,10 +59,22 @@ export default function EventSpacesPage() {
     return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
 
-  if (loading) {
+  if (loading && eventSpaces.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loading size="lg" text="Loading event spaces..." />
+      </div>
+    );
+  }
+
+  if (error && eventSpaces.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-6 bg-white">
+        <ErrorState
+          title="Couldn't load event spaces"
+          message={error}
+          onRetry={fetchEventSpaces}
+        />
       </div>
     );
   }
@@ -231,11 +171,10 @@ export default function EventSpacesPage() {
               <button
                 key={type.value}
                 onClick={() => setFilterType(type.value as EventSpaceType | "all")}
-                className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
-                  filterType === type.value
-                    ? "bg-[#0F75BD] text-white"
-                    : "bg-[#F5F5F5] text-[#1A1A1A] hover:bg-[#E5E7EB]"
-                }`}
+                className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${filterType === type.value
+                  ? "bg-[#0F75BD] text-white"
+                  : "bg-[#F5F5F5] text-[#1A1A1A] hover:bg-[#E5E7EB]"
+                  }`}
               >
                 {type.label}
               </button>
@@ -313,11 +252,10 @@ export default function EventSpacesPage() {
                       {/* Availability Badge */}
                       <div className="absolute bottom-3 right-3">
                         <span
-                          className={`px-2.5 py-1 text-xs font-semibold rounded-lg ${
-                            space.is_available
-                              ? "bg-[#ECFDF5] text-green-700"
-                              : "bg-[#FEE2E2] text-red-700"
-                          }`}
+                          className={`px-2.5 py-1 text-xs font-semibold rounded-lg ${space.is_available
+                            ? "bg-[#ECFDF5] text-green-700"
+                            : "bg-[#FEE2E2] text-red-700"
+                            }`}
                         >
                           {space.is_available ? "Available" : "Booked"}
                         </span>

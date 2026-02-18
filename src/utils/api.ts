@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hotel-api-gateway.onrender.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://andinoh-backend.onrender.com/api/v1';
 
 // DEBUG logs muted for production
 
@@ -42,6 +42,22 @@ class ApiClient {
         return response;
       },
       (error) => {
+        const { toast } = require('react-hot-toast');
+
+        // Handle 401 Unauthorized - Auth expired or invalid
+        if (error.response?.status === 401) {
+          if (typeof window !== 'undefined') {
+            const currentPath = window.location.pathname;
+            // Only redirect if not already on an auth page to avoid loops
+            if (!['/login', '/register'].includes(currentPath)) {
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              toast.error('Session expired. Please log in again.');
+              window.location.href = '/login';
+            }
+          }
+        }
+
         // Handle 404 errors
         if (error.response?.status === 404) {
           const notFoundError = new Error('Resource not found') as Error & { response?: unknown };
@@ -60,11 +76,18 @@ class ApiClient {
         // Better error message for timeouts
         if (error.code === 'ECONNABORTED' || message.includes('timeout')) {
           message = 'Request timed out. The server might be starting up (this can take 30-60 seconds on first request). Please try again.';
+          toast.error(message, { id: 'api-timeout' }); // deduplicate with id
         }
 
         // Better error message for network errors
         if (error.code === 'ERR_NETWORK' || !error.response) {
           message = 'Network error. The API server might be unreachable. Please wait 30-60 seconds for it to wake up, then try again.';
+          toast.error(message, { id: 'api-network-error' });
+        }
+
+        // Global toast for server errors
+        if (error.response?.status && error.response.status >= 500) {
+          toast.error('Internal server error. Our team has been notified.', { id: 'server-error' });
         }
 
         const apiError = new Error(message) as Error & { response?: unknown };

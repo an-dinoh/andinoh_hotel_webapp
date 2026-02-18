@@ -3,8 +3,10 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
-import { TabType } from "@/types/staff.types";
-import { mockUsers, mockAdmins, mockRoles, mockStats } from "@/data/mockStaffData";
+import { TabType, Role } from "@/types/staff.types";
+import { hotelService } from "@/services/hotel.service";
+import { HotelStaff } from "@/types/hotel.types";
+import { toast } from "react-hot-toast";
 import StatsCard from "@/components/staff/StatsCard";
 import UsersTable from "@/components/staff/UsersTable";
 import AdminsTable from "@/components/staff/AdminsTable";
@@ -21,6 +23,41 @@ function StaffContent() {
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
   const [showCreateAdminModal, setShowCreateAdminModal] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [staff, setStaff] = useState<HotelStaff[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [rolesLoading, setRolesLoading] = useState(false);
+
+  const fetchStaff = async () => {
+    try {
+      setLoading(true);
+      const data = await hotelService.getStaff();
+      setStaff(data || []);
+    } catch (error: any) {
+      console.error("Error fetching staff:", error);
+      toast.error(error.message || "Failed to fetch staff");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      setRolesLoading(true);
+      const data = await hotelService.getRoles();
+      setRoles(data || []);
+    } catch (error: any) {
+      console.error("Error fetching roles:", error);
+      toast.error(error.message || "Failed to fetch roles");
+    } finally {
+      setRolesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStaff();
+    fetchRoles();
+  }, []);
 
   // Update active tab when URL parameter changes
   useEffect(() => {
@@ -36,11 +73,18 @@ function StaffContent() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedUsers.length === mockUsers.length) {
+    if (selectedUsers.length === staff.length) {
       setSelectedUsers([]);
     } else {
-      setSelectedUsers(mockUsers.map((u) => u.id));
+      setSelectedUsers(staff.map((u) => u.id));
     }
+  };
+
+  const stats = {
+    total: staff.length,
+    active: staff.filter(s => s.is_active).length,
+    inactive: staff.filter(s => !s.is_active).length,
+    pending: staff.filter(s => s.invitation_status === 'pending').length
   };
 
   const handleCreateClick = () => {
@@ -85,10 +129,10 @@ function StaffContent() {
         {/* Stats Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Total Users", value: mockStats.totalUsers, bg: "bg-[#F5F5F5]" },
-            { label: "Active Users", value: mockStats.activeUsers, bg: "bg-[#F0F9FF]" },
-            { label: "Inactive Users", value: mockStats.inactiveUsers, bg: "bg-[#FEF3C7]" },
-            { label: "Deleted Users", value: mockStats.deletedUsers, bg: "bg-[#FEE2E2]" },
+            { label: "Total Staff", value: stats.total, bg: "bg-[#F5F5F5]" },
+            { label: "Active Staff", value: stats.active, bg: "bg-[#F0F9FF]" },
+            { label: "Inactive Staff", value: stats.inactive, bg: "bg-[#FEF3C7]" },
+            { label: "Pending Invitations", value: stats.pending, bg: "bg-[#FEE2E2]" },
           ].map((stat, index) => (
             <div key={index} className={`${stat.bg} rounded-2xl p-5`}>
               <p className="text-[#5C5B59] text-sm mb-1">{stat.label}</p>
@@ -103,31 +147,28 @@ function StaffContent() {
             <div className="flex">
               <button
                 onClick={() => setActiveTab("users")}
-                className={`px-8 py-4 font-medium text-sm  transition-colors relative ${
-                  activeTab === "users"
-                    ? "text-[#0F75BD] border-b-2 border-[#0F75BD]"
-                    : "text-[#5C5B59] hover:text-[#1A1A1A]"
-                }`}
+                className={`px-8 py-4 font-medium text-sm  transition-colors relative ${activeTab === "users"
+                  ? "text-[#0F75BD] border-b-2 border-[#0F75BD]"
+                  : "text-[#5C5B59] hover:text-[#1A1A1A]"
+                  }`}
               >
                 Users
               </button>
               <button
                 onClick={() => setActiveTab("admins")}
-                className={`px-8 py-4 font-medium text-sm transition-colors relative ${
-                  activeTab === "admins"
-                    ? "text-[#0F75BD] border-b-2 border-[#0F75BD]"
-                    : "text-[#5C5B59] hover:text-[#1A1A1A]"
-                }`}
+                className={`px-8 py-4 font-medium text-sm transition-colors relative ${activeTab === "admins"
+                  ? "text-[#0F75BD] border-b-2 border-[#0F75BD]"
+                  : "text-[#5C5B59] hover:text-[#1A1A1A]"
+                  }`}
               >
                 Admins
               </button>
               <button
                 onClick={() => setActiveTab("roles")}
-                className={`px-8 py-4 font-medium text-sm transition-colors relative ${
-                  activeTab === "roles"
-                    ? "text-[#0F75BD] border-b-2 border-[#0F75BD]"
-                    : "text-[#5C5B59] hover:text-[#1A1A1A]"
-                }`}
+                className={`px-8 py-4 font-medium text-sm transition-colors relative ${activeTab === "roles"
+                  ? "text-[#0F75BD] border-b-2 border-[#0F75BD]"
+                  : "text-[#5C5B59] hover:text-[#1A1A1A]"
+                  }`}
               >
                 Roles and Permissions
               </button>
@@ -137,24 +178,52 @@ function StaffContent() {
           {/* Tab Content */}
           {activeTab === "users" && (
             <UsersTable
-              users={mockUsers}
+              users={staff}
+              roles={roles}
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
               selectedUsers={selectedUsers}
               onToggleUser={toggleUserSelection}
               onToggleAll={toggleSelectAll}
+              loading={loading}
+              onRefresh={fetchStaff}
             />
           )}
 
-          {activeTab === "admins" && <AdminsTable admins={mockAdmins} />}
+          {activeTab === "admins" && (
+            <AdminsTable
+              admins={staff.filter(s => s.role === 'hotel_owner' || s.role === 'hotel_admin' || s.role === 'hotel_manager')}
+              roles={roles}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              loading={loading}
+              onRefresh={fetchStaff}
+            />
+          )}
 
-          {activeTab === "roles" && <RolesList roles={mockRoles} />}
+          {activeTab === "roles" && (
+            <RolesList
+              roles={roles}
+              loading={rolesLoading}
+              onRefresh={fetchRoles}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+            />
+          )}
         </div>
       </div>
 
       {/* Modals */}
-      <CreateUserModal isOpen={showCreateUserModal} onClose={() => setShowCreateUserModal(false)} />
-      <CreateAdminModal isOpen={showCreateAdminModal} onClose={() => setShowCreateAdminModal(false)} />
+      <CreateUserModal
+        isOpen={showCreateUserModal}
+        onClose={() => setShowCreateUserModal(false)}
+        onSuccess={fetchStaff}
+      />
+      <CreateAdminModal
+        isOpen={showCreateAdminModal}
+        onClose={() => setShowCreateAdminModal(false)}
+        onSuccess={fetchStaff}
+      />
     </div>
   );
 }
