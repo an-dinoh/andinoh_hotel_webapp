@@ -20,13 +20,18 @@ class ApiClient {
   }
 
   private setupInterceptors(): void {
-    // Request interceptor - Add auth token to all requests
+    // Request interceptor - Add auth token and currency to all requests
     this.client.interceptors.request.use(
       (config) => {
         if (typeof window !== 'undefined') {
           const token = localStorage.getItem('token');
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+          }
+
+          const currency = localStorage.getItem('user_currency');
+          if (currency) {
+            config.headers['X-User-Currency'] = currency;
           }
         }
         return config;

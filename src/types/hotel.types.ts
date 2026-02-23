@@ -108,6 +108,12 @@ export interface RoomFilters {
   has_sea_view?: boolean;
   bed_type?: BedType;
   min_occupancy?: number;
+  city_id?: string;
+  area_id?: string;
+  state_id?: string;
+  country_id?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 // Booking Types
@@ -450,4 +456,62 @@ export interface EventSpaceImage {
   is_primary: boolean;
   order: number;
   created_at: string;
+}
+
+// Currency Types
+export interface Currency {
+  id: string;
+  name: string;
+  code: string;
+  symbol: string;
+  rate: string;
+  is_active: boolean;
+}
+
+export interface CurrencyConversionResponse {
+  from: string;
+  to: string;
+  amount: number;
+  converted_amount: number;
+  rate: string;
+}
+
+// Feed Types
+export interface FeedItem extends Hotel {
+  distance?: number;
+  weighted_score?: number;
+  display_price?: {
+    amount: string;
+    currency: string;
+    label: string;
+  };
+}
+
+export interface FeedSection {
+  id: string;
+  title: string;
+  type: 'HORIZONTAL_HOTEL_LIST' | 'GRID_HOTEL_LIST';
+  items: FeedItem[];
+}
+
+export interface HotelFeed {
+  personalized_greeting: string;
+  sections: FeedSection[];
+}
+
+// Flight / Airport Types
+export interface Airport {
+  id: string;
+  name: string;
+  iata_code: string;
+  city: string;
+  country: string;
+  is_major: boolean;
+}
+
+// Device Types
+export interface DeviceRegistration {
+  registration_id: string;
+  type: 'android' | 'ios' | 'web';
+  name: string;
 }

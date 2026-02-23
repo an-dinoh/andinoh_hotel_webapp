@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { Search, ChevronDown, Bell, Calendar, CheckCircle, AlertCircle, User, DollarSign, Clock, X, Settings, LogOut, UserCircle, Building2, Shield } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import NotificationIcon from "@/icons/NotificationIcon";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export default function Topbar() {
+  const { currencies, activeCurrency, isLoading, setCurrency } = useCurrency();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
@@ -113,6 +115,39 @@ export default function Topbar() {
           <span className="text-sm font-semibold text-[#059669]">Verified</span>
         </div>
 
+        {/* Currency Switcher */}
+        <div className="relative group">
+          <button className="flex items-center gap-2 px-3 py-2 bg-[#FAFAFB] border border-[#E5E7EB] rounded-xl hover:bg-[#F0F9FF] transition-colors">
+            <DollarSign className="w-4 h-4 text-[#5C5B59]" />
+            <span className="text-sm font-semibold text-[#1A1A1A]">
+              {activeCurrency?.code || 'NGN'} ({activeCurrency?.symbol || '₦'})
+            </span>
+            <ChevronDown className="w-4 h-4 text-[#5C5B59]" />
+          </button>
+
+          <div className="absolute right-0 mt-2 w-48 bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden shadow-xl z-50 invisible group-hover:visible translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-200">
+            <div className="py-2">
+              {isLoading ? (
+                <div className="px-4 py-2 text-xs text-gray-500">Loading currencies...</div>
+              ) : (
+                currencies.map((currency) => (
+                  <button
+                    key={currency.id}
+                    onClick={() => setCurrency(currency.code)}
+                    className={`w-full px-4 py-3 hover:bg-[#FAFAFB] transition-colors flex items-center justify-between text-left ${activeCurrency?.code === currency.code ? 'bg-[#F0F9FF] text-[#0F75BD]' : 'text-[#1A1A1A]'
+                      }`}
+                  >
+                    <span className="text-sm font-semibold">{currency.name}</span>
+                    <span className="text-xs font-medium text-[#5C5B59] bg-[#EEF0F2] px-2 py-0.5 rounded-lg">
+                      {currency.symbol} {currency.code}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Notification Icon */}
         <div className="relative" ref={notificationRef}>
           <button
@@ -153,9 +188,8 @@ export default function Topbar() {
                   return (
                     <div
                       key={notification.id}
-                      className={`px-6 py-4 border-b border-[#E5E7EB] hover:bg-[#FAFAFB] transition-colors cursor-pointer ${
-                        !notification.read ? "bg-[#F0F9FF]" : ""
-                      }`}
+                      className={`px-6 py-4 border-b border-[#E5E7EB] hover:bg-[#FAFAFB] transition-colors cursor-pointer ${!notification.read ? "bg-[#F0F9FF]" : ""
+                        }`}
                     >
                       <div className="flex items-start gap-3">
                         <div className={`w-10 h-10 ${notification.iconBg} rounded-xl flex items-center justify-center flex-shrink-0`}>

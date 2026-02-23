@@ -1,0 +1,51 @@
+(node:81111) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/travis/Software/andinoh_hotel_webapp/scripts/test_manager_profile.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/travis/Software/andinoh_hotel_webapp/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀 Starting Comprehensive Hotel Manager Profile API Test Suite
+Target: https://andinoh-backend.onrender.com/api/v1
+Using Verified Owner: hotel_owner_1_5fceeb2a@example.com
+
+1️⃣  Logging in as Owner...
+✅ Owner Logged In
+
+3️⃣  Getting Owner Profile (GET auth/profile/)...
+✅ Profile Retrieved: Success
+
+4️⃣  Updating Owner Profile (PATCH auth/profile/)...
+✅ Profile Updated
+
+5️⃣  Checking Invitation for non-invited email (Verifying Backend Improvement)...
+ℹ️ Invitation Check (Not Found) still returns 404, but with data: {
+  "invitation_found": false,
+  "message": "No staff invitation found for your email"
+}
+
+6️⃣  Logging in as Staff (staff_test@example.com)...
+✅ Staff Logged In
+
+7️⃣  Checking My Own Staff Invitation (GET hotels/staff/check-invitation/)...
+✅ My Invitation Status: {
+  "invitation_found": true,
+  "invitation_status": "active",
+  "hotel_name": "The Grand Budapest Hotel",
+  "role": "General Manager",
+  "department": "Management",
+  "needs_registration": false,
+  "needs_activation": false,
+  "is_active": true
+}
+
+8️⃣  Attempting Staff Profile Registration (POST hotels/staff/register/)...
+ℹ️ Staff Registration status: 500
+⚠️ Backend 500 error still present in "register" serializer.
+
+9️⃣  Getting My Staff Profile (GET hotels/staff/me/)...
+ℹ️ Staff Profile status: 500
+⚠️ Backend 500 error still present in "me" serializer.
+
+1️⃣1️⃣ Changing Staff Password (POST hotels/staff/change-password/)...
+✅ Staff Password Changed
+✅ Staff Password Reverted
+
+✨ ALL TESTS COMPLETED ✨

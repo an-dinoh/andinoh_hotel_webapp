@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { User, Bell, Lock, Building2, ChevronRight, Mail, Globe, MapPin, Clock, Star, Upload, Shield, CreditCard } from "lucide-react";
+import { useState, useEffect } from "react";
+import { User as UserIcon, Bell, Lock, Building2, ChevronRight, Mail, Globe, MapPin, Clock, Star, Upload, Shield, CreditCard } from "lucide-react";
 import Image from "next/image";
+import { authService } from "@/services/auth.service";
+import { hotelService } from "@/services/hotel.service";
+import { toast } from "react-hot-toast";
+import { User } from "@/types/auth.types";
+import { Hotel } from "@/types/hotel.types";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -11,31 +16,78 @@ export default function SettingsPage() {
 
   // Form state
   const [profileForm, setProfileForm] = useState({
-    fullName: "Hotel Manager",
-    email: "manager@hotel.com",
-    phone: "+234 123 456 7890",
+    fullName: "",
+    email: "",
+    phone: "",
   });
+
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const [hotelForm, setHotelForm] = useState({
-    name: "Grand Plaza Hotel",
-    description: "A luxurious 5-star hotel in the heart of the city offering world-class amenities and exceptional service.",
-    hotelType: "luxury",
-    starRating: 5,
-    address: "123 Main Street",
-    city: "Lagos",
-    state: "Lagos",
-    country: "Nigeria",
-    postalCode: "100001",
-    phone: "+234 555 123 4567",
-    email: "info@grandplaza.com",
-    website: "https://grandplaza.com",
-    checkInTime: "15:00",
-    checkOutTime: "11:00",
-    totalRooms: 150,
+    name: "",
+    description: "",
+    hotelType: "",
+    starRating: 0,
+    address: "",
+    city: "",
+    state: "",
+    country: "",
+    postalCode: "",
+    phone: "",
+    email: "",
+    website: "",
+    checkInTime: "",
+    checkOutTime: "",
+    totalRooms: 0,
   });
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [user, hotel] = await Promise.all([
+          authService.getCurrentUser(),
+          hotelService.getMyHotel().catch(() => null)
+        ]);
+
+        if (user) {
+          setProfileForm({
+            fullName: user.full_name || "",
+            email: user.email || "",
+            phone: user.phone_number || "",
+          });
+        }
+
+        if (hotel) {
+          setHotelForm({
+            name: hotel.name || "",
+            description: hotel.description || "",
+            hotelType: hotel.hotel_type || "",
+            starRating: hotel.star_rating || 0,
+            address: hotel.address || "",
+            city: hotel.city || "",
+            state: hotel.state || "",
+            country: hotel.country || "",
+            postalCode: hotel.postal_code || "",
+            phone: hotel.phone || "",
+            email: hotel.email || "",
+            website: hotel.website || "",
+            checkInTime: hotel.check_in_time || "",
+            checkOutTime: hotel.check_out_time || "",
+            totalRooms: hotel.total_rooms || 0,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching settings data:", error);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const tabs = [
-    { id: "profile", label: "Profile", icon: User, description: "Manage your personal information" },
+    { id: "profile", label: "Profile", icon: UserIcon, description: "Manage your personal information" },
     { id: "hotel", label: "Hotel Details", icon: Building2, description: "Update your hotel information" },
     { id: "notifications", label: "Notifications", icon: Bell, description: "Configure notification preferences" },
     { id: "security", label: "Security", icon: Lock, description: "Password and security settings" },
@@ -43,9 +95,39 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setSaving(false);
-    setEditing(false);
+    try {
+      if (activeTab === "profile") {
+        await authService.updateProfile({
+          full_name: profileForm.fullName,
+          phone_number: profileForm.phone,
+        });
+        toast.success("Profile updated successfully");
+      } else if (activeTab === "hotel") {
+        await hotelService.updateHotel({
+          name: hotelForm.name,
+          description: hotelForm.description,
+          hotel_type: hotelForm.hotelType as any,
+          star_rating: hotelForm.starRating as any,
+          address: hotelForm.address,
+          city: hotelForm.city,
+          state: hotelForm.state,
+          country: hotelForm.country,
+          postal_code: hotelForm.postalCode,
+          phone: hotelForm.phone,
+          email: hotelForm.email,
+          website: hotelForm.website,
+          check_in_time: hotelForm.checkInTime,
+          check_out_time: hotelForm.checkOutTime,
+          total_rooms: hotelForm.totalRooms,
+        });
+        toast.success("Hotel details updated successfully");
+      }
+      setEditing(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save changes");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -70,11 +152,10 @@ export default function SettingsPage() {
                     setActiveTab(tab.id);
                     setEditing(false);
                   }}
-                  className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all ${
-                    isActive
-                      ? "bg-[#0F75BD] text-white"
-                      : "text-[#5C5B59] hover:bg-white hover:text-[#0F75BD]"
-                  }`}
+                  className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all ${isActive
+                    ? "bg-[#0F75BD] text-white"
+                    : "text-[#5C5B59] hover:bg-white hover:text-[#0F75BD]"
+                    }`}
                 >
                   <Icon className={`w-5 h-5 ${isActive ? "text-white" : ""}`} />
                   <div className="flex-1 text-left">
@@ -94,14 +175,14 @@ export default function SettingsPage() {
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto scrollbar-hide p-8">
-            {/* Profile Tab */}
-            {activeTab === "profile" && (
-              <div className="max-w-4xl space-y-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-[#1A1A1A]">Personal Profile</h2>
-                    <p className="text-[#5C5B59] text-sm mt-1">Update your personal information</p>
-                  </div>
+          {/* Profile Tab */}
+          {activeTab === "profile" && (
+            <div className="max-w-4xl space-y-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-[#1A1A1A]">Personal Profile</h2>
+                  <p className="text-[#5C5B59] text-sm mt-1">Update your personal information</p>
+                </div>
                 {!editing ? (
                   <button
                     onClick={() => setEditing(true)}

@@ -12,12 +12,15 @@ import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
 import BookingsOverviewCard from "@/components/dashboard/BookingsOverviewCard";
 import RevenueOverviewCard from "@/components/dashboard/RevenueOverviewCard";
 import AnalyticsChart from "@/components/dashboard/AnalyticsChart";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import ActivitiesSection from "@/components/dashboard/ActivitiesSection";
 import PerformanceCard from "@/components/dashboard/PerformanceCard";
 import ReviewsCard from "@/components/dashboard/ReviewsCard";
 import ErrorState from "@/components/ui/ErrorState";
 
 export default function DashboardPage() {
+  const { activeCurrency } = useCurrency();
+  const currencySymbol = activeCurrency?.symbol || "₦";
   const router = useRouter();
   const [currentUser] = useState(authService.getUser());
   const [loading, setLoading] = useState(true);
@@ -103,11 +106,11 @@ export default function DashboardPage() {
   const revenueItems = [
     {
       label: "Today's Revenue",
-      amount: `₦${parseFloat(stats?.revenue_today || "0").toLocaleString()}`,
+      amount: `${currencySymbol}${parseFloat(stats?.revenue_today || "0").toLocaleString()}`,
     },
     {
       label: "This Week",
-      amount: `₦${parseFloat(stats?.revenue_this_week || "0").toLocaleString()}`,
+      amount: `${currencySymbol}${parseFloat(stats?.revenue_this_week || "0").toLocaleString()}`,
     },
   ];
 
@@ -151,7 +154,7 @@ export default function DashboardPage() {
           />
 
           <RevenueOverviewCard
-            totalRevenue={`₦${parseFloat(stats?.revenue_this_month || "0").toLocaleString()}`}
+            totalRevenue={`${parseFloat(stats?.revenue_this_month || "0").toLocaleString()}`}
             items={revenueItems}
           />
         </div>

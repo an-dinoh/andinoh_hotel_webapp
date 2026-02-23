@@ -22,7 +22,11 @@ class AuthService {
   }
 
   async getCurrentUser(): Promise<User> {
-    return apiClient.get<User>('auth/me/');
+    return apiClient.get<User>('auth/profile/');
+  }
+
+  async updateProfile(data: Partial<User>): Promise<User> {
+    return apiClient.patch<User>('auth/profile/', data);
   }
 
   async forgotPassword(data: ForgotPasswordRequest): Promise<MessageResponse> {

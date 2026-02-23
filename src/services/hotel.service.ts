@@ -34,6 +34,8 @@ import {
   EventSpaceFilters,
   BookingTrend,
   RevenueByRoomType,
+  HotelFeed,
+  DeviceRegistration,
 } from '@/types/hotel.types';
 
 class HotelService {
@@ -41,6 +43,12 @@ class HotelService {
 
   async getMyHotel(): Promise<Hotel> {
     return apiClient.get<Hotel>('hotels/my-hotel/');
+  }
+
+  async getFeed(latitude?: number, longitude?: number): Promise<HotelFeed> {
+    return apiClient.get<HotelFeed>('hotels/feed/', {
+      params: { latitude, longitude }
+    });
   }
 
   async createHotel(data: CreateHotelRequest): Promise<Hotel> {
@@ -130,7 +138,27 @@ class HotelService {
   }
 
   async changeStaffRole(staffId: string, data: ChangeStaffRoleRequest): Promise<HotelStaff> {
-    return apiClient.patch<HotelStaff>(`hotels/staff/${staffId}/change-role/`, data);
+    return apiClient.post<HotelStaff>(`hotels/staff/${staffId}/change-role/`, data);
+  }
+
+  async getMyStaffProfile(): Promise<{ staff: HotelStaff; hotel: any; permissions: string[]; is_manager: boolean }> {
+    return apiClient.get<{ staff: HotelStaff; hotel: any; permissions: string[]; is_manager: boolean }>('hotels/staff/me/');
+  }
+
+  async updateMyStaffProfile(data: UpdateStaffProfileRequest): Promise<HotelStaff> {
+    return apiClient.patch<HotelStaff>('hotels/staff/me/update/', data);
+  }
+
+  async checkStaffInvitation(email: string): Promise<{ pending: boolean }> {
+    return apiClient.get<{ pending: boolean }>('hotels/staff/check-invitation/', { params: { email } });
+  }
+
+  async registerStaff(data: any): Promise<HotelStaff> {
+    return apiClient.post<HotelStaff>('hotels/staff/register/', data);
+  }
+
+  async changeStaffPassword(data: ChangePasswordRequest): Promise<void> {
+    return apiClient.post<void>('hotels/staff/change-password/', data);
   }
 
   async updateStaff(staffId: string, data: Partial<HotelStaff>): Promise<HotelStaff> {
@@ -143,6 +171,10 @@ class HotelService {
 
   async getRoles(): Promise<any[]> {
     return apiClient.get<any[]>('hotels/roles/');
+  }
+
+  async registerDevice(data: DeviceRegistration): Promise<void> {
+    return apiClient.post<void>('customers/devices/', data);
   }
 
   async deleteRole(id: string): Promise<void> {

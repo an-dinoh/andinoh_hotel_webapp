@@ -10,11 +10,16 @@ interface RevenueOverviewCardProps {
   items: RevenueItem[];
 }
 
+import { useCurrency } from "@/contexts/CurrencyContext";
+
 export default function RevenueOverviewCard({
   totalRevenue,
-  currency = "₦",
+  currency,
   items
 }: RevenueOverviewCardProps) {
+  const { activeCurrency } = useCurrency();
+  const displayCurrency = currency || activeCurrency?.symbol || "₦";
+
   return (
     <div className="bg-[#FAFAFB] border-[0.5px] border-[#C8CFD5] rounded-3xl p-4 flex-1">
       <div className="flex items-center gap-3 mb-6">
@@ -34,7 +39,7 @@ export default function RevenueOverviewCard({
           </svg>
         </div>
         <h2 className="text-base font-semibold text-[#1A1A1A]">
-          Revenue Overview ({currency}{totalRevenue})
+          Revenue Overview ({displayCurrency}{totalRevenue})
         </h2>
       </div>
 
@@ -50,7 +55,7 @@ export default function RevenueOverviewCard({
                   {item.label}
                 </p>
                 <p className="text-xl font-bold text-[#1A1A1A]">
-                  {currency} {item.amount}
+                  {displayCurrency} {item.amount}
                 </p>
               </div>
               <span className="text-sm text-[#5C5B59] bg-[#EEF0F2] w-8 h-8 flex items-center justify-center rounded-full">
