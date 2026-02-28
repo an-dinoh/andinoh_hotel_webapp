@@ -31,8 +31,8 @@ function StaffContent() {
   const fetchStaff = async () => {
     try {
       setLoading(true);
-      const data = await hotelService.getStaff();
-      setStaff(data || []);
+      const response = await hotelService.getStaff();
+      setStaff(response.results || []);
     } catch (error: any) {
       console.error("Error fetching staff:", error);
       toast.error(error.message || "Failed to fetch staff");
@@ -44,8 +44,8 @@ function StaffContent() {
   const fetchRoles = async () => {
     try {
       setRolesLoading(true);
-      const data = await hotelService.getRoles();
-      setRoles(data || []);
+      const response = await hotelService.getRoles();
+      setRoles(response.results || []);
     } catch (error: any) {
       console.error("Error fetching roles:", error);
       toast.error(error.message || "Failed to fetch roles");
@@ -53,6 +53,7 @@ function StaffContent() {
       setRolesLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchStaff();

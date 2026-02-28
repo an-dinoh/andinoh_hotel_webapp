@@ -21,24 +21,28 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         const initCurrency = async () => {
             try {
-                const availableCurrencies = await currencyService.getCurrencies();
+                const response = await currencyService.getCurrencies();
+                const availableCurrencies = response.results || [];
+
                 setCurrencies(availableCurrencies);
 
                 const storedCurrencyCode = localStorage.getItem('user_currency');
-                if (storedCurrencyCode) {
+                if (storedCurrencyCode && availableCurrencies.length > 0) {
                     const found = availableCurrencies.find(c => c.code === storedCurrencyCode);
                     if (found) {
                         setActiveCurrency(found);
                     } else {
                         setActiveCurrency(availableCurrencies[0] || null);
                     }
-                } else {
+                } else if (availableCurrencies.length > 0) {
                     // Default to NGN if available, else first one
                     const defaultCurrency = availableCurrencies.find(c => c.code === 'NGN') || availableCurrencies[0];
                     setActiveCurrency(defaultCurrency || null);
                     if (defaultCurrency) {
                         localStorage.setItem('user_currency', defaultCurrency.code);
                     }
+                } else {
+                    setActiveCurrency(null);
                 }
             } catch (error) {
                 console.error('Failed to initialize currency:', error);

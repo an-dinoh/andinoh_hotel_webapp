@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Hotel, ChevronLeft, Menu, Building2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { authService } from "@/services/auth.service";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 import LogoutIcon from "@/icons/LogoutIcon";
 import BookingIcon from "@/icons/BookingIcon";
@@ -27,15 +28,15 @@ const navigationMain = [
   { name: "Dashboard", href: "/dashboard", icon: DashboardIcon, badge: null },
   { name: "Rooms", href: "/rooms", icon: BookingIcon, badge: null },
   { name: "Event Spaces", href: "/event-spaces", icon: EventIcon, badge: null },
-  { name: "Bookings", href: "/bookings", icon: CalendarIcon, badge: "3" },
+  { name: "Bookings", href: "/bookings", icon: CalendarIcon, badge: null },
   { name: "Wallet", href: "/wallet", icon: WalletIcon, badge: null },
-  { name: "Chats", href: "/chats", icon: MessageIcon, badge: "1" },
+  { name: "Chats", href: "/chats", icon: MessageIcon, badge: null },
   { name: "Staff", href: "/staff", icon: PeopleIcon, badge: null },
 ];
 
 const navigationSecondary = [
   { name: "Settings", href: "/settings", icon: SettingIcon, badge: null },
-  { name: "Reports", href: "/reports", icon: DangerIcon, badge:  null },
+  { name: "Reports", href: "/reports", icon: DangerIcon, badge: null },
   { name: "Help & Support", href: "/help", icon: HelpIcon, badge: null },
 ];
 
@@ -46,6 +47,12 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { notifications } = useNotifications();
+
+  // Count unread chat notifications — reset when user is on /chats
+  const chatUnreadCount = pathname === "/chats"
+    ? 0
+    : notifications.filter(n => n.type === "new_chat_message" && !n.read).length;
 
   useEffect(() => {
     const userData = authService.getUser();
@@ -122,37 +129,38 @@ export default function Sidebar() {
               key={item.name}
               href={item.href}
               onClick={() => setMobileOpen(false)}
-              className={`group relative flex items-center justify-center ${
-                !collapsed && "gap-3"
-              } ${
-                collapsed ? "px-2" : "px-5"
-              } py-3 rounded-xl transition-all duration-300 ease-in-out ${
-                isActive
+              className={`group relative flex items-center justify-center ${!collapsed && "gap-3"
+                } ${collapsed ? "px-2" : "px-5"
+                } py-3 rounded-xl transition-all duration-300 ease-in-out ${isActive
                   ? "bg-[#0F75BD] text-white"
                   : "text-gray-300 hover:bg-[#EEF0F2] hover:text-[#0F75BD]"
-              }`}
+                }`}
             >
               <item.icon
-                className={`w-5 h-5 font-medium transition-all duration-300 ${
-                  isActive
-                    ? "text-white"
-                    : "text-[#5C5B59] group-hover:text-[#0F75BD]"
-                }`}
+                className={`w-5 h-5 font-medium transition-all duration-300 ${isActive
+                  ? "text-white"
+                  : "text-[#5C5B59] group-hover:text-[#0F75BD]"
+                  }`}
               />
 
               {!collapsed && (
                 <>
                   <span
-                    className={`${
-                      isActive
-                        ? "font-semibold text-[#FFFFFF]"
-                        : "font-regular text-[#3C3B39]"
-                    } text-sm flex-1 whitespace-nowrap`}
+                    className={`${isActive
+                      ? "font-semibold text-[#FFFFFF]"
+                      : "font-regular text-[#3C3B39]"
+                      } text-sm flex-1 whitespace-nowrap`}
                   >
                     {item.name}
                   </span>
 
-                  {item.badge && (
+                  {/* Dynamic badge — only for Chats */}
+                  {item.name === "Chats" && chatUnreadCount > 0 && (
+                    <span className="px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full">
+                      {chatUnreadCount}
+                    </span>
+                  )}
+                  {item.name !== "Chats" && item.badge && (
                     <span className="px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full">
                       {item.badge}
                     </span>
@@ -184,32 +192,27 @@ export default function Sidebar() {
               key={item.name}
               href={item.href}
               onClick={() => setMobileOpen(false)}
-              className={`group relative flex items-center justify-center ${
-                !collapsed && "gap-3"
-              } ${
-                collapsed ? "px-2" : "px-5"
-              } py-3 rounded-xl transition-all duration-300 ease-in-out ${
-                isActive
+              className={`group relative flex items-center justify-center ${!collapsed && "gap-3"
+                } ${collapsed ? "px-2" : "px-5"
+                } py-3 rounded-xl transition-all duration-300 ease-in-out ${isActive
                   ? "bg-[#0F75BD] text-white text-sm"
                   : "text-gray-300 hover:bg-[#EEF0F2] hover:text-[#0F75BD]"
-              }`}
+                }`}
             >
               <item.icon
-                className={`w-5 h-5 font-medium transition-all duration-300 ${
-                  isActive
-                    ? "text-white"
-                    : "text-[#5C5B59] group-hover:text-[#0F75BD]"
-                }`}
+                className={`w-5 h-5 font-medium transition-all duration-300 ${isActive
+                  ? "text-white"
+                  : "text-[#5C5B59] group-hover:text-[#0F75BD]"
+                  }`}
               />
 
               {!collapsed && (
                 <>
                   <span
-                    className={`${
-                      isActive
-                        ? "font-semibold text-[#FFFFFF]"
-                        : "font-regular text-[#3C3B39]"
-                    } text-sm flex-1 whitespace-nowrap`}
+                    className={`${isActive
+                      ? "font-semibold text-[#FFFFFF]"
+                      : "font-regular text-[#3C3B39]"
+                      } text-sm flex-1 whitespace-nowrap`}
                   >
                     {item.name}
                   </span>
@@ -240,11 +243,9 @@ export default function Sidebar() {
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className={`flex items-center justify-center ${
-            !collapsed && "gap-3"
-          } ${
-            collapsed ? "px-2" : "px-5"
-          } py-3 w-full rounded-xl transition-all duration-300 ease-in-out group hover:bg-red-500/10`}
+          className={`flex items-center justify-center ${!collapsed && "gap-3"
+            } ${collapsed ? "px-2" : "px-5"
+            } py-3 w-full rounded-xl transition-all duration-300 ease-in-out group hover:bg-red-500/10`}
         >
           <LogoutIcon className="w-5 h-5 text-red-400 group-hover:text-red-300 group-hover:rotate-180 transition-all duration-300" />
           {!collapsed && (
@@ -261,9 +262,8 @@ export default function Sidebar() {
     <>
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden lg:block bg-white transition-all duration-300 border-l border-gray-200 ${
-          collapsed ? "w-20" : "w-[244px]"
-        }`}
+        className={`hidden lg:block bg-white transition-all duration-300 border-l border-gray-200 ${collapsed ? "w-20" : "w-[244px]"
+          }`}
       >
         <div className="h-screen sticky top-0">
           <SidebarContent />
@@ -280,9 +280,8 @@ export default function Sidebar() {
 
       {/* Mobile Sidebar */}
       <aside
-        className={`lg:hidden fixed top-0 left-0 h-full w-64 bg-gray-900 transform transition-transform duration-300 ease-out z-50 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`lg:hidden fixed top-0 left-0 h-full w-64 bg-gray-900 transform transition-transform duration-300 ease-out z-50 ${mobileOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <SidebarContent />
       </aside>

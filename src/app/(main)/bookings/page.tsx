@@ -23,8 +23,9 @@ export default function BookingsPage() {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const data = await hotelService.getBookings();
-      setBookings(data || []);
+      const response = await hotelService.getBookings();
+      const results = Array.isArray(response?.results) ? response.results : [];
+      setBookings(results);
     } catch (error: any) {
       console.error("Error fetching bookings:", error);
       toast.error(error.message || "Failed to fetch bookings");
@@ -36,11 +37,12 @@ export default function BookingsPage() {
 
   // Get today's bookings
   const today = new Date().toISOString().split("T")[0];
-  const arrivalsToday = bookings.filter((b) => b.check_in_date === today);
-  const departuresToday = bookings.filter((b) => b.check_out_date === today);
+  const bookingsArray = Array.isArray(bookings) ? bookings : [];
+  const arrivalsToday = bookingsArray.filter((b) => b.check_in_date === today);
+  const departuresToday = bookingsArray.filter((b) => b.check_out_date === today);
 
   // Calculate occupancy (mock calculation - adjust based on actual logic)
-  const occupancyRate = bookings.filter((b) => b.booking_status === "checked_in").length;
+  const occupancyRate = bookingsArray.filter((b) => b.booking_status === "checked_in").length;
 
   const getStatusConfig = (status: BookingStatus) => {
     const configs = {
@@ -80,7 +82,7 @@ export default function BookingsPage() {
 
 
   // Filter bookings based on search and status
-  const filteredBookings = bookings.filter((booking) => {
+  const filteredBookings = bookingsArray.filter((booking) => {
     const matchesSearch =
       booking.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking.customer_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -124,7 +126,7 @@ export default function BookingsPage() {
         {/* Stats Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Total Bookings", value: bookings.length, bg: "bg-[#F5F5F5]" },
+            { label: "Total Bookings", value: bookingsArray.length, bg: "bg-[#F5F5F5]" },
             { label: "Check-ins Today", value: arrivalsToday.length, bg: "bg-[#F0F9FF]" },
             { label: "Check-outs Today", value: departuresToday.length, bg: "bg-[#FEF3C7]" },
             { label: "Active", value: occupancyRate, bg: "bg-[#F5F3FF]" },
@@ -332,8 +334,8 @@ export default function BookingsPage() {
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-2 py-1 rounded-lg font-medium transition-colors ${currentPage === pageNum
-                            ? "bg-[#0F75BD] text-white"
-                            : "hover:bg-[#FAFAFB] text-[#1A1A1A] font-regular"
+                          ? "bg-[#0F75BD] text-white"
+                          : "hover:bg-[#FAFAFB] text-[#1A1A1A] font-regular"
                           }`}
                       >
                         {pageNum}

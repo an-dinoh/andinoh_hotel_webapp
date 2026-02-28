@@ -36,6 +36,7 @@ import {
   RevenueByRoomType,
   HotelFeed,
   DeviceRegistration,
+  PaginatedResponse,
 } from '@/types/hotel.types';
 
 class HotelService {
@@ -65,8 +66,8 @@ class HotelService {
 
   // ==================== ROOM MANAGEMENT ====================
 
-  async getRooms(filters?: RoomFilters): Promise<Room[]> {
-    return apiClient.get<Room[]>('hotels/rooms/', { params: filters });
+  async getRooms(filters?: RoomFilters): Promise<PaginatedResponse<Room>> {
+    return apiClient.get<PaginatedResponse<Room>>('hotels/rooms/', { params: filters });
   }
 
   async getRoom(id: string): Promise<Room> {
@@ -87,8 +88,8 @@ class HotelService {
 
   // ==================== BOOKING MANAGEMENT ====================
 
-  async getBookings(filters?: BookingFilters): Promise<Booking[]> {
-    return apiClient.get<Booking[]>('hotels/bookings/', { params: filters });
+  async getBookings(filters?: BookingFilters): Promise<PaginatedResponse<Booking>> {
+    return apiClient.get<PaginatedResponse<Booking>>('hotels/bookings/', { params: filters });
   }
 
   async getBooking(id: string): Promise<Booking> {
@@ -121,8 +122,8 @@ class HotelService {
 
   // ==================== STAFF MANAGEMENT ====================
 
-  async getStaff(filters?: StaffFilters): Promise<HotelStaff[]> {
-    return apiClient.get<HotelStaff[]>('hotels/staff/', { params: filters });
+  async getStaff(filters?: StaffFilters): Promise<PaginatedResponse<HotelStaff>> {
+    return apiClient.get<PaginatedResponse<HotelStaff>>('hotels/staff/', { params: filters });
   }
 
   async getStaffById(id: string): Promise<HotelStaff> {
@@ -169,8 +170,8 @@ class HotelService {
     return apiClient.delete<void>(`hotels/staff/${id}/`);
   }
 
-  async getRoles(): Promise<any[]> {
-    return apiClient.get<any[]>('hotels/roles/');
+  async getRoles(): Promise<PaginatedResponse<any>> {
+    return apiClient.get<PaginatedResponse<any>>('hotels/staff/roles/');
   }
 
   async registerDevice(data: DeviceRegistration): Promise<void> {
@@ -181,8 +182,8 @@ class HotelService {
     return apiClient.delete<void>(`hotels/roles/${id}/`);
   }
 
-  async getReviews(): Promise<any[]> {
-    return apiClient.get<any[]>('hotels/reviews/');
+  async getReviews(): Promise<PaginatedResponse<any>> {
+    return apiClient.get<PaginatedResponse<any>>('hotels/reviews/');
   }
 
   // ==================== AVAILABILITY ====================
@@ -278,8 +279,8 @@ class HotelService {
 
   // ==================== EVENT SPACE MANAGEMENT ====================
 
-  async getEventSpaces(filters?: EventSpaceFilters): Promise<EventSpace[]> {
-    return apiClient.get<EventSpace[]>('hotels/event-spaces/', { params: filters });
+  async getEventSpaces(filters?: EventSpaceFilters): Promise<PaginatedResponse<EventSpace>> {
+    return apiClient.get<PaginatedResponse<EventSpace>>('hotels/event-spaces/', { params: filters });
   }
 
   async getEventSpace(id: string): Promise<EventSpace> {

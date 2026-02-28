@@ -6,6 +6,7 @@ import { hotelService } from "@/services/hotel.service";
 import { DashboardStats } from "@/types/hotel.types";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { webSocketService } from "@/services/websocket.service";
 
 // Import dashboard components
 import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
@@ -43,7 +44,7 @@ export default function DashboardPage() {
       if (trendsData && trendsData.length > 0) {
         // Take last 7 days for the chart
         const last7Days = trendsData.slice(-7);
-        setRevenueData(last7Days.map(t => parseFloat(t.revenue)));
+        setRevenueData(last7Days.map(t => parseFloat(t.revenue ?? '0')));
         setBookingsTrendData(last7Days.map(t => t.count));
       }
     } catch (err: any) {
@@ -56,7 +57,34 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchDashboardData();
+
+    // Listen for real-time updates to refresh dashboard data
+    const removeListener = webSocketService.addListener((payload: any) => {
+      if (['booking_update', 'inventory_updated', 'hotel_status_update'].includes(payload.type)) {
+        fetchDashboardData();
+      }
+    });
+
+    return () => {
+      removeListener();
+    };
   }, []);
+
+  const totalBookings = stats?.total_bookings !== undefined
+    ? stats.total_bookings
+    : (stats?.total_bookings_this_week || 0);
+
+  const activeBookings = stats?.active_bookings !== undefined
+    ? stats.active_bookings
+    : (stats?.total_bookings_today || 0);
+
+  const totalRevenue = stats?.total_revenue !== undefined
+    ? stats.total_revenue.toLocaleString()
+    : parseFloat(stats?.revenue_this_month || "0").toLocaleString();
+
+  const occupancyRate = stats?.occupancy_rate !== undefined
+    ? stats.occupancy_rate
+    : (stats?.current_occupancy_rate || 0);
 
   // Prepare data for components
   const welcomeActionCards = [
@@ -115,7 +143,7 @@ export default function DashboardPage() {
   ];
 
   const activityTabs = [
-    { id: "gigs" as const, label: "Active Bookings", count: stats?.total_bookings_today || 0 },
+    { id: "gigs" as const, label: "Active Bookings", count: activeBookings },
     { id: "saved" as const, label: "Pending Tasks", count: stats?.pending_tasks || 0 },
     { id: "posts" as const, label: "Monthly Growth", count: stats?.total_bookings_this_month || 0 },
   ];
@@ -149,12 +177,12 @@ export default function DashboardPage() {
 
         <div className="bg-white flex flex-row gap-6">
           <BookingsOverviewCard
-            totalBookings={stats?.total_bookings_this_week || 0}
+            totalBookings={totalBookings}
             stats={bookingStats}
           />
 
           <RevenueOverviewCard
-            totalRevenue={`${parseFloat(stats?.revenue_this_month || "0").toLocaleString()}`}
+            totalRevenue={totalRevenue}
             items={revenueItems}
           />
         </div>
@@ -163,6 +191,37 @@ export default function DashboardPage() {
           revenueData={revenueData}
           gigsData={bookingsTrendData}
         />
+
+        {/* Room Stats — sourced from dashboard-stats endpoint */}
+        {stats?.room_stats && (
+          <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-base font-semibold text-[#1A1A1A]">Room Overview</h3>
+                <p className="text-xs text-[#5C5B59] mt-0.5">Live availability from your property</p>
+              </div>
+              <button
+                onClick={() => router.push("/rooms")}
+                className="text-xs font-medium text-[#0F75BD] hover:underline"
+              >
+                Manage Rooms →
+              </button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: "Total Rooms", value: stats.room_stats.total_rooms, bg: "bg-[#F5F5F5]", text: "text-[#1A1A1A]" },
+                { label: "Available", value: stats.room_stats.available_rooms, bg: "bg-[#ECFDF5]", text: "text-green-700" },
+                { label: "Occupied", value: stats.room_stats.occupied_rooms, bg: "bg-[#FEF3C7]", text: "text-orange-700" },
+                { label: "Avg. Rate", value: `${currencySymbol}${stats.room_stats.average_rate.toLocaleString()}`, bg: "bg-[#F0F9FF]", text: "text-[#0F75BD]" },
+              ].map((item, i) => (
+                <div key={i} className={`${item.bg} rounded-xl p-4`}>
+                  <p className="text-xs text-[#5C5B59] mb-1">{item.label}</p>
+                  <p className={`text-2xl font-bold ${item.text}`}>{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <ActivitiesSection
           tabs={activityTabs}
@@ -173,10 +232,10 @@ export default function DashboardPage() {
         <PerformanceCard
           userName={currentUser?.full_name || currentUser?.name || "User"}
           userBadge={currentUser?.role === 'hotel_owner' ? "Owner" : "Staff"}
-          averageRating={0}
-          completionPercentage={stats?.current_occupancy_rate || 0}
+          averageRating={stats?.average_rating || 0}
+          completionPercentage={occupancyRate}
           points={0}
-          approvedGigs={stats?.total_bookings_this_month || 0}
+          approvedGigs={totalBookings}
         />
 
         <ReviewsCard />

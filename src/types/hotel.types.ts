@@ -2,6 +2,13 @@
 export type HotelType = 'luxury' | 'boutique' | 'business' | 'budget' | 'resort' | 'hostel' | 'motel' | 'bed_breakfast';
 export type StarRating = 1 | 2 | 3 | 4 | 5;
 
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 export interface Hotel {
   id: string;
   owner_id: string;
@@ -102,6 +109,7 @@ export interface UpdateRoomRequest extends Partial<CreateRoomRequest> { }
 
 export interface RoomFilters {
   room_type?: RoomType;
+  is_available?: boolean;
   min_price?: number;
   max_price?: number;
   has_balcony?: boolean;
@@ -114,6 +122,8 @@ export interface RoomFilters {
   country_id?: string;
   latitude?: number;
   longitude?: number;
+  page?: number;
+  page_size?: number;
 }
 
 // Booking Types
@@ -351,22 +361,35 @@ export interface CalendarDay {
 
 // Dashboard/Analytics Types
 export interface DashboardStats {
-  today_check_ins: number;
-  today_check_outs: number;
-  current_occupancy_rate: number;
-  total_bookings_today: number;
-  total_bookings_this_week: number;
-  total_bookings_this_month: number;
-  revenue_today: string;
-  revenue_this_week: string;
-  revenue_this_month: string;
-  pending_tasks: number;
+  total_bookings: number;
+  active_bookings: number;
+  total_revenue: number;
+  occupancy_rate: number;
+  average_rating: number;
+  total_reviews: number;
+  room_stats?: {
+    total_rooms: number;
+    available_rooms: number;
+    occupied_rooms: number;
+    average_rate: number;
+  };
+  // Optional legacy fields
+  today_check_ins?: number;
+  today_check_outs?: number;
+  current_occupancy_rate?: number;
+  total_bookings_today?: number;
+  total_bookings_this_week?: number;
+  total_bookings_this_month?: number;
+  revenue_today?: string;
+  revenue_this_week?: string;
+  revenue_this_month?: string;
+  pending_tasks?: number;
 }
 
 export interface BookingTrend {
   date: string;
   count: number;
-  revenue: string;
+  revenue?: string;
 }
 
 export interface RevenueByRoomType {

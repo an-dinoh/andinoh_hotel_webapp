@@ -78,6 +78,9 @@ export const metadata: Metadata = {
   },
 };
 
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import { Toaster } from "react-hot-toast";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -88,7 +91,10 @@ export default function RootLayout({
       <body className={`${rational.variable} ${rational.className} antialiased`} suppressHydrationWarning={true}>
         <GlobalErrorBoundary>
           <CurrencyProvider>
-            {children}
+            <NotificationProvider>
+              {children}
+              <Toaster position="top-right" />
+            </NotificationProvider>
           </CurrencyProvider>
         </GlobalErrorBoundary>
       </body>

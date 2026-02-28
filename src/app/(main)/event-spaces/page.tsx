@@ -37,9 +37,14 @@ export default function EventSpacesPage() {
         filters.space_type = filterType;
       }
 
-      const data = await hotelService.getEventSpaces(filters);
-      setEventSpaces(data || []);
+      const response = await hotelService.getEventSpaces(filters);
+      setEventSpaces(response.results || []);
     } catch (err: any) {
+      // 404 = endpoint exists but no data yet, treat as empty
+      if (err?.message === 'Resource not found') {
+        setEventSpaces([]);
+        return;
+      }
       console.error("Error fetching event spaces:", err);
       setError(err.message || "Failed to fetch event spaces");
       setEventSpaces([]);

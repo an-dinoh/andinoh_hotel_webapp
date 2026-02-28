@@ -6,6 +6,7 @@ import { Search, ChevronDown, Bell, Calendar, CheckCircle, AlertCircle, User, Do
 import { useState, useRef, useEffect } from "react";
 import NotificationIcon from "@/icons/NotificationIcon";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useNotifications, Notification } from "@/contexts/NotificationContext";
 
 export default function Topbar() {
   const { currencies, activeCurrency, isLoading, setCurrency } = useCurrency();
@@ -16,66 +17,7 @@ export default function Topbar() {
   const notificationRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // Mock notifications data
-  const notifications = [
-    {
-      id: 1,
-      type: "booking",
-      title: "New Booking Received",
-      message: "John Doe booked a Deluxe Suite for 3 nights",
-      time: "5 minutes ago",
-      read: false,
-      icon: Calendar,
-      iconBg: "bg-[#F0F9FF]",
-      iconColor: "text-blue-600",
-    },
-    {
-      id: 2,
-      type: "payment",
-      title: "Payment Confirmed",
-      message: "₦150,000 received from Sarah Johnson",
-      time: "1 hour ago",
-      read: false,
-      icon: DollarSign,
-      iconBg: "bg-[#ECFDF5]",
-      iconColor: "text-green-600",
-    },
-    {
-      id: 3,
-      type: "checkin",
-      title: "Guest Checked In",
-      message: "Michael Brown checked into Room 204",
-      time: "2 hours ago",
-      read: true,
-      icon: CheckCircle,
-      iconBg: "bg-[#F5F3FF]",
-      iconColor: "text-purple-600",
-    },
-    {
-      id: 4,
-      type: "alert",
-      title: "Maintenance Alert",
-      message: "Room 305 requires maintenance attention",
-      time: "3 hours ago",
-      read: true,
-      icon: AlertCircle,
-      iconBg: "bg-[#FEF3C7]",
-      iconColor: "text-orange-600",
-    },
-    {
-      id: 5,
-      type: "user",
-      title: "New Staff Member",
-      message: "Emily Davis added as Receptionist",
-      time: "5 hours ago",
-      read: true,
-      icon: User,
-      iconBg: "bg-[#FEE2E2]",
-      iconColor: "text-red-600",
-    },
-  ];
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const { notifications, unreadCount, markAsRead } = useNotifications();
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -129,7 +71,7 @@ export default function Topbar() {
             <div className="py-2">
               {isLoading ? (
                 <div className="px-4 py-2 text-xs text-gray-500">Loading currencies...</div>
-              ) : (
+              ) : Array.isArray(currencies) && (
                 currencies.map((currency) => (
                   <button
                     key={currency.id}
@@ -183,35 +125,44 @@ export default function Topbar() {
 
               {/* Notifications List */}
               <div className="max-h-96 overflow-y-auto scrollbar-hide">
-                {notifications.map((notification) => {
-                  const Icon = notification.icon;
-                  return (
-                    <div
-                      key={notification.id}
-                      className={`px-6 py-4 border-b border-[#E5E7EB] hover:bg-[#FAFAFB] transition-colors cursor-pointer ${!notification.read ? "bg-[#F0F9FF]" : ""
-                        }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 ${notification.iconBg} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                          <Icon className={`w-5 h-5 ${notification.iconColor}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <h4 className="font-semibold text-sm text-[#1A1A1A]">{notification.title}</h4>
-                            {!notification.read && (
-                              <div className="w-2 h-2 bg-[#0F75BD] rounded-full flex-shrink-0 mt-1.5"></div>
-                            )}
+                {notifications.length === 0 ? (
+                  <div className="px-6 py-12 text-center">
+                    <Bell className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+                    <p className="text-sm text-gray-500 font-medium">No notifications yet</p>
+                  </div>
+                ) : (
+                  notifications.map((notification: Notification) => {
+                    const Icon = getIconForType(notification.type);
+                    const iconStyles = getStylesForType(notification.type);
+                    return (
+                      <div
+                        key={notification.id}
+                        onClick={() => markAsRead(notification.id)}
+                        className={`px-6 py-4 border-b border-[#E5E7EB] hover:bg-[#FAFAFB] transition-colors cursor-pointer ${!notification.read ? "bg-[#F0F9FF]" : ""
+                          }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-10 h-10 ${iconStyles.bg} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                            <Icon className={`w-5 h-5 ${iconStyles.color}`} />
                           </div>
-                          <p className="text-xs text-[#5C5B59] mt-1">{notification.message}</p>
-                          <div className="flex items-center gap-1 mt-2 text-xs text-[#5C5B59]">
-                            <Clock className="w-3 h-3" />
-                            <span>{notification.time}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <h4 className="font-semibold text-sm text-[#1A1A1A]">{notification.title}</h4>
+                              {!notification.read && (
+                                <div className="w-2 h-2 bg-[#0F75BD] rounded-full flex-shrink-0 mt-1.5"></div>
+                              )}
+                            </div>
+                            <p className="text-xs text-[#5C5B59] mt-1 line-clamp-2">{notification.message}</p>
+                            <div className="flex items-center gap-1 mt-2 text-xs text-[#5C5B59]">
+                              <Clock className="w-3 h-3" />
+                              <span>{new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
 
               {/* Footer */}
@@ -318,4 +269,27 @@ export default function Topbar() {
       </div>
     </div>
   );
+}
+
+// Helper functions for notification icons and styles
+function getIconForType(type: string) {
+  switch (type) {
+    case 'booking_update': return Calendar;
+    case 'new_chat_message': return User;
+    case 'hotel_status_update': return Shield;
+    case 'reception_alert': return Bell;
+    case 'inventory_updated': return Building2;
+    default: return Bell;
+  }
+}
+
+function getStylesForType(type: string) {
+  switch (type) {
+    case 'booking_update': return { bg: "bg-blue-50", color: "text-blue-600" };
+    case 'new_chat_message': return { bg: "bg-purple-50", color: "text-purple-600" };
+    case 'hotel_status_update': return { bg: "bg-green-50", color: "text-green-600" };
+    case 'reception_alert': return { bg: "bg-orange-50", color: "text-orange-600" };
+    case 'inventory_updated': return { bg: "bg-indigo-50", color: "text-indigo-600" };
+    default: return { bg: "bg-gray-50", color: "text-gray-600" };
+  }
 }

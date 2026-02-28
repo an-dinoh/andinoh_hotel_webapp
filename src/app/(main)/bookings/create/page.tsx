@@ -72,8 +72,8 @@ export default function CreateBookingPage() {
 
   const fetchRooms = async () => {
     try {
-      const data = await hotelService.getRooms();
-      const roomsArray = Array.isArray(data) ? data : [];
+      const response = await hotelService.getRooms();
+      const roomsArray = response.results || [];
       setRooms(roomsArray.filter((r) => r.is_available));
       setAvailableRooms(roomsArray.filter((r) => r.is_available));
     } catch {
@@ -271,9 +271,8 @@ export default function CreateBookingPage() {
                   value={form.check_in_date}
                   onChange={handleInputChange}
                   min={new Date().toISOString().split("T")[0]}
-                  className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent ${
-                    errors.check_in_date ? "border-red-500 focus:ring-red-500" : "border-[#D3D9DD] focus:ring-[#8E9397]"
-                  }`}
+                  className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent ${errors.check_in_date ? "border-red-500 focus:ring-red-500" : "border-[#D3D9DD] focus:ring-[#8E9397]"
+                    }`}
                 />
                 {errors.check_in_date && (
                   <p className="mt-1 text-xs text-red-500">{errors.check_in_date}</p>
@@ -290,9 +289,8 @@ export default function CreateBookingPage() {
                   value={form.check_out_date}
                   onChange={handleInputChange}
                   min={form.check_in_date || new Date().toISOString().split("T")[0]}
-                  className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent ${
-                    errors.check_out_date ? "border-red-500 focus:ring-red-500" : "border-[#D3D9DD] focus:ring-[#8E9397]"
-                  }`}
+                  className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent ${errors.check_out_date ? "border-red-500 focus:ring-red-500" : "border-[#D3D9DD] focus:ring-[#8E9397]"
+                    }`}
                 />
                 {errors.check_out_date && (
                   <p className="mt-1 text-xs text-red-500">{errors.check_out_date}</p>
@@ -341,9 +339,8 @@ export default function CreateBookingPage() {
                 name="room_id"
                 value={form.room_id}
                 onChange={handleInputChange}
-                className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent appearance-none bg-white bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNCA2TDggMTBMMTIgNiIgc3Ryb2tlPSIjOEY4RThEIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[length:16px_16px] bg-[right_12px_center] bg-no-repeat pr-10 ${
-                  errors.room_id ? "border-red-500 focus:ring-red-500" : "border-[#D3D9DD] focus:ring-[#8E9397]"
-                }`}
+                className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent appearance-none bg-white bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNCA2TDggMTBMMTIgNiIgc3Ryb2tlPSIjOEY4RThEIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[length:16px_16px] bg-[right_12px_center] bg-no-repeat pr-10 ${errors.room_id ? "border-red-500 focus:ring-red-500" : "border-[#D3D9DD] focus:ring-[#8E9397]"
+                  }`}
               >
                 <option value="">Select a room</option>
                 {availableRooms.map((room) => (

@@ -12,10 +12,23 @@ import ErrorState from "@/components/ui/ErrorState";
 
 type RoomDetailTab = "pictures" | "videos" | "reviews" | "3d-tour";
 
+interface RoomStats {
+  total: number;
+  available: number;
+  occupied: number;
+  avgRate: number | null;
+}
+
+const PAGE_SIZE = 12;
+
 export default function RoomsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [roomStats, setRoomStats] = useState<RoomStats>({ total: 0, available: 0, occupied: 0, avgRate: null });
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<RoomType | "all">("all");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -24,21 +37,51 @@ export default function RoomsPage() {
   const [activeTab, setActiveTab] = useState<RoomDetailTab>("pictures");
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch room stats from dashboard endpoint (single call, no room cards needed)
+  const fetchStats = async () => {
+    try {
+      setStatsLoading(true);
+      const stats = await hotelService.getDashboardStats();
+      if (stats.room_stats) {
+        setRoomStats({
+          total: stats.room_stats.total_rooms,
+          available: stats.room_stats.available_rooms,
+          occupied: stats.room_stats.occupied_rooms,
+          avgRate: stats.room_stats.average_rate,
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching room stats:", err);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
   useEffect(() => {
     fetchRooms();
-  }, [filterType]);
+  }, [filterType, currentPage]);
 
   const fetchRooms = async () => {
     try {
       setLoading(true);
       setError(null);
-      const filters: any = {};
-      if (filterType !== "all") {
-        filters.room_type = filterType;
-      }
+      const filters: any = { page: currentPage, page_size: PAGE_SIZE };
+      if (filterType !== "all") filters.room_type = filterType;
 
-      const data = await hotelService.getRooms(filters);
-      setRooms(data || []);
+      const response = await hotelService.getRooms(filters);
+      const results = response.results || [];
+      setRooms(results);
+      setTotalCount(response.count ?? 0);
+
+      // Update average rate from loaded page
+      if (results.length > 0) {
+        const avg = Math.round(results.reduce((sum, r) => sum + parseInt(r.base_price), 0) / results.length);
+        setRoomStats(prev => ({ ...prev, avgRate: avg }));
+      }
     } catch (err: any) {
       console.error("Error fetching rooms:", err);
       setError(err.message || "Failed to fetch rooms");
@@ -49,11 +92,14 @@ export default function RoomsPage() {
   };
 
   const filteredRooms = rooms.filter((room) => {
-    const matchesSearch = room.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      room.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType === "all" || room.room_type === filterType;
-    return matchesSearch && matchesFilter;
+    if (!searchTerm) return true;
+    return (
+      room.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      room.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   });
+
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   if (loading && rooms.length === 0) {
     return (
@@ -488,10 +534,10 @@ export default function RoomsPage() {
         {/* Stats Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Total Rooms", value: rooms.length, bg: "bg-[#F5F5F5]" },
-            { label: "Available", value: rooms.filter(r => r.is_available).length, bg: "bg-[#F0F9FF]" },
-            { label: "Occupied", value: rooms.filter(r => !r.is_available).length, bg: "bg-[#FEF3C7]" },
-            { label: "Average Rate", value: `₦${Math.round(rooms.reduce((sum, r) => sum + parseInt(r.base_price), 0) / rooms.length)}`, bg: "bg-[#F5F3FF]" },
+            { label: "Total Rooms", value: statsLoading ? "—" : roomStats.total, bg: "bg-[#F5F5F5]" },
+            { label: "Available", value: statsLoading ? "—" : roomStats.available, bg: "bg-[#F0F9FF]" },
+            { label: "Occupied", value: statsLoading ? "—" : roomStats.occupied, bg: "bg-[#FEF3C7]" },
+            { label: "Average Rate", value: roomStats.avgRate != null ? `₦${roomStats.avgRate}` : "—", bg: "bg-[#F5F3FF]" },
           ].map((stat, index) => (
             <div key={index} className={`${stat.bg} rounded-2xl p-5`}>
               <p className="text-[#5C5B59] text-sm mb-1">{stat.label}</p>
@@ -612,27 +658,48 @@ export default function RoomsPage() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-center gap-2 m-8">
-              <button className="p-2 hover:bg-[#FAFAFB] rounded-lg transition-colors">
-                <ChevronDown className="w-5 h-5 rotate-90 text-[#5C5B59] text-xs" />
-              </button>
-              <button className="px-2 py-1 bg-[#0F75BD] text-white rounded-lg font-medium">
-                1
-              </button>
-              <button className="px-2 py-1 hover:bg-[#FAFAFB] text-[#1A1A1A] rounded-lg font-regular transition-colors">
-                2
-              </button>
-              <button className="px-2 py-1 hover:bg-[#FAFAFB] text-[#1A1A1A] rounded-lg font-regular transition-colors">
-                3
-              </button>
-              <span className="px-2 text-[#5C5B59]">...</span>
-              <button className="px-2 py-1 hover:bg-[#FAFAFB] text-[#1A1A1A] rounded-lg font-regular transition-colors">
-                10
-              </button>
-              <button className="p-2.5 hover:bg-[#FAFAFB] rounded-lg transition-colors">
-                <ChevronDown className="w-5 h-5 -rotate-90 text-[#5C5B59]" />
-              </button>
-            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 m-8">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 hover:bg-[#FAFAFB] rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronDown className="w-5 h-5 rotate-90 text-[#5C5B59]" />
+                </button>
+                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                  let page: number;
+                  if (totalPages <= 7) {
+                    page = i + 1;
+                  } else if (currentPage <= 4) {
+                    page = i + 1;
+                  } else if (currentPage >= totalPages - 3) {
+                    page = totalPages - 6 + i;
+                  } else {
+                    page = currentPage - 3 + i;
+                  }
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 rounded-lg font-medium transition-colors ${currentPage === page
+                        ? "bg-[#0F75BD] text-white"
+                        : "hover:bg-[#FAFAFB] text-[#1A1A1A]"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2.5 hover:bg-[#FAFAFB] rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <ChevronDown className="w-5 h-5 -rotate-90 text-[#5C5B59]" />
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
