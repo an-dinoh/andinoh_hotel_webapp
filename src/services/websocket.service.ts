@@ -18,7 +18,7 @@ class WebSocketService {
     private baseUrl = 'wss://andinoh-backend.onrender.com/ws/notifications/';
     private listeners: Set<(data: ServerNotification) => void> = new Set();
     private reconnectAttempts = 0;
-    private maxReconnectAttempts = 5;
+    private maxReconnectAttempts = 20; // Increased to allow more retries over time
     // Queue subscriptions that arrive before the socket is OPEN
     private pendingSubscriptions: Array<{ action: WebSocketAction; id: string }> = [];
 
@@ -70,7 +70,7 @@ class WebSocketService {
             console.log(`Attempting to reconnect in ${delay}ms... (Attempt ${this.reconnectAttempts})`);
             setTimeout(() => this.connect(), delay);
         } else {
-            console.error('Max WebSocket reconnect attempts reached.');
+            console.warn('Max WebSocket reconnect attempts reached. Please refresh to re-establish connection.');
         }
     }
 

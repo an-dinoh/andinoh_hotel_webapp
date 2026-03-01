@@ -47,12 +47,10 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { notifications } = useNotifications();
+  const { notifications, totalUnreadChats } = useNotifications();
 
-  // Count unread chat notifications — reset when user is on /chats
-  const chatUnreadCount = pathname === "/chats"
-    ? 0
-    : notifications.filter(n => n.type === "new_chat_message" && !n.read).length;
+  // Use global totalUnreadChats for the badge, but hide it if on the chats page
+  const chatBadgeCount = pathname === "/chats" ? 0 : totalUnreadChats;
 
   useEffect(() => {
     const userData = authService.getUser();
@@ -155,9 +153,9 @@ export default function Sidebar() {
                   </span>
 
                   {/* Dynamic badge — only for Chats */}
-                  {item.name === "Chats" && chatUnreadCount > 0 && (
+                  {item.name === "Chats" && chatBadgeCount > 0 && (
                     <span className="px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full">
-                      {chatUnreadCount}
+                      {chatBadgeCount}
                     </span>
                   )}
                   {item.name !== "Chats" && item.badge && (

@@ -77,17 +77,17 @@ export default function BookingsPage() {
         label: "No Show",
       },
     };
-    return configs[status];
+    return configs[status as keyof typeof configs] || configs.pending;
   };
 
 
   // Filter bookings based on search and status
   const filteredBookings = bookingsArray.filter((booking) => {
     const matchesSearch =
-      booking.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.customer_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.booking_reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      booking.customer_phone?.toLowerCase().includes(searchTerm.toLowerCase());
+      (booking.customer_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (booking.customer_email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (booking.booking_reference?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (booking.customer_phone?.toLowerCase() || "").includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === "all" || booking.booking_status === statusFilter;
 
@@ -235,11 +235,11 @@ export default function BookingsPage() {
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-[#0F75BD] rounded-full flex items-center justify-center">
                               <span className="text-white font-semibold text-sm">
-                                {booking.customer_name.charAt(0).toUpperCase()}
+                                {(booking.customer_name || "Guest").charAt(0).toUpperCase()}
                               </span>
                             </div>
                             <div>
-                              <p className="text-sm font-semibold text-[#1A1A1A]">{booking.customer_name}</p>
+                              <p className="text-sm font-semibold text-[#1A1A1A]">{booking.customer_name || "Guest"}</p>
                               <p className="text-xs text-[#5C5B59]">{booking.customer_email}</p>
                             </div>
                           </div>

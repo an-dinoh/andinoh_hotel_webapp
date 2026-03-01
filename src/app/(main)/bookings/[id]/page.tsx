@@ -1,8 +1,5 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
@@ -156,7 +153,7 @@ export default function BookingDetailPage() {
         label: "No Show",
       },
     };
-    return configs[status];
+    return configs[status as keyof typeof configs] || configs.pending;
   };
 
   if (!booking) {
@@ -225,9 +222,9 @@ export default function BookingDetailPage() {
                         <span className="text-2xl font-bold text-white">{booking.booking_reference}</span>
                       </div>
                     </div>
-                    <h2 className="text-4xl font-bold text-white mb-3">{booking.customer_name}</h2>
+                    <h2 className="text-4xl font-bold text-white mb-3">{booking.customer_name || "Guest"}</h2>
                     <p className="text-white/90 text-lg max-w-3xl">
-                      {booking.number_of_nights} {booking.number_of_nights === 1 ? "Night" : "Nights"} Stay • Room {booking.room.toUpperCase()}
+                      {booking.number_of_nights} {booking.number_of_nights === 1 ? "Night" : "Nights"} Stay • Room {(booking.room || "N/A").toUpperCase()}
                     </p>
                   </div>
                   <div className={`px-4 py-2 rounded-xl font-semibold ${statusConfig.color}`}>
@@ -238,10 +235,10 @@ export default function BookingDetailPage() {
                 <div className="flex items-center gap-4">
                   <span className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-bold rounded-xl">
                     <Sparkles className="w-4 h-4" />
-                    {booking.booking_source.toUpperCase().replace("_", " ")}
+                    {(booking.booking_source || "direct").toUpperCase().replace("_", " ")}
                   </span>
                   <div className="text-white">
-                    <span className="text-3xl font-bold">₦{parseFloat(booking.total_amount).toLocaleString()}</span>
+                    <span className="text-3xl font-bold">₦{(parseFloat(booking.total_amount) || 0).toLocaleString()}</span>
                     <span className="text-white/80 ml-2">/total</span>
                   </div>
                 </div>
@@ -263,8 +260,8 @@ export default function BookingDetailPage() {
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={`flex items-center gap-2 px-6 py-4 font-semibold transition-all ${activeTab === tab.id
-                          ? "text-[#0F75BD] border-b-2 border-[#0F75BD]"
-                          : "text-[#5C5B59] hover:text-[#0F75BD]"
+                        ? "text-[#0F75BD] border-b-2 border-[#0F75BD]"
+                        : "text-[#5C5B59] hover:text-[#0F75BD]"
                         }`}
                     >
                       <Icon className="w-5 h-5" />
@@ -345,7 +342,7 @@ export default function BookingDetailPage() {
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-purple-700 uppercase">Room Number</p>
-                        <p className="text-2xl font-bold text-gray-900">{booking.room.toUpperCase()}</p>
+                        <p className="text-2xl font-bold text-gray-900">{(booking.room || "N/A").toUpperCase()}</p>
                       </div>
                     </div>
                     <button
@@ -365,14 +362,14 @@ export default function BookingDetailPage() {
                       <div>
                         <p className="text-xs font-semibold text-green-700 uppercase">Total Guests</p>
                         <p className="text-2xl font-bold text-gray-900">
-                          {booking.number_of_adults + booking.number_of_children}
+                          {(booking.number_of_adults || 0) + (booking.number_of_children || 0)}
                         </p>
                       </div>
                     </div>
                     <p className="text-sm text-gray-600">
-                      {booking.number_of_adults} {booking.number_of_adults === 1 ? "Adult" : "Adults"}
-                      {booking.number_of_children > 0 &&
-                        ` • ${booking.number_of_children} ${booking.number_of_children === 1 ? "Child" : "Children"}`}
+                      {booking.number_of_adults || 0} {(booking.number_of_adults || 0) === 1 ? "Adult" : "Adults"}
+                      {(booking.number_of_children || 0) > 0 &&
+                        ` • ${booking.number_of_children || 0} ${(booking.number_of_children || 0) === 1 ? "Child" : "Children"}`}
                     </p>
                   </div>
                 </div>
@@ -438,11 +435,11 @@ export default function BookingDetailPage() {
                     <div className="flex items-center gap-4">
                       <div className="w-20 h-20 bg-gradient-to-br from-[#0F75BD] to-[#02A5E6] rounded-full flex items-center justify-center">
                         <span className="text-white font-bold text-3xl">
-                          {booking.customer_name.charAt(0).toUpperCase()}
+                          {(booking.customer_name || "Guest").charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div>
-                        <h3 className="text-2xl font-bold text-gray-900">{booking.customer_name}</h3>
+                        <h3 className="text-2xl font-bold text-gray-900">{booking.customer_name || "Guest"}</h3>
                         <p className="text-sm text-gray-500">Primary Guest</p>
                         <div className="flex items-center gap-1 mt-2">
                           {[1, 2, 3, 4, 5].map((star) => (
@@ -493,7 +490,7 @@ export default function BookingDetailPage() {
                         <p className="text-xs font-semibold text-gray-500 uppercase">Booking Source</p>
                       </div>
                       <p className="text-base font-medium text-gray-900 capitalize">
-                        {booking.booking_source.replace("_", " ")}
+                        {(booking.booking_source || "direct").replace("_", " ")}
                       </p>
                     </div>
                   </div>
@@ -533,24 +530,24 @@ export default function BookingDetailPage() {
                     <div className="flex justify-between items-center pb-4 border-b border-[#0F75BD]/20">
                       <span className="text-sm font-semibold text-gray-600 uppercase">Total Amount</span>
                       <span className="text-3xl font-bold text-gray-900">
-                        ₦{parseFloat(booking.total_amount).toLocaleString()}
+                        ₦{(parseFloat(booking.total_amount || "0") || 0).toLocaleString()}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center pb-4 border-b border-[#0F75BD]/20">
                       <span className="text-sm font-semibold text-gray-600 uppercase">Amount Paid</span>
                       <span className="text-2xl font-bold text-green-600">
-                        ₦{parseFloat(booking.amount_paid || "0").toLocaleString()}
+                        ₦{(parseFloat(booking.amount_paid || "0") || 0).toLocaleString()}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center pt-2">
                       <span className="text-sm font-semibold text-gray-700 uppercase">Balance Due</span>
                       <span
-                        className={`text-3xl font-bold ${parseFloat(booking.balance_due || "0") > 0 ? "text-orange-600" : "text-green-600"
+                        className={`text-3xl font-bold ${(parseFloat(booking.balance_due || "0") || 0) > 0 ? "text-orange-600" : "text-green-600"
                           }`}
                       >
-                        ₦{parseFloat(booking.balance_due || "0").toLocaleString()}
+                        ₦{(parseFloat(booking.balance_due || "0") || 0).toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -563,7 +560,7 @@ export default function BookingDetailPage() {
                     <div className="flex justify-between items-center pb-3 border-b border-gray-200">
                       <span className="text-sm text-gray-600">Room Rate ({booking.number_of_nights} nights)</span>
                       <span className="font-semibold text-gray-900">
-                        ₦{parseFloat(booking.total_amount).toLocaleString()}
+                        ₦{(parseFloat(booking.total_amount || "0") || 0).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between items-center pb-3 border-b border-gray-200">
@@ -577,7 +574,7 @@ export default function BookingDetailPage() {
                     <div className="flex justify-between items-center pt-2">
                       <span className="text-base font-bold text-gray-800">Grand Total</span>
                       <span className="text-xl font-bold text-[#0F75BD]">
-                        ₦{parseFloat(booking.total_amount).toLocaleString()}
+                        ₦{(parseFloat(booking.total_amount || "0") || 0).toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -649,7 +646,7 @@ export default function BookingDetailPage() {
                             minute: "2-digit",
                           })}
                         </p>
-                        <p className="text-xs text-gray-400 mt-2">via {booking.booking_source}</p>
+                        <p className="text-xs text-gray-400 mt-2">via {(booking.booking_source || "direct").replace("_", " ")}</p>
                       </div>
                     </div>
                   </div>
@@ -765,7 +762,7 @@ export default function BookingDetailPage() {
                 </div>
                 <div className="flex items-center justify-between pb-4 border-b border-[#F3F4F6]">
                   <span className="text-gray-500 text-sm font-medium">Room</span>
-                  <span className="font-semibold text-gray-800">{booking.room.toUpperCase()}</span>
+                  <span className="font-semibold text-gray-800">{(booking.room || "N/A").toUpperCase()}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-500 text-sm font-medium">Nights</span>
@@ -786,13 +783,13 @@ export default function BookingDetailPage() {
                 <div className="flex items-center justify-between pb-4 border-b border-[#F3F4F6]">
                   <span className="text-gray-500 text-sm font-medium">Total</span>
                   <span className="font-semibold text-gray-800">
-                    ₦{parseFloat(booking.total_amount).toLocaleString()}
+                    ₦{(parseFloat(booking.total_amount || "0") || 0).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between pb-4 border-b border-[#F3F4F6]">
                   <span className="text-gray-500 text-sm font-medium">Paid</span>
                   <span className="font-semibold text-green-600">
-                    ₦{parseFloat(booking.amount_paid || "0").toLocaleString()}
+                    ₦{(parseFloat(booking.amount_paid || "0") || 0).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

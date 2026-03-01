@@ -193,7 +193,7 @@ export default function EventSpacesPage() {
             { label: "Total Spaces", value: eventSpaces.length, bg: "bg-[#F5F5F5]", icon: PartyPopper },
             { label: "Available", value: eventSpaces.filter(s => s.is_available).length, bg: "bg-[#F0F9FF]", icon: Calendar },
             { label: "Booked", value: eventSpaces.filter(s => !s.is_available).length, bg: "bg-[#FEF3C7]", icon: Zap },
-            { label: "Avg. Capacity", value: Math.round(eventSpaces.reduce((sum, s) => sum + s.max_capacity_banquet, 0) / eventSpaces.length), bg: "bg-[#F5F3FF]", icon: Users },
+            { label: "Avg. Capacity", value: eventSpaces.length > 0 ? Math.round(eventSpaces.reduce((sum, s) => sum + s.max_capacity_banquet, 0) / eventSpaces.length) : 0, bg: "bg-[#F5F3FF]", icon: Users },
           ].map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -203,7 +203,7 @@ export default function EventSpacesPage() {
                 </div>
                 <div>
                   <p className="text-[#5C5B59] text-sm mb-1">{stat.label}</p>
-                  <p className="text-2xl font-bold text-[#1A1A1A]">{stat.value}</p>
+                  <p className="text-2xl font-bold text-[#1A1A1A]">{stat.value?.toLocaleString() || "0"}</p>
                 </div>
               </div>
             );

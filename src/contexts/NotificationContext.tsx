@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { authService } from '@/services/auth.service';
 import { webSocketService } from '@/services/websocket.service';
 import { hotelService } from '@/services/hotel.service';
+import { chatService } from '@/services/chat.service';
 
 export interface Notification {
     id: string;
@@ -22,12 +23,15 @@ interface NotificationContextType {
     markAsRead: (id: string) => void;
     markAllAsRead: () => void;
     clearNotifications: () => void;
+    totalUnreadChats: number;
+    refreshUnreadCount: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [totalUnreadChats, setTotalUnreadChats] = useState(0);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -79,6 +83,17 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         setNotifications([]);
     };
 
+    const refreshUnreadCount = useCallback(async () => {
+        try {
+            const response = await chatService.getConversations('active');
+            const results = response.results || [];
+            const unreadCount = results.filter((c: any) => c.unread_count > 0).length;
+            setTotalUnreadChats(unreadCount);
+        } catch (err) {
+            console.error('Failed to refresh unread chat count:', err);
+        }
+    }, []);
+
     const [hotelId, setHotelId] = useState<string | null>(null);
 
     // Monitor authentication status and connect/disconnect WebSocket accordingly
@@ -120,6 +135,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         const removeListener = webSocketService.addListener((data) => {
             addNotification(data);
+            // Refresh counts on new messages or alerts
+            if (data.type === 'new_chat_message' || data.type === 'reception_alert') {
+                refreshUnreadCount();
+            }
         });
 
         return () => {
@@ -127,7 +146,14 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             removeListener();
             webSocketService.disconnect();
         };
-    }, [addNotification]);
+    }, [addNotification, refreshUnreadCount]);
+
+    // Initial fetch of unread count when hotelId is ready
+    useEffect(() => {
+        if (hotelId) {
+            refreshUnreadCount();
+        }
+    }, [hotelId, refreshUnreadCount]);
 
     // Handle global subscriptions when both connection and hotelId are ready
     useEffect(() => {
@@ -140,7 +166,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }, [hotelId]);
 
     return (
-        <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications }}>
+        <NotificationContext.Provider value={{
+            notifications,
+            unreadCount,
+            markAsRead,
+            markAllAsRead,
+            clearNotifications,
+            totalUnreadChats,
+            refreshUnreadCount
+        }}>
             {children}
         </NotificationContext.Provider>
     );
