@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Key, Edit, Save, CheckSquare, Square } from "lucide-react";
+import { Key, Edit, Save, CheckSquare, Square, Plus, X, Loader2 } from "lucide-react";
 import { RoomStatus, HousekeepingStatus, PhysicalRoom } from "@/types/hotel.types";
 import { hotelService } from "@/services/hotel.service";
 import toast from "react-hot-toast";
@@ -11,6 +11,11 @@ export default function PhysicalRoomList({ roomId }: { roomId: string }) {
     const [bulkStatus, setBulkStatus] = useState<RoomStatus | "">("");
     const [bulkHousekeeping, setBulkHousekeeping] = useState<HousekeepingStatus | "">("");
     const [isUpdating, setIsUpdating] = useState(false);
+
+    // New Unit state
+    const [isAdding, setIsAdding] = useState(false);
+    const [newRoomNumber, setNewRoomNumber] = useState("");
+    const [isCreating, setIsCreating] = useState(false);
 
     useEffect(() => {
         const fetchUnits = async () => {
@@ -30,6 +35,33 @@ export default function PhysicalRoomList({ roomId }: { roomId: string }) {
             fetchUnits();
         }
     }, [roomId]);
+
+    const handleAddUnit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newRoomNumber.trim()) {
+            toast.error("Please enter a room number");
+            return;
+        }
+
+        try {
+            setIsCreating(true);
+            const newUnit = await hotelService.createPhysicalRoom(roomId, {
+                room_number: newRoomNumber,
+                status: "available",
+                housekeeping_status: "clean"
+            });
+
+            setUnits(prev => [newUnit, ...prev]);
+            setNewRoomNumber("");
+            setIsAdding(false);
+            toast.success(`Room ${newRoomNumber} added successfully`);
+        } catch (error: any) {
+            console.error("Error creating physical room:", error);
+            toast.error(error.message || "Failed to add room unit");
+        } finally {
+            setIsCreating(false);
+        }
+    };
 
     const toggleSelect = (id: string) => {
         setSelectedIds((prev) =>
@@ -111,7 +143,65 @@ export default function PhysicalRoomList({ roomId }: { roomId: string }) {
                     <h3 className="text-lg font-semibold text-gray-800">Physical Rooms (Units)</h3>
                     <p className="text-sm text-gray-500">Manage individual room statuses and housekeeping</p>
                 </div>
+                {!isAdding ? (
+                    <button
+                        onClick={() => setIsAdding(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#0F75BD] text-white text-sm font-medium rounded-xl hover:bg-[#0050C8] transition-colors"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Add Room Unit
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => setIsAdding(false)}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-200 transition-colors"
+                    >
+                        <X className="w-4 h-4" />
+                        Cancel
+                    </button>
+                )}
             </div>
+
+            {/* Add Unit Form */}
+            {isAdding && (
+                <form
+                    onSubmit={handleAddUnit}
+                    className="bg-blue-50 border border-blue-200 rounded-2xl p-6 transition-all animate-in fade-in slide-in-from-top-2"
+                >
+                    <div className="flex flex-col sm:flex-row items-end gap-4">
+                        <div className="flex-1 space-y-2">
+                            <label className="text-xs font-bold text-blue-800 uppercase tracking-wider ml-1">
+                                Room Number / Name
+                            </label>
+                            <input
+                                type="text"
+                                value={newRoomNumber}
+                                onChange={(e) => setNewRoomNumber(e.target.value)}
+                                placeholder="e.g. 101, Suite A, Deluxe-1"
+                                autoFocus
+                                className="w-full px-4 py-3 bg-white border border-blue-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm"
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={isCreating || !newRoomNumber.trim()}
+                            className="px-6 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center gap-2 shadow-md hover:shadow-lg active:scale-95"
+                        >
+                            {isCreating ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Creating...
+                                </>
+                            ) : (
+                                <>
+                                    <Plus className="w-4 h-4" />
+                                    Add Room Unit
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </form>
+            )}
 
             {/* Bulk Actions Bar */}
             {selectedIds.length > 0 && (

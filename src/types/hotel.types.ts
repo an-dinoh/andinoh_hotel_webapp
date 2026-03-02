@@ -81,6 +81,7 @@ export interface Room {
   has_city_view: boolean;
   is_available: boolean;
   total_rooms: number; // Read-only: dynamic count from backend
+  primary_image?: string;
   display_price?: { amount: number; currency: string; };
   availability_summary?: { date: string; rooms_available: number; is_available: boolean; };
   created_at: string;

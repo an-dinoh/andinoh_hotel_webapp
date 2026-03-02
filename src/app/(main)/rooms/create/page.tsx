@@ -26,7 +26,6 @@ import InputField from "@/components/ui/InputField";
 import Button from "@/components/ui/Button";
 
 interface RoomForm {
-  room_number: string;
   room_type: RoomType;
   title: string;
   description: string;
@@ -46,7 +45,6 @@ export default function CreateRoomPage() {
   const [successMessage, setSuccessMessage] = useState("");
 
   const [form, setForm] = useState<RoomForm>({
-    room_number: "",
     room_type: "standard",
     title: "",
     description: "",
@@ -89,7 +87,6 @@ export default function CreateRoomPage() {
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!form.room_number.trim()) newErrors.room_number = "Room number is required";
     if (!form.title.trim()) newErrors.title = "Room title is required";
     if (!form.description.trim()) newErrors.description = "Description is required";
     if (!form.base_price || parseFloat(form.base_price) <= 0)
@@ -121,7 +118,6 @@ export default function CreateRoomPage() {
         max_adults: form.max_occupancy,
         max_children: 0,
         base_price: form.base_price,
-        total_rooms: 1,
       });
 
       setSuccessMessage("Room created successfully!");
@@ -206,17 +202,6 @@ export default function CreateRoomPage() {
               Basic Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <InputField
-                label="Room Number *"
-                type="text"
-                placeholder="e.g., 101, 205, Suite 301"
-                value={form.room_number}
-                onChange={(e) => {
-                  handleInputChange(e);
-                }}
-                error={errors.room_number}
-              />
-
               <div>
                 <label className="block text-[#0B0A07] text-sm mb-1">
                   Room Type <span className="text-red-500">*</span>
@@ -255,11 +240,10 @@ export default function CreateRoomPage() {
                   value={form.description}
                   onChange={handleInputChange}
                   rows={4}
-                  className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent placeholder:text-[#8F8E8D] placeholder:text-sm resize-none ${
-                    errors.description
+                  className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent placeholder:text-[#8F8E8D] placeholder:text-sm resize-none ${errors.description
                       ? "border-red-500 focus:ring-red-500"
                       : "border-[#D3D9DD] focus:ring-[#8E9397]"
-                  }`}
+                    }`}
                   placeholder="Describe the room features, views, and highlights..."
                 />
                 {errors.description && (
@@ -338,11 +322,10 @@ export default function CreateRoomPage() {
                     key={amenity.id}
                     type="button"
                     onClick={() => toggleAmenity(amenity.id)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all ${
-                      isSelected
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all ${isSelected
                         ? "bg-[#0F75BD] border-[#0F75BD] text-white"
                         : "bg-white border-[#D3D9DD] text-gray-800 hover:border-[#0F75BD]"
-                    }`}
+                      }`}
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
                     <span className="text-sm font-medium truncate">

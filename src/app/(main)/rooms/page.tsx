@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, Edit, Trash2, Eye, ChevronDown, Bookmark, MapPin, Star, Bed, Users, Maximize2, Sparkles, Image as ImageIcon, Video, MessageSquare, Box, Key, DollarSign } from "lucide-react";
 import Image from "next/image";
-import Loading from "@/components/ui/Loading";
 import { Room, RoomType } from "@/types/hotel.types";
 import { hotelService } from "@/services/hotel.service";
-import { toast } from "react-hot-toast";
 import ErrorState from "@/components/ui/ErrorState";
 import PhysicalRoomList from "@/components/rooms/PhysicalRoomList";
 import PricingRulesList from "@/components/rooms/PricingRulesList";
+import { useRooms } from "@/contexts/RoomsContext";
+import RoomCardSkeleton from "@/components/rooms/RoomCardSkeleton";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 type RoomDetailTab = "pictures" | "videos" | "reviews" | "3d-tour" | "units" | "pricing";
 
@@ -25,79 +26,33 @@ const PAGE_SIZE = 12;
 
 export default function RoomsPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [roomStats, setRoomStats] = useState<RoomStats>({ total: 0, available: 0, occupied: 0, avgRate: null });
-  const [totalCount, setTotalCount] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<RoomType | "all">("all");
+  const {
+    rooms,
+    totalCount,
+    roomStats,
+    isLoading,
+    isRefreshing,
+    statsLoading,
+    error,
+    currentPage,
+    searchTerm,
+    filterType,
+    sortBy,
+    setCurrentPage,
+    setSearchTerm,
+    setFilterType,
+    setSortBy,
+    fetchRoomsData
+  } = useRooms();
+
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [sortBy, setSortBy] = useState("newly_added");
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [activeTab, setActiveTab] = useState<RoomDetailTab>("pictures");
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch room stats from dashboard endpoint (single call, no room cards needed)
-  const fetchStats = async () => {
-    try {
-      setStatsLoading(true);
-      const stats = await hotelService.getDashboardStats();
-      if (stats.room_stats) {
-        setRoomStats({
-          total: stats.room_stats.total,
-          available: stats.room_stats.available,
-          occupied: stats.room_stats.occupied,
-          avgRate: stats.performance?.adr || null,
-        });
-      }
-    } catch (err) {
-      console.error("Error fetching room stats:", err);
-    } finally {
-      setStatsLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchStats();
-  }, []);
-
-  useEffect(() => {
-    fetchRooms();
-  }, [filterType, currentPage]);
-
-  const fetchRooms = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const filters: any = { page: currentPage, page_size: PAGE_SIZE };
-      if (filterType !== "all") filters.room_type = filterType;
-
-      const response = await hotelService.getRooms(filters);
-      const results = response.results || [];
-      setRooms(results);
-      setTotalCount(response.count ?? 0);
-
-      // Update average rate from loaded page
-      if (results.length > 0) {
-        const validRates = results
-          .map(r => parseFloat(r.base_price))
-          .filter(p => !isNaN(p));
-
-        if (validRates.length > 0) {
-          const avg = Math.round(validRates.reduce((sum, p) => sum + p, 0) / validRates.length);
-          setRoomStats(prev => ({ ...prev, avgRate: avg }));
-        }
-      }
-    } catch (err: any) {
-      console.error("Error fetching rooms:", err);
-      setError(err.message || "Failed to fetch rooms");
-      setRooms([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Fetch data initially and when filters (currentPage, filterType) change
+    fetchRoomsData(rooms.length > 0);
+  }, [currentPage, filterType, fetchRoomsData]);
 
   const filteredRooms = rooms.filter((room) => {
     if (!searchTerm) return true;
@@ -109,21 +64,49 @@ export default function RoomsPage() {
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  if (loading && rooms.length === 0) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loading size="lg" text="Loading rooms..." />
+      <div className="h-full bg-white overflow-y-auto scrollbar-hide pt-8 pb-8">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <Skeleton variant="text" className="w-48 h-8 mb-2" />
+              <Skeleton variant="text" className="w-64 h-4" />
+            </div>
+            <Skeleton variant="rect" className="w-36 h-10 rounded-2xl" />
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Skeleton variant="rect" className="w-full h-10 rounded-xl" />
+            <Skeleton variant="rect" className="w-32 h-10 rounded-xl" />
+          </div>
+
+          <div>
+            <Skeleton variant="text" className="w-32 h-4 mb-4" />
+            <div className="flex gap-3">
+              {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} variant="rect" className="w-24 h-10 rounded-xl" />)}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} variant="rect" className="w-full h-24 rounded-2xl" />)}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map(i => <RoomCardSkeleton key={i} />)}
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error && rooms.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen p-6 bg-white">
+      <div className="flex items-center justify-center h-full p-6 bg-white">
         <ErrorState
           title="Couldn't load rooms"
           message={error}
-          onRetry={fetchRooms}
+          onRetry={() => fetchRoomsData(false)}
         />
       </div>
     );
@@ -596,8 +579,8 @@ export default function RoomsPage() {
                       <span className="text-6xl">🏨</span>
 
                       {/* Room Number */}
-                      <div className="absolute top-4 right-4 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                        <span className="text-sm font-bold text-[#0F75BD]">{roomNumber}</span>
+                      <div className="absolute top-4 right-4 h-12 px-3 bg-white/90 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-sm">
+                        <span className="text-sm font-bold text-[#0F75BD]">{room.total_rooms || 0} Units</span>
                       </div>
 
                       {/* Room Type Badge */}
@@ -679,7 +662,7 @@ export default function RoomsPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 m-8">
                 <button
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   className="p-2 hover:bg-[#FAFAFB] rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
@@ -710,7 +693,7 @@ export default function RoomsPage() {
                   );
                 })}
                 <button
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                   className="p-2.5 hover:bg-[#FAFAFB] rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >

@@ -116,6 +116,10 @@ class HotelService {
     return apiClient.get<PaginatedResponse<PhysicalRoom>>(`hotels/rooms/${typeId}/physical-rooms/`);
   }
 
+  async createPhysicalRoom(typeId: string, data: Partial<PhysicalRoom>): Promise<PhysicalRoom> {
+    return apiClient.post<PhysicalRoom>(`hotels/rooms/${typeId}/physical-rooms/`, data);
+  }
+
   async getPricingRules(typeId: string): Promise<PaginatedResponse<PricingRule>> {
     return apiClient.get<PaginatedResponse<PricingRule>>(`hotels/rooms/${typeId}/pricing-rules/`);
   }

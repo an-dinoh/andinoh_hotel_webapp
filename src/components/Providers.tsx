@@ -5,6 +5,7 @@ import { GlobalErrorBoundary } from "@/components/ui/GlobalErrorBoundary";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { DashboardProvider } from "@/contexts/DashboardContext";
+import { RoomsProvider } from "@/contexts/RoomsContext";
 import { Toaster } from "react-hot-toast";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -13,8 +14,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <CurrencyProvider>
                 <DashboardProvider>
                     <NotificationProvider>
-                        {children}
-                        <Toaster position="top-right" />
+                        <RoomsProvider>
+                            {children}
+                            <Toaster position="top-right" />
+                        </RoomsProvider>
                     </NotificationProvider>
                 </DashboardProvider>
             </CurrencyProvider>
