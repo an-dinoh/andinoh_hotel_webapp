@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DollarSign, Plus, Calendar, Percent, X } from "lucide-react";
 import { PricingRule } from "@/types/hotel.types";
 import { hotelService } from "@/services/hotel.service";
@@ -6,8 +6,28 @@ import toast from "react-hot-toast";
 
 export default function PricingRulesList({ roomTypeId }: { roomTypeId: string }) {
     const [rules, setRules] = useState<PricingRule[]>([]);
+    const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        const fetchRules = async () => {
+            try {
+                setLoading(true);
+                const data = await hotelService.getPricingRules(roomTypeId);
+                setRules(data.results || []);
+            } catch (error) {
+                console.error("Error fetching pricing rules:", error);
+                toast.error("Failed to load pricing rules");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (roomTypeId) {
+            fetchRules();
+        }
+    }, [roomTypeId]);
 
     const [title, setTitle] = useState("");
     const [startDate, setStartDate] = useState("");
@@ -69,7 +89,14 @@ export default function PricingRulesList({ roomTypeId }: { roomTypeId: string })
                 </button>
             </div>
 
-            {rules.length === 0 ? (
+            {loading ? (
+                <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-500">
+                    <div className="flex flex-col items-center gap-2">
+                        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-sm font-medium">Loading rules...</p>
+                    </div>
+                </div>
+            ) : rules.length === 0 ? (
                 <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-500">
                     <DollarSign className="w-12 h-12 mx-auto text-gray-300 mb-4" />
                     <p className="text-lg font-medium text-gray-900 mb-1">No pricing rules</p>

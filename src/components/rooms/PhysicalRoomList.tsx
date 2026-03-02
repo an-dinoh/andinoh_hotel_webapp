@@ -1,22 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Key, Edit, Save, CheckSquare, Square } from "lucide-react";
 import { RoomStatus, HousekeepingStatus, PhysicalRoom } from "@/types/hotel.types";
 import { hotelService } from "@/services/hotel.service";
 import toast from "react-hot-toast";
 
 export default function PhysicalRoomList({ roomId }: { roomId: string }) {
-    // Mock data to demonstrate bulk update since the exact GET endpoint isn't detailed, 
-    // but we must implement the bulk update spec perfectly.
-    const [units, setUnits] = useState<PhysicalRoom[]>([
-        { id: `uuid-${roomId}-1`, hotel: "hotel-1", room_type: roomId, room_number: "201", status: "available", housekeeping_status: "clean", created_at: "2026-03-01", updated_at: "2026-03-01" },
-        { id: `uuid-${roomId}-2`, hotel: "hotel-1", room_type: roomId, room_number: "202", status: "occupied", housekeeping_status: "dirty", created_at: "2026-03-01", updated_at: "2026-03-01" },
-        { id: `uuid-${roomId}-3`, hotel: "hotel-1", room_type: roomId, room_number: "203", status: "maintenance", housekeeping_status: "inspecting", created_at: "2026-03-01", updated_at: "2026-03-01" },
-    ]);
-
+    const [units, setUnits] = useState<PhysicalRoom[]>([]);
+    const [loading, setLoading] = useState(true);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [bulkStatus, setBulkStatus] = useState<RoomStatus | "">("");
     const [bulkHousekeeping, setBulkHousekeeping] = useState<HousekeepingStatus | "">("");
     const [isUpdating, setIsUpdating] = useState(false);
+
+    useEffect(() => {
+        const fetchUnits = async () => {
+            try {
+                setLoading(true);
+                const data = await hotelService.getPhysicalRooms(roomId);
+                setUnits(data.results || []);
+            } catch (error) {
+                console.error("Error fetching physical rooms:", error);
+                toast.error("Failed to load room units");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (roomId) {
+            fetchUnits();
+        }
+    }, [roomId]);
 
     const toggleSelect = (id: string) => {
         setSelectedIds((prev) =>
@@ -168,39 +181,59 @@ export default function PhysicalRoomList({ roomId }: { roomId: string }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {units.map((unit) => (
-                                <tr
-                                    key={unit.id}
-                                    className={`border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors ${selectedIds.includes(unit.id) ? "bg-blue-50/50" : ""
-                                        }`}
-                                >
-                                    <td className="p-4">
-                                        <button onClick={() => toggleSelect(unit.id)} className="text-gray-400 hover:text-blue-600">
-                                            {selectedIds.includes(unit.id) ? (
-                                                <CheckSquare className="w-5 h-5 text-blue-600" />
-                                            ) : (
-                                                <Square className="w-5 h-5" />
-                                            )}
-                                        </button>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-2">
-                                            <Key className="w-4 h-4 text-gray-400" />
-                                            <span className="font-semibold text-gray-900">{unit.room_number}</span>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={4} className="p-12 text-center text-gray-500">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                            <p className="text-sm font-medium">Loading units...</p>
                                         </div>
                                     </td>
-                                    <td className="p-4">
-                                        <span className={`px-2.5 py-1 text-xs font-medium rounded-full capitalize ${getStatusColor(unit.status)}`}>
-                                            {unit.status.replace(/_/g, " ")}
-                                        </span>
-                                    </td>
-                                    <td className="p-4">
-                                        <span className={`px-2.5 py-1 text-xs font-medium rounded-full capitalize ${getHousekeepingColor(unit.housekeeping_status)}`}>
-                                            {unit.housekeeping_status.replace(/_/g, " ")}
-                                        </span>
+                                </tr>
+                            ) : units.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="p-12 text-center text-gray-500">
+                                        <div className="flex flex-col items-center gap-2 text-gray-400">
+                                            <Key className="w-8 h-8 " />
+                                            <p className="text-sm">No physical room units found for this type.</p>
+                                        </div>
                                     </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                units.map((unit) => (
+                                    <tr
+                                        key={unit.id}
+                                        className={`border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors ${selectedIds.includes(unit.id) ? "bg-blue-50/50" : ""
+                                            }`}
+                                    >
+                                        <td className="p-4">
+                                            <button onClick={() => toggleSelect(unit.id)} className="text-gray-400 hover:text-blue-600">
+                                                {selectedIds.includes(unit.id) ? (
+                                                    <CheckSquare className="w-5 h-5 text-blue-600" />
+                                                ) : (
+                                                    <Square className="w-5 h-5" />
+                                                )}
+                                            </button>
+                                        </td>
+                                        <td className="p-4">
+                                            <div className="flex items-center gap-2">
+                                                <Key className="w-4 h-4 text-gray-400" />
+                                                <span className="font-semibold text-gray-900">{unit.room_number}</span>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className={`px-2.5 py-1 text-xs font-medium rounded-full capitalize ${getStatusColor(unit.status)}`}>
+                                                {unit.status?.replace(/_/g, " ") || "N/A"}
+                                            </span>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className={`px-2.5 py-1 text-xs font-medium rounded-full capitalize ${getHousekeepingColor(unit.housekeeping_status)}`}>
+                                                {unit.housekeeping_status?.replace(/_/g, " ") || "N/A"}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>

@@ -67,7 +67,7 @@ export default function RevenueOverviewCard({
             </div>
           ))
         ) : (
-          items.map((item, index) => (
+          (items || []).map((item, index) => (
             <div
               key={index}
               className="bg-white border-[0.5px] border-[#C8CFD5] rounded-2xl py-4 px-4 hover:border-[#FBB81F] transition-colors group"
@@ -78,11 +78,11 @@ export default function RevenueOverviewCard({
                     {item.label}
                   </p>
                   <p className="text-xl font-bold text-[#1A1A1A]">
-                    {displayCurrency} {item.amount}
+                    {displayCurrency} {item.amount || "0"}
                   </p>
                 </div>
                 <span className="text-xs font-bold text-[#FBB81F] bg-[#FFF4DF] w-10 h-10 flex items-center justify-center rounded-full">
-                  {item.percentage || "-%"}
+                  {item.percentage || "0%"}
                 </span>
               </div>
             </div>

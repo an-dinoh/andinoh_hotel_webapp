@@ -112,6 +112,14 @@ class HotelService {
     return apiClient.post<void>('hotels/physical-rooms/bulk-update/', data);
   }
 
+  async getPhysicalRooms(typeId: string): Promise<PaginatedResponse<PhysicalRoom>> {
+    return apiClient.get<PaginatedResponse<PhysicalRoom>>(`hotels/rooms/${typeId}/physical-rooms/`);
+  }
+
+  async getPricingRules(typeId: string): Promise<PaginatedResponse<PricingRule>> {
+    return apiClient.get<PaginatedResponse<PricingRule>>(`hotels/rooms/${typeId}/pricing-rules/`);
+  }
+
   async createPricingRule(typeId: string, data: Partial<PricingRule>): Promise<PricingRule> {
     return apiClient.post<PricingRule>(`hotels/rooms/${typeId}/pricing-rules/`, data);
   }

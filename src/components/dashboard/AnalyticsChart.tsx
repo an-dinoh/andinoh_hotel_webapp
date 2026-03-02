@@ -15,6 +15,7 @@ export default function AnalyticsChart({
   loading = false,
 }: AnalyticsChartProps) {
   const [view, setView] = useState<"revenue" | "bookings">("revenue");
+  const skeletonHeights = ["70%", "44%", "52%", "22%", "35%", "78%", "72%", "66%", "53%", "77%", "36%", "42%"];
 
   return (
     <div className="bg-white border border-gray-100 rounded-3xl p-8">
@@ -47,7 +48,7 @@ export default function AnalyticsChart({
             <div key={i} className="flex-1 flex flex-col justify-end gap-2 h-full">
               <Skeleton
                 width="100%"
-                height={`${Math.floor(Math.random() * 60) + 20}%`}
+                height={skeletonHeights[i % skeletonHeights.length]}
                 className="rounded-t-xl bg-blue-50"
               />
             </div>

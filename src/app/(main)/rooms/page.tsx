@@ -81,8 +81,14 @@ export default function RoomsPage() {
 
       // Update average rate from loaded page
       if (results.length > 0) {
-        const avg = Math.round(results.reduce((sum, r) => sum + parseInt(r.base_price), 0) / results.length);
-        setRoomStats(prev => ({ ...prev, avgRate: avg }));
+        const validRates = results
+          .map(r => parseFloat(r.base_price))
+          .filter(p => !isNaN(p));
+
+        if (validRates.length > 0) {
+          const avg = Math.round(validRates.reduce((sum, p) => sum + p, 0) / validRates.length);
+          setRoomStats(prev => ({ ...prev, avgRate: avg }));
+        }
       }
     } catch (err: any) {
       console.error("Error fetching rooms:", err);
@@ -177,7 +183,7 @@ export default function RoomsPage() {
                   <div className="flex items-center gap-4">
                     <span className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-bold rounded-xl">
                       <Sparkles className="w-4 h-4" />
-                      {selectedRoom.room_type.toUpperCase()}
+                      {selectedRoom.room_type?.toUpperCase() || "N/A"}
                     </span>
                     <div className="text-white">
                       <span className="text-3xl font-bold">₦{selectedRoom.base_price}</span>
@@ -373,7 +379,7 @@ export default function RoomsPage() {
                 <div className="space-y-5">
                   <div className="flex items-center justify-between pb-4 border-b border-[#F3F4F6]">
                     <span className="text-gray-500 text-sm font-medium">Bed Type</span>
-                    <span className="font-semibold text-gray-800 capitalize">{selectedRoom.bed_type}</span>
+                    <span className="font-semibold text-gray-800 capitalize">{selectedRoom.bed_type || "N/A"}</span>
                   </div>
                   <div className="flex items-center justify-between pb-4 border-b border-[#F3F4F6]">
                     <span className="text-gray-500 text-sm font-medium">Room Size</span>

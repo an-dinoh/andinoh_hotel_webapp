@@ -7,6 +7,7 @@ import { DashboardStats, BookingTrendResponse, SegmentationResponse, WalletStats
 import { useRouter } from "next/navigation";
 import { webSocketService } from "@/services/websocket.service";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useDashboard } from "@/contexts/DashboardContext";
 
 // Import dashboard components
 import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
@@ -22,71 +23,42 @@ import ErrorState from "@/components/ui/ErrorState";
 
 export default function DashboardPage() {
   const { activeCurrency } = useCurrency();
+  const {
+    stats,
+    trendResponse,
+    wallet,
+    upcomingBookings,
+    activities,
+    isLoading,
+    isRefreshing,
+    error,
+    fetchDashboardData
+  } = useDashboard();
+
   const currencySymbol = activeCurrency?.symbol || "₦";
   const router = useRouter();
   const [currentUser] = useState(authService.getUser());
-  const [loading, setLoading] = useState(true);
-
-  // Data States
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [trendResponse, setTrendResponse] = useState<BookingTrendResponse | null>(null);
-  const [wallet, setWallet] = useState<WalletStats | null>(null);
-  const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
-  const [activities, setActivities] = useState<any[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Fetch core stats
-      const [statsData, trendsData, walletData, bookingsData] = await Promise.all([
-        hotelService.getDashboardStats().catch(() => null),
-        hotelService.getBookingTrends().catch(() => null),
-        hotelService.getWalletStats().catch(() => null),
-        hotelService.getBookings({ booking_status: 'confirmed' }).catch(() => ({ results: [] })),
-      ]);
-
-      setStats(statsData);
-      setTrendResponse(trendsData);
-      setWallet(walletData);
-      setUpcomingBookings(bookingsData.results);
-
-      // Mock some real-world activities for the premium feel
-      setActivities([
-        { id: '1', type: 'booking', title: 'New Booking', timestamp: '2 mins ago', description: 'John Doe booked Deluxe Room for 3 nights.' },
-        { id: '2', type: 'payment', title: 'Payment Received', timestamp: '15 mins ago', description: 'Confirmed payment of ₦45,000 for Booking #BK-9021.' },
-        { id: '3', type: 'system', title: 'Daily Report Ready', timestamp: '1 hour ago', description: 'The performance report for Feb 28 is now available.' },
-        { id: '4', type: currentUser?.role === 'staff' ? 'staff' : 'system', title: 'Room Cleaned', timestamp: '2 hours ago', description: 'Room 204 has been marked as Clean by Housekeeping.' },
-      ]);
-
-    } catch (err: any) {
-      console.error("Error fetching dashboard data:", err);
-      setError(err.message || "Failed to load dashboard statistics");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchDashboardData();
+    // Initial fetch on mount - if we already have data, this will be a background refresh
+    fetchDashboardData(!!stats);
 
     const removeListener = webSocketService.addListener((payload: any) => {
       if (['booking_update', 'inventory_updated', 'hotel_status_update'].includes(payload.type)) {
-        fetchDashboardData();
+        // Use background refresh for WebSocket updates
+        fetchDashboardData(true);
       }
     });
 
     return () => {
       removeListener();
     };
-  }, []);
+  }, [fetchDashboardData]);
 
-  const totalBookings = stats?.volume.total_bookings || 0;
-  const activeBookings = stats?.room_stats.occupied || 0;
-  const totalRevenue = stats?.volume.total_revenue?.toLocaleString() || "0";
-  const occupancyRate = stats?.performance.occupancy_rate || 0;
+  const totalBookings = stats?.volume?.total_bookings || 0;
+  const activeBookings = stats?.room_stats?.occupied || 0;
+  const totalRevenue = stats?.volume?.total_revenue?.toLocaleString() || "0";
+  const occupancyRate = stats?.performance?.occupancy_rate || 0;
 
   const welcomeActionCards = [
     {
@@ -112,20 +84,20 @@ export default function DashboardPage() {
   ];
 
   const bookingStats = [
-    { label: "Check-ins Today", count: stats?.today.check_ins || 0, color: "text-green-600", bgColor: "bg-[#E7F2EB]" },
-    { label: "Check-outs Today", count: stats?.today.check_outs || 0, color: "text-orange-600", bgColor: "bg-[#FFF4DF]" },
-    { label: "Pending Tasks", count: stats?.today.pending_tasks || 0, color: "text-gray-600", bgColor: "bg-gray-100" },
+    { label: "Check-ins Today", count: stats?.today?.check_ins || 0, color: "text-green-600", bgColor: "bg-[#E7F2EB]" },
+    { label: "Check-outs Today", count: stats?.today?.check_outs || 0, color: "text-orange-600", bgColor: "bg-[#FFF4DF]" },
+    { label: "Pending Tasks", count: stats?.today?.pending_tasks || 0, color: "text-gray-600", bgColor: "bg-gray-100" },
   ];
 
   const revenueItems = [
-    { label: "Today's Revenue", amount: stats?.today.revenue.toLocaleString() || "0", percentage: "+12%" },
-    { label: "Available Balance", amount: wallet?.available_balance.toLocaleString() || "0", percentage: "Live" },
+    { label: "Today's Revenue", amount: stats?.today?.revenue?.toLocaleString() || "0", percentage: "+12%" },
+    { label: "Available Balance", amount: wallet?.available_balance?.toLocaleString() || "0", percentage: "Live" },
   ];
 
   const activityTabs = [
     { id: "gigs" as const, label: "Occupancy", count: activeBookings },
-    { id: "saved" as const, label: "Tasks", count: stats?.today.pending_tasks || 0 },
-    { id: "posts" as const, label: "Reviews", count: stats?.performance.average_rating || 0 },
+    { id: "saved" as const, label: "Tasks", count: stats?.today?.pending_tasks || 0 },
+    { id: "posts" as const, label: "Reviews", count: stats?.performance?.average_rating || 0 },
   ];
 
   if (error && !stats) {
@@ -143,26 +115,26 @@ export default function DashboardPage() {
         <WelcomeHeader
           userName={currentUser?.full_name || currentUser?.name || "User"}
           actionCards={welcomeActionCards}
-          loading={loading}
+          loading={isLoading}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <BookingsOverviewCard
             totalBookings={totalBookings}
             stats={bookingStats}
-            loading={loading}
+            loading={isLoading}
           />
           <RevenueOverviewCard
             totalRevenue={totalRevenue}
             items={revenueItems}
-            loading={loading}
+            loading={isLoading}
           />
         </div>
 
         <AnalyticsChart
           series={trendResponse?.series || []}
           currency={currencySymbol}
-          loading={loading}
+          loading={isLoading}
         />
 
         {/* Room Stats - Grid for better visual hierarchy */}
@@ -181,14 +153,14 @@ export default function DashboardPage() {
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { label: "Total Inventory", value: stats?.room_stats.total || 0, color: "text-[#1A1A1A]", bg: "bg-gray-50" },
-              { label: "Available Now", value: stats?.room_stats.available || 0, color: "text-green-600", bg: "bg-green-50" },
-              { label: "Current Stay", value: stats?.room_stats.occupied || 0, color: "text-orange-600", bg: "bg-[#FFF4DF]/50" },
-              { label: "Avg Nightly Rate", value: `${currencySymbol}${stats?.performance.adr?.toLocaleString() || "0"}`, color: "text-[#0F75BD]", bg: "bg-blue-50" },
+              { label: "Total Inventory", value: stats?.room_stats?.total || 0, color: "text-[#1A1A1A]", bg: "bg-gray-50" },
+              { label: "Available Now", value: stats?.room_stats?.available || 0, color: "text-green-600", bg: "bg-green-50" },
+              { label: "Current Stay", value: stats?.room_stats?.occupied || 0, color: "text-orange-600", bg: "bg-[#FFF4DF]/50" },
+              { label: "Avg Nightly Rate", value: `${currencySymbol}${stats?.performance?.adr?.toLocaleString() || "0"}`, color: "text-[#0F75BD]", bg: "bg-blue-50" },
             ].map((item, i) => (
               <div key={i} className={`${item.bg} rounded-2xl p-6 transition-transform hover:scale-[1.02] duration-300`}>
                 <p className="text-[10px] font-bold text-[#5C5B59] uppercase tracking-wider mb-2">{item.label}</p>
-                <p className={`text-2xl font-black ${item.color}`}>{loading ? "..." : item.value}</p>
+                <p className={`text-2xl font-black ${item.color}`}>{isLoading ? "..." : item.value}</p>
               </div>
             ))}
           </div>
@@ -202,24 +174,24 @@ export default function DashboardPage() {
         <PerformanceCard
           userName={currentUser?.full_name || currentUser?.name || "User"}
           userBadge={currentUser?.role === 'hotel_owner' ? "Owner" : "Staff"}
-          averageRating={stats?.performance.average_rating || 0}
+          averageRating={stats?.performance?.average_rating || 0}
           completionPercentage={occupancyRate}
           points={0}
           approvedGigs={totalBookings}
-          loading={loading}
+          loading={isLoading}
         />
 
         <UpcomingBookings
           bookings={upcomingBookings}
-          loading={loading}
+          loading={isLoading}
         />
 
         <RecentActivity
           activities={activities}
-          loading={loading}
+          loading={isLoading}
         />
 
-        <ReviewsCard loading={loading} />
+        <ReviewsCard loading={isLoading} />
       </div>
     </div>
   );

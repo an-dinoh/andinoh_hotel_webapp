@@ -73,7 +73,11 @@ export default function PerformanceCard({
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <span className="text-2xl font-black text-orange-500">
-              {loading ? <Skeleton width="40px" height="32px" /> : averageRating.toFixed(1)}
+              {loading ? (
+                <Skeleton width="40px" height="32px" />
+              ) : (
+                (typeof averageRating === 'number' ? averageRating.toFixed(1) : "0.0")
+              )}
             </span>
             <span className="text-xs font-bold text-[#5C5B59] uppercase tracking-tighter">
               Avg Rating
@@ -81,7 +85,7 @@ export default function PerformanceCard({
           </div>
           <div className="flex gap-0.5">
             {[1, 2, 3, 4, 5].map((s) => (
-              <span key={s} className={`text-xs ${s <= Math.round(averageRating) ? 'text-orange-400' : 'text-gray-200'}`}>⭐</span>
+              <span key={s} className={`text-xs ${s <= Math.round(averageRating || 0) ? 'text-orange-400' : 'text-gray-200'}`}>⭐</span>
             ))}
           </div>
         </div>
@@ -110,14 +114,14 @@ export default function PerformanceCard({
                     strokeWidth="10"
                     fill="none"
                     strokeDasharray="452.39"
-                    strokeDashoffset={452.39 - (completionPercentage / 100) * 452.39}
+                    strokeDashoffset={452.39 - ((completionPercentage || 0) / 100) * 452.39}
                     strokeLinecap="round"
                     className="transition-all duration-1000 ease-out"
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-3xl font-black text-[#1A1A1A]">
-                    {completionPercentage}%
+                    {Math.round(completionPercentage || 0)}%
                   </span>
                   <span className="text-[10px] text-[#5C5B59] font-bold uppercase">Occupancy</span>
                 </div>
@@ -130,11 +134,11 @@ export default function PerformanceCard({
       <div className="grid grid-cols-2 gap-4 mb-8">
         <div className="border border-gray-100 bg-gray-50 rounded-2xl p-4">
           <p className="text-[10px] font-bold text-[#5C5B59] uppercase mb-1">Total Points</p>
-          {loading ? <Skeleton width="40px" height="24px" /> : <p className="text-2xl font-black text-[#1A1A1A]">{points}</p>}
+          {loading ? <Skeleton width="40px" height="24px" /> : <p className="text-2xl font-black text-[#1A1A1A]">{points || 0}</p>}
         </div>
         <div className="border border-gray-100 bg-gray-50 rounded-2xl p-4">
           <p className="text-[10px] font-bold text-[#5C5B59] uppercase mb-1">Bookings</p>
-          {loading ? <Skeleton width="40px" height="24px" /> : <p className="text-2xl font-black text-[#1A1A1A]">{approvedGigs}</p>}
+          {loading ? <Skeleton width="40px" height="24px" /> : <p className="text-2xl font-black text-[#1A1A1A]">{approvedGigs || 0}</p>}
         </div>
       </div>
 

@@ -80,7 +80,7 @@ export interface Room {
   has_sea_view: boolean;
   has_city_view: boolean;
   is_available: boolean;
-  total_rooms: number;
+  total_rooms: number; // Read-only: dynamic count from backend
   display_price?: { amount: number; currency: string; };
   availability_summary?: { date: string; rooms_available: number; is_available: boolean; };
   created_at: string;
@@ -133,7 +133,7 @@ export interface CreateRoomRequest {
   has_balcony?: boolean;
   has_sea_view?: boolean;
   has_city_view?: boolean;
-  total_rooms: number;
+  total_rooms?: number; // Optional: calculated by backend from physical units
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

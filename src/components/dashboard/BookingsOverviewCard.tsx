@@ -57,7 +57,7 @@ export default function BookingsOverviewCard({
             </div>
           ))
         ) : (
-          stats.map((stat, index) => (
+          (stats || []).map((stat, index) => (
             <div
               key={index}
               className="flex items-center justify-between border-[0.5px] border-[#C8CFD5] bg-white rounded-2xl px-4 py-4 hover:border-[#0F75BD] transition-colors group"
@@ -66,7 +66,7 @@ export default function BookingsOverviewCard({
                 {stat.label}
               </span>
               <span className={`text-sm font-bold ${stat.color} ${stat.bgColor} px-4 py-1.5 rounded-lg`}>
-                {stat.count}
+                {stat.count || 0}
               </span>
             </div>
           ))
