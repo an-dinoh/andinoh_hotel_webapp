@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { GlobalErrorBoundary } from "@/components/ui/GlobalErrorBoundary";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import { Toaster } from "react-hot-toast";
 
 const rational = localFont({
   src: [
@@ -78,8 +80,7 @@ export const metadata: Metadata = {
   },
 };
 
-import { NotificationProvider } from "@/contexts/NotificationContext";
-import { Toaster } from "react-hot-toast";
+import { Providers } from "@/components/Providers";
 
 export default function RootLayout({
   children,
@@ -89,14 +90,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${rational.variable} ${rational.className} antialiased`} suppressHydrationWarning={true}>
-        <GlobalErrorBoundary>
-          <CurrencyProvider>
-            <NotificationProvider>
-              {children}
-              <Toaster position="top-right" />
-            </NotificationProvider>
-          </CurrencyProvider>
-        </GlobalErrorBoundary>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -2,15 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Edit, Trash2, Eye, ChevronDown, Bookmark, MapPin, Star, Bed, Users, Maximize2, Sparkles, Image as ImageIcon, Video, MessageSquare, Box } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Eye, ChevronDown, Bookmark, MapPin, Star, Bed, Users, Maximize2, Sparkles, Image as ImageIcon, Video, MessageSquare, Box, Key, DollarSign } from "lucide-react";
 import Image from "next/image";
 import Loading from "@/components/ui/Loading";
 import { Room, RoomType } from "@/types/hotel.types";
 import { hotelService } from "@/services/hotel.service";
 import { toast } from "react-hot-toast";
 import ErrorState from "@/components/ui/ErrorState";
+import PhysicalRoomList from "@/components/rooms/PhysicalRoomList";
+import PricingRulesList from "@/components/rooms/PricingRulesList";
 
-type RoomDetailTab = "pictures" | "videos" | "reviews" | "3d-tour";
+type RoomDetailTab = "pictures" | "videos" | "reviews" | "3d-tour" | "units" | "pricing";
 
 interface RoomStats {
   total: number;
@@ -44,10 +46,10 @@ export default function RoomsPage() {
       const stats = await hotelService.getDashboardStats();
       if (stats.room_stats) {
         setRoomStats({
-          total: stats.room_stats.total_rooms,
-          available: stats.room_stats.available_rooms,
-          occupied: stats.room_stats.occupied_rooms,
-          avgRate: stats.room_stats.average_rate,
+          total: stats.room_stats.total,
+          available: stats.room_stats.available,
+          occupied: stats.room_stats.occupied,
+          avgRate: stats.performance?.adr || null,
         });
       }
     } catch (err) {
@@ -187,12 +189,14 @@ export default function RoomsPage() {
 
               {/* Tabs Navigation */}
               <div className="border-b border-[#E5E7EB] bg-white">
-                <div className="flex gap-1 px-8">
+                <div className="flex gap-1 px-8 overflow-x-auto scrollbar-hide">
                   {[
                     { id: "pictures" as RoomDetailTab, label: "Pictures", icon: ImageIcon },
                     { id: "videos" as RoomDetailTab, label: "Videos", icon: Video },
                     { id: "reviews" as RoomDetailTab, label: "Reviews", icon: MessageSquare },
                     { id: "3d-tour" as RoomDetailTab, label: "3D Tour", icon: Box },
+                    { id: "units" as RoomDetailTab, label: "Units (Physical Rooms)", icon: Key },
+                    { id: "pricing" as RoomDetailTab, label: "Pricing Rules", icon: DollarSign },
                   ].map((tab) => {
                     const Icon = tab.icon;
                     return (
@@ -345,6 +349,14 @@ export default function RoomsPage() {
                     <p className="text-xs text-gray-500 mt-6">Supported platforms: Matterport, Kuula, 360Cities</p>
                   </div>
                 </div>
+              )}
+
+              {activeTab === "units" && (
+                <PhysicalRoomList roomId={selectedRoom.id} />
+              )}
+
+              {activeTab === "pricing" && (
+                <PricingRulesList roomTypeId={selectedRoom.id} />
               )}
             </div>
 

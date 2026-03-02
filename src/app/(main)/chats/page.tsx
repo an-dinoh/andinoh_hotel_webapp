@@ -169,6 +169,10 @@ export default function ChatsPage() {
     setMessage("");
     setSending(true);
 
+    // Get staff name
+    const user = authService.getUser();
+    const staffName = user ? `${(user as any).first_name || ''} ${(user as any).last_name || ''}`.trim() || 'Staff' : 'Staff';
+
     // Optimistic update
     const optimistic: ChatMessage = {
       id: `temp-${Date.now()}`,
@@ -181,7 +185,7 @@ export default function ChatsPage() {
     setMessages(prev => [...prev, optimistic]);
 
     try {
-      const sent = await chatService.sendMessage(selectedChat.id, text);
+      const sent = await chatService.sendMessage(selectedChat.id, text, staffName);
       // Replace optimistic with confirmed
       setMessages(prev => prev.map(m => m.id === optimistic.id ? sent : m));
     } catch {
@@ -195,15 +199,43 @@ export default function ChatsPage() {
 
   const handleCloseChat = async () => {
     if (!selectedChat) return;
-    setShowChatMenu(false);
     try {
+      setShowChatMenu(false);
       await chatService.closeChat(selectedChat.id);
-      toast.success("Chat closed");
-      setSelectedChat(null);
-      setMessages([]);
+      toast.success("Chat closed successfully");
       fetchConversations();
-    } catch {
+      setSelectedChat(null);
+    } catch (err: any) {
       toast.error("Failed to close chat");
+    }
+  };
+
+  const handleAssignChat = async () => {
+    if (!selectedChat) return;
+
+    try {
+      const user = authService.getUser() as any;
+      if (!user) {
+        toast.error("User session not found");
+        return;
+      }
+      const staffId = user.id || user.uid;
+
+      if (!staffId) {
+        toast.error("Staff ID not available");
+        return;
+      }
+
+      setShowChatMenu(false);
+      await chatService.assignChat(selectedChat.id, staffId);
+      toast.success("Chat assigned to you");
+      fetchConversations();
+
+      // Update selected chat immediately if possible
+      const staffName = user.full_name || `${user.first_name || ""} ${user.last_name || ""}`.trim() || "You";
+      setSelectedChat(prev => prev ? { ...prev, assigned_staff_name: staffName } : null);
+    } catch (err: any) {
+      toast.error("Failed to assign chat");
     }
   };
 
@@ -372,8 +404,28 @@ export default function ChatsPage() {
                         <UserCircle className="w-4 h-4 text-[#0F75BD]" />
                         View Guest Profile
                       </button>
+                      {selectedChat.assigned_staff_name ? (
+                        <div className="px-4 py-2 text-xs text-gray-500 bg-gray-50 border-b border-[#E5E7EB]">
+                          Assigned to: <span className="font-semibold text-gray-700">{selectedChat.assigned_staff_name}</span>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={handleAssignChat}
+                          className="w-full px-4 py-2.5 text-left text-sm hover:bg-[#FAFAFB] transition-colors flex items-center gap-3 text-[#1A1A1A]"
+                        >
+                          <UserCircle className="w-4 h-4 text-emerald-600" />
+                          Assign to me
+                        </button>
+                      )}
                       <button
-                        onClick={() => setShowChatMenu(false)}
+                        onClick={() => {
+                          if (selectedChat?.booking_id) {
+                            window.open(`/bookings/${selectedChat.booking_id}`, "_blank");
+                          } else {
+                            toast.error("No booking associated with this chat");
+                          }
+                          setShowChatMenu(false);
+                        }}
                         className="w-full px-4 py-2.5 text-left text-sm hover:bg-[#FAFAFB] transition-colors flex items-center gap-3 text-[#1A1A1A]"
                       >
                         <FileText className="w-4 h-4 text-blue-600" />

@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, Plus, Download, TrendingUp, TrendingDown, Calendar, DollarSign, X, FileText, FileSpreadsheet, File } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ChevronDown, Plus, Download, TrendingUp, TrendingDown, Calendar, DollarSign, X, FileText, FileSpreadsheet, File, Building2 } from "lucide-react";
 import Image from "next/image";
+import { hotelService } from "@/services/hotel.service";
+import { WalletStats } from "@/types/hotel.types";
+import BankAccountsList from "@/components/wallet/BankAccountsList";
+import WithdrawalModal from "@/components/wallet/WithdrawalModal";
 
 interface Transaction {
   id: string;
@@ -23,7 +27,26 @@ export default function WalletPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showBankAccountsModal, setShowBankAccountsModal] = useState(false);
+  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+  const [walletStats, setWalletStats] = useState<WalletStats | null>(null);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 10;
+
+  useEffect(() => {
+    const fetchWalletData = async () => {
+      try {
+        setLoading(true);
+        const stats = await hotelService.getWalletStats();
+        setWalletStats(stats);
+      } catch (error) {
+        console.error("Failed to load wallet stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchWalletData();
+  }, []);
 
   // Mock transaction data
   const transactions: Transaction[] = [
@@ -54,10 +77,6 @@ export default function WalletPage() {
     { id: "TXN-025", type: "Room Service Payment", guest: "Ronald Green", room: "Deluxe 405", amount: 9500, date: "Nov 21, 2025", status: "Completed", paymentMethod: "Cash", time: "7:00 PM", description: "Mini bar and snacks" },
   ];
 
-  const totalRevenue = 450000;
-  const withdrawals = 120000;
-  const pendingPayments = 58000;
-
   // Pagination calculations
   const totalPages = Math.ceil(transactions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -79,45 +98,63 @@ export default function WalletPage() {
             <h1 className="text-3xl font-bold text-[#1A1A1A]">Wallet</h1>
             <p className="text-[#5C5B59] mt-1">Manage your hotel finances and transactions</p>
           </div>
-          <button
-            onClick={() => setShowExportModal(true)}
-            className="px-4 py-2.5 bg-[#0F75BD] text-sm text-white font-regular rounded-2xl hover:bg-[#0050C8] transition-colors flex items-center gap-2 w-fit"
-          >
-            <Download className="w-4 h-4" />
-            Export Report
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowBankAccountsModal(true)}
+              className="px-4 py-2.5 border border-[#D3D9DD] text-sm text-[#1A1A1A] font-medium rounded-2xl hover:bg-[#FAFAFB] transition-colors flex items-center gap-2"
+            >
+              <Building2 className="w-4 h-4" />
+              Bank Accounts
+            </button>
+            <button
+              onClick={() => setShowExportModal(true)}
+              className="px-4 py-2.5 bg-[#0F75BD] text-sm text-white font-medium rounded-2xl hover:bg-[#0050C8] transition-colors flex items-center gap-2 w-fit"
+            >
+              <Download className="w-4 h-4" />
+              Export Report
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-[#F5F5F5] rounded-2xl p-5">
+          <div className="bg-[#F5F5F5] rounded-2xl p-5 relative overflow-hidden">
+            {loading && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10" />}
             <p className="text-[#5C5B59] text-sm mb-1">Total Revenue</p>
-            <p className="text-2xl font-bold text-[#1A1A1A]">₦{totalRevenue.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-[#1A1A1A]">₦{(walletStats?.total_lifetime_revenue || 0).toLocaleString()}</p>
             <div className="flex items-center gap-1 mt-2">
               <TrendingUp className="w-4 h-4 text-green-600" />
-              <span className="text-xs font-medium text-green-600">+12.5%</span>
+              <span className="text-xs font-medium text-green-600">Lifetime</span>
             </div>
           </div>
 
-          <div className="bg-[#F0F9FF] rounded-2xl p-5">
+          <div className="bg-[#F0F9FF] rounded-2xl p-5 relative overflow-hidden">
+            {loading && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10" />}
             <p className="text-[#5C5B59] text-sm mb-1">Total Withdrawals</p>
-            <p className="text-2xl font-bold text-[#1A1A1A]">₦{withdrawals.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-[#1A1A1A]">₦{(walletStats?.total_withdrawn || 0).toLocaleString()}</p>
             <div className="flex items-center gap-1 mt-2">
               <TrendingDown className="w-4 h-4 text-orange-600" />
               <span className="text-xs font-medium text-orange-600">Withdrawn</span>
             </div>
           </div>
 
-          <div className="bg-[#FEF3C7] rounded-2xl p-5">
-            <p className="text-[#5C5B59] text-sm mb-1">Pending Payments</p>
-            <p className="text-2xl font-bold text-[#1A1A1A]">₦{pendingPayments.toLocaleString()}</p>
-            <p className="text-xs text-[#5C5B59] mt-2">1 booking payment</p>
+          <div className="bg-[#FEF3C7] rounded-2xl p-5 relative overflow-hidden">
+            {loading && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10" />}
+            <p className="text-[#5C5B59] text-sm mb-1">Pending Clearance</p>
+            <p className="text-2xl font-bold text-[#1A1A1A]">₦{(walletStats?.pending_clearance || 0).toLocaleString()}</p>
+            <p className="text-xs text-[#5C5B59] mt-2">Awaiting settlement</p>
           </div>
 
-          <div className="bg-[#F5F3FF] rounded-2xl p-5">
+          <div className="bg-[#F5F3FF] rounded-2xl p-5 relative overflow-hidden">
+            {loading && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10" />}
             <p className="text-[#5C5B59] text-sm mb-1">Available Balance</p>
-            <p className="text-2xl font-bold text-[#1A1A1A]">₦{(totalRevenue - withdrawals).toLocaleString()}</p>
-            <button className="text-xs font-medium text-[#0F75BD] mt-2 hover:underline">Withdraw Funds</button>
+            <p className="text-2xl font-bold text-[#1A1A1A]">₦{(walletStats?.available_balance || 0).toLocaleString()}</p>
+            <button
+              onClick={() => setShowWithdrawalModal(true)}
+              className="text-xs font-medium text-[#0F75BD] mt-2 hover:underline"
+            >
+              Withdraw Funds
+            </button>
           </div>
         </div>
 
@@ -142,9 +179,8 @@ export default function WalletPage() {
                       setSelectedPeriod(period);
                       setShowPeriodDropdown(false);
                     }}
-                    className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[#FAFAFB] transition-colors ${
-                      selectedPeriod === period ? "text-[#0F75BD] font-semibold bg-[#E8F4F8]" : "text-[#1A1A1A]"
-                    }`}
+                    className={`w-full px-4 py-2.5 text-left text-sm hover:bg-[#FAFAFB] transition-colors ${selectedPeriod === period ? "text-[#0F75BD] font-semibold bg-[#E8F4F8]" : "text-[#1A1A1A]"
+                      }`}
                   >
                     {period}
                   </button>
@@ -207,13 +243,12 @@ export default function WalletPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                          transaction.status === "Completed"
-                            ? "bg-[#ECFDF5] text-green-700"
-                            : transaction.status === "Pending"
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${transaction.status === "Completed"
+                          ? "bg-[#ECFDF5] text-green-700"
+                          : transaction.status === "Pending"
                             ? "bg-[#FEF3C7] text-yellow-700"
                             : "bg-[#FEE2E2] text-red-700"
-                        }`}
+                          }`}
                       >
                         {transaction.status}
                       </span>
@@ -258,11 +293,10 @@ export default function WalletPage() {
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
-                      className={`px-2 py-1 rounded-lg font-medium transition-colors ${
-                        currentPage === pageNum
-                          ? "bg-[#0F75BD] text-white"
-                          : "hover:bg-[#FAFAFB] text-[#1A1A1A] font-regular"
-                      }`}
+                      className={`px-2 py-1 rounded-lg font-medium transition-colors ${currentPage === pageNum
+                        ? "bg-[#0F75BD] text-white"
+                        : "hover:bg-[#FAFAFB] text-[#1A1A1A] font-regular"
+                        }`}
                     >
                       {pageNum}
                     </button>
@@ -314,13 +348,12 @@ export default function WalletPage() {
                 </p>
                 <div className="mt-3 flex items-center gap-2">
                   <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                      selectedTransaction.status === "Completed"
-                        ? "bg-green-100 text-green-700"
-                        : selectedTransaction.status === "Pending"
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${selectedTransaction.status === "Completed"
+                      ? "bg-green-100 text-green-700"
+                      : selectedTransaction.status === "Pending"
                         ? "bg-yellow-100 text-yellow-700"
                         : "bg-red-100 text-red-700"
-                    }`}
+                      }`}
                   >
                     {selectedTransaction.status}
                   </span>
@@ -440,6 +473,23 @@ export default function WalletPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bank Accounts Modal */}
+      {showBankAccountsModal && (
+        <BankAccountsList
+          isOpen={showBankAccountsModal}
+          onClose={() => setShowBankAccountsModal(false)}
+        />
+      )}
+
+      {/* Withdrawal Modal */}
+      {showWithdrawalModal && (
+        <WithdrawalModal
+          isOpen={showWithdrawalModal}
+          onClose={() => setShowWithdrawalModal(false)}
+          availableBalance={walletStats?.available_balance || 0}
+        />
       )}
     </div>
   );

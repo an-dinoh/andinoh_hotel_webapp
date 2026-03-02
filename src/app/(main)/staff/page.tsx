@@ -47,8 +47,9 @@ function StaffContent() {
       const response = await hotelService.getRoles();
       setRoles(response.results || []);
     } catch (error: any) {
-      console.error("Error fetching roles:", error);
-      toast.error(error.message || "Failed to fetch roles");
+      if (error?.message !== 'Resource not found') {
+        toast.error(error.message || "Failed to fetch roles");
+      }
     } finally {
       setRolesLoading(false);
     }

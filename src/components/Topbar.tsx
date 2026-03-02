@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from "react";
 import NotificationIcon from "@/icons/NotificationIcon";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useNotifications, Notification } from "@/contexts/NotificationContext";
+import GlobalSearchResults from "@/components/search/GlobalSearchResults";
 
 export default function Topbar() {
   const { currencies, activeCurrency, isLoading, setCurrency } = useCurrency();
@@ -46,6 +47,12 @@ export default function Topbar() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-12 pr-4 h-11 border border-[#D3D9DD] rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-[#8E9397] focus:border-transparent text-gray-800 placeholder:text-[#8F8E8D] placeholder:text-sm"
           />
+          {searchQuery.length >= 3 && (
+            <GlobalSearchResults
+              query={searchQuery}
+              onClose={() => setSearchQuery("")}
+            />
+          )}
         </div>
       </div>
 

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Shield, CheckCircle, AlertCircle, Plus, X } from "lucide-react";
+import { hotelService } from "@/services/hotel.service";
 
 interface Permission {
   id: string;
@@ -22,6 +23,8 @@ export default function CreateRolePage() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [successMessage, setSuccessMessage] = useState("");
+  const [availablePermissions, setAvailablePermissions] = useState<string[]>([]);
+  const [isLoadingPermissions, setIsLoadingPermissions] = useState(true);
 
   const [form, setForm] = useState<RoleForm>({
     name: "",
@@ -64,7 +67,25 @@ export default function CreateRolePage() {
     { id: "edit_settings", label: "Edit Settings", description: "Modify system configuration", category: "Settings" },
   ];
 
-  const categories = Array.from(new Set(permissionsData.map(p => p.category)));
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      try {
+        const perms = await hotelService.getPermissions();
+        setAvailablePermissions(perms);
+      } catch (error) {
+        console.error("Failed to fetch permissions:", error);
+      } finally {
+        setIsLoadingPermissions(false);
+      }
+    };
+    fetchPermissions();
+  }, []);
+
+  const activePermissions = availablePermissions.length > 0
+    ? permissionsData.filter(p => availablePermissions.includes(p.id))
+    : permissionsData;
+
+  const categories = Array.from(new Set(activePermissions.map(p => p.category)));
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -86,8 +107,10 @@ export default function CreateRolePage() {
       setErrors({});
       setSuccessMessage("");
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await hotelService.createRole({
+        name: form.name,
+        permissions: form.permissions,
+      });
 
       setSuccessMessage("Role created successfully!");
       setTimeout(() => {
@@ -115,7 +138,7 @@ export default function CreateRolePage() {
   };
 
   const selectAllInCategory = (category: string) => {
-    const categoryPermissions = permissionsData
+    const categoryPermissions = activePermissions
       .filter(p => p.category === category)
       .map(p => p.id);
 
@@ -192,11 +215,10 @@ export default function CreateRolePage() {
                     if (errors.name) setErrors({ ...errors, name: "" });
                   }}
                   placeholder="e.g., Front Desk Manager, Housekeeping Staff"
-                  className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent placeholder:text-[#8F8E8D] placeholder:text-sm ${
-                    errors.name
+                  className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent placeholder:text-[#8F8E8D] placeholder:text-sm ${errors.name
                       ? "border-red-500 focus:ring-red-500"
                       : "border-[#D3D9DD] focus:ring-[#8E9397]"
-                  }`}
+                    }`}
                 />
                 {errors.name && (
                   <p className="mt-1 text-xs text-red-600">{errors.name}</p>
@@ -216,11 +238,10 @@ export default function CreateRolePage() {
                   }}
                   rows={3}
                   placeholder="Describe the responsibilities and scope of this role..."
-                  className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent placeholder:text-[#8F8E8D] placeholder:text-sm resize-none ${
-                    errors.description
+                  className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent placeholder:text-[#8F8E8D] placeholder:text-sm resize-none ${errors.description
                       ? "border-red-500 focus:ring-red-500"
                       : "border-[#D3D9DD] focus:ring-[#8E9397]"
-                  }`}
+                    }`}
                 />
                 {errors.description && (
                   <p className="mt-1 text-xs text-red-600">{errors.description}</p>
@@ -245,8 +266,11 @@ export default function CreateRolePage() {
             )}
 
             <div className="space-y-6">
-              {categories.map(category => {
-                const categoryPerms = permissionsData.filter(p => p.category === category);
+              {isLoadingPermissions && (
+                <div className="text-gray-500 text-sm py-4">Loading available permissions...</div>
+              )}
+              {!isLoadingPermissions && categories.map(category => {
+                const categoryPerms = activePermissions.filter(p => p.category === category);
                 const allSelected = categoryPerms.every(p => form.permissions.includes(p.id));
                 const someSelected = categoryPerms.some(p => form.permissions.includes(p.id));
 
@@ -270,11 +294,10 @@ export default function CreateRolePage() {
                       {categoryPerms.map(permission => (
                         <label
                           key={permission.id}
-                          className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
-                            form.permissions.includes(permission.id)
+                          className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${form.permissions.includes(permission.id)
                               ? "border-[#0F75BD] bg-[#F0F9FF]"
                               : "border-[#E5E7EB] hover:border-[#D3D9DD] hover:bg-[#FAFAFB]"
-                          }`}
+                            }`}
                         >
                           <input
                             type="checkbox"

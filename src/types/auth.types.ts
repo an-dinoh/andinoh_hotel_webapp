@@ -23,9 +23,9 @@ export interface VerifyOtpRequest {
 }
 
 export interface ResetPasswordRequest {
-  token: string;
-  password: string;
-  confirmPassword?: string;
+  email: string;
+  otp: string;
+  new_password: string;
 }
 
 // Auth Response Models

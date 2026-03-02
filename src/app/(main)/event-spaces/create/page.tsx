@@ -12,6 +12,8 @@ import {
 import { EventSpaceType, SetupStyle } from "@/types/hotel.types";
 import InputField from "@/components/ui/InputField";
 import Button from "@/components/ui/Button";
+import { hotelService } from "@/services/hotel.service";
+import { toast } from "react-hot-toast";
 
 interface EventSpaceForm {
   title: string;
@@ -114,13 +116,29 @@ export default function CreateEventSpacePage() {
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await hotelService.createEventSpace({
+        ...form,
+        hotel: "current_hotel_id", // The backend usually infers this or it needs to be provided
+        space_size: parseFloat(form.space_size),
+        max_capacity_theater: parseInt(form.max_capacity_theater),
+        max_capacity_banquet: parseInt(form.max_capacity_banquet),
+        max_capacity_cocktail: parseInt(form.max_capacity_cocktail),
+        min_capacity: parseInt(form.min_capacity),
+        ceiling_height: form.ceiling_height ? parseFloat(form.ceiling_height) : 0,
+        total_spaces: parseInt(form.total_spaces),
+        weekend_rate_multiplier: parseFloat(form.weekend_rate_multiplier),
+        supported_setups: [
+          { style: "theater", max_capacity: parseInt(form.max_capacity_theater) },
+          { style: "banquet", max_capacity: parseInt(form.max_capacity_banquet) },
+          { style: "cocktail", max_capacity: parseInt(form.max_capacity_cocktail) },
+        ]
+      } as any);
 
-      // Success - redirect to event spaces page
+      toast.success("Event space created successfully");
       router.push("/event-spaces");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating event space:", error);
+      toast.error(error.message || "Failed to create event space");
     } finally {
       setLoading(false);
     }

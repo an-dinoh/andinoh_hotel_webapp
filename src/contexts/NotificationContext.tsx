@@ -90,7 +90,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             const unreadCount = results.filter((c: any) => c.unread_count > 0).length;
             setTotalUnreadChats(unreadCount);
         } catch (err) {
-            console.error('Failed to refresh unread chat count:', err);
+            // Silently catch to avoid Next.js dev overlay popping up for 500 errors
         }
     }, []);
 

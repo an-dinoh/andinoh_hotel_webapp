@@ -47,11 +47,10 @@ class ApiClient {
         return response;
       },
       (error) => {
-        const { toast } = require('react-hot-toast');
-
         // Handle 401 Unauthorized - Auth expired or invalid
         if (error.response?.status === 401) {
           if (typeof window !== 'undefined') {
+            const { toast } = require('react-hot-toast');
             const currentPath = window.location.pathname;
             // Only redirect if not already on an auth page to avoid loops
             if (!['/login', '/register'].includes(currentPath)) {
@@ -81,18 +80,27 @@ class ApiClient {
         // Better error message for timeouts
         if (error.code === 'ECONNABORTED' || message.includes('timeout')) {
           message = 'Request timed out. The server might be starting up (this can take 30-60 seconds on first request). Please try again.';
-          toast.error(message, { id: 'api-timeout' }); // deduplicate with id
+          if (typeof window !== 'undefined') {
+            const { toast } = require('react-hot-toast');
+            toast.error(message, { id: 'api-timeout' }); // deduplicate with id
+          }
         }
 
         // Better error message for network errors
         if (error.code === 'ERR_NETWORK' || !error.response) {
           message = 'Network error. The API server might be unreachable. Please wait 30-60 seconds for it to wake up, then try again.';
-          toast.error(message, { id: 'api-network-error' });
+          if (typeof window !== 'undefined') {
+            const { toast } = require('react-hot-toast');
+            toast.error(message, { id: 'api-network-error' });
+          }
         }
 
         // Global toast for server errors
         if (error.response?.status && error.response.status >= 500) {
-          toast.error('Internal server error. Our team has been notified.', { id: 'server-error' });
+          if (typeof window !== 'undefined') {
+            const { toast } = require('react-hot-toast');
+            toast.error('Internal server error. Our team has been notified.', { id: 'server-error' });
+          }
         }
 
         const apiError = new Error(message) as Error & { response?: unknown };

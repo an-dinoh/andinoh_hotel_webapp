@@ -2,6 +2,7 @@ import { apiClient } from '@/utils/api';
 
 export interface ChatConversation {
     id: string;
+    booking_id?: string;
     customer_name: string;
     room_number: string;
     unread_count: number;
@@ -39,8 +40,8 @@ class ChatService {
     }
 
     /** Send a staff reply */
-    async sendMessage(chatId: string, message: string): Promise<ChatMessage> {
-        return apiClient.post<ChatMessage>(`hotels/chats/${chatId}/messages/`, { message });
+    async sendMessage(chatId: string, message: string, staffName: string): Promise<ChatMessage> {
+        return apiClient.post<ChatMessage>(`hotels/chats/${chatId}/messages/`, { message, staff_name: staffName });
     }
 
     /** Close a chat */

@@ -81,6 +81,38 @@ export interface Room {
   has_city_view: boolean;
   is_available: boolean;
   total_rooms: number;
+  display_price?: { amount: number; currency: string; };
+  availability_summary?: { date: string; rooms_available: number; is_available: boolean; };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PricingRule {
+  id: string;
+  room_type: string;
+  title: string;
+  start_date: string;
+  end_date: string;
+  price_multiplier?: string;
+  fixed_price?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type RoomStatus = 'available' | 'occupied' | 'maintenance' | 'out_of_order';
+export type HousekeepingStatus = 'clean' | 'dirty' | 'inspecting' | 'cleaning_in_progress';
+
+export interface PhysicalRoom {
+  id: string;
+  hotel: string;
+  room_type: string;
+  room_number: string;
+  floor?: string;
+  building?: string;
+  status: RoomStatus;
+  housekeeping_status: HousekeepingStatus;
+  notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -155,8 +187,37 @@ export interface Booking {
   checked_out_at?: string;
   checked_in_by?: string;
   checked_out_by?: string;
+  financials?: {
+    room_charges: string;
+    incidentals_total: string;
+    taxes: string;
+    total_amount: string;
+    amount_paid: string;
+    balance_due: string;
+    payment_status: string; // paid, partial, pending
+  };
   created_at: string;
   updated_at: string;
+}
+
+export interface IncidentalCharge {
+  id: string;
+  booking: string;
+  service_type: string; // e.g. 'minibar'
+  amount: string;
+  description: string;
+  created_at: string;
+  added_by?: string;
+}
+
+export interface BookingFolio {
+  booking_id: string;
+  room_charges: string;
+  taxes: string;
+  incidentals: IncidentalCharge[];
+  total_amount: string;
+  amount_paid: string;
+  balance_due: string;
 }
 
 export interface CreateBookingRequest {
@@ -228,13 +289,38 @@ export interface HotelStaff {
   updated_at: string;
 }
 
+export interface Permission {
+  id: string;
+  name: string; // e.g., "manage_bookings"
+  description: string;
+}
+
+export interface Role {
+  id: string;
+  hotel: string;
+  name: string;
+  permissions: string[]; // List of permission strings
+  is_default: boolean;
+  created_at: string;
+}
+
+export interface StaffActivity {
+  id: string;
+  staff_member: string;
+  action: string;
+  description: string;
+  ip_address?: string;
+  created_at: string;
+}
+
 export interface InviteStaffRequest {
   email: string;
   full_name: string;
   employee_id: string;
-  role: StaffRole;
-  department: Department;
-  hire_date: string;
+  role?: StaffRole;
+  role_id?: string;
+  department: Department | string;
+  hire_date?: string;
   salary?: string;
   is_full_time?: boolean;
 }
@@ -427,6 +513,30 @@ export interface WalletStats {
   total_withdrawn: number;
 }
 
+export interface BankAccount {
+  id: string;
+  hotel: string;
+  bank_name: string;
+  account_number: string;
+  account_name: string;
+  is_primary: boolean;
+  created_at: string;
+}
+
+export type WithdrawalStatus = 'pending_review' | 'approved' | 'processing' | 'completed' | 'failed' | 'rejected';
+
+export interface WithdrawalRequest {
+  id: string;
+  hotel: string;
+  amount: string;
+  bank_account: BankAccount | string;
+  reference_id: string;
+  status: WithdrawalStatus;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Event Space Types
 export type EventSpaceType = 'ballroom' | 'conference_room' | 'meeting_room' | 'banquet_hall' | 'boardroom' | 'outdoor_venue' | 'rooftop_terrace' | 'garden' | 'theater' | 'exhibition_hall';
 export type EventType = 'wedding' | 'corporate' | 'conference' | 'seminar' | 'workshop' | 'birthday' | 'anniversary' | 'exhibition' | 'product_launch' | 'gala' | 'networking' | 'other';
@@ -457,6 +567,7 @@ export interface EventSpace {
   is_available: boolean;
   floor_level: string; // e.g., "Ground Floor", "2nd Floor"
   total_spaces: number; // how many of this type exist
+  supported_setups?: { style: SetupStyle | string; max_capacity: number; }[];
   created_at: string;
   updated_at: string;
 }
@@ -484,6 +595,7 @@ export interface CreateEventSpaceRequest {
   ceiling_height: number;
   floor_level: string;
   total_spaces: number;
+  supported_setups?: { style: string; max_capacity: number; }[];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -566,4 +678,75 @@ export interface DeviceRegistration {
   registration_id: string;
   type: 'android' | 'ios' | 'web';
   name: string;
+}
+
+// Facility Types
+export type FacilityCategory = 'popular' | 'internet' | 'parking' | 'food' | 'pool' | 'wellness' | 'family' | 'cleaning' | 'business' | 'other';
+export interface Facility {
+  id: string;
+  hotel: string;
+  name: string;
+  description?: string;
+  icon?: string;
+  category: FacilityCategory;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Reporting Types
+export interface ReportJob {
+  id: string;
+  hotel: string;
+  report_type: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  download_url?: string;
+  result_summary?: any;
+  start_date?: string;
+  end_date?: string;
+  format: string;
+  created_at: string;
+  completed_at?: string;
+}
+
+// Support Ticket Types
+export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type TicketCategory = 'billing' | 'technical' | 'account' | 'feature_request' | 'other';
+export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+
+export interface SupportTicket {
+  id: string;
+  hotel: string;
+  subject: string;
+  category: TicketCategory;
+  message: string;
+  priority: TicketPriority;
+  status: TicketStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSupportTicketRequest {
+  subject: string;
+  category: TicketCategory;
+  message: string;
+  priority: TicketPriority;
+}
+
+// Global Search Types
+export interface GlobalSearchResultItem {
+  id: string;
+  title: string;
+  subtitle?: string;
+  url?: string;
+}
+
+export interface GlobalSearchResponse {
+  results: {
+    bookings?: GlobalSearchResultItem[];
+    guests?: GlobalSearchResultItem[];
+    rooms?: GlobalSearchResultItem[];
+    staff?: GlobalSearchResultItem[];
+    [key: string]: GlobalSearchResultItem[] | undefined;
+  };
 }

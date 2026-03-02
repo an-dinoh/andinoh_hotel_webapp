@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import Loading from "@/components/ui/Loading";
 import { hotelService } from "@/services/hotel.service";
+import FacilitiesManager from "@/components/hotel/FacilitiesManager";
+import PoliciesManager from "@/components/hotel/PoliciesManager";
 import { Hotel as HotelType, HotelType as HotelCategory } from "@/types/hotel.types";
 import { toast } from "react-hot-toast";
 
@@ -28,6 +30,7 @@ export default function MyHotelPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState<"general" | "facilities" | "policies">("general");
   const [hotel, setHotel] = useState<HotelType | null>(null);
   const [form, setForm] = useState({
     name: "",
@@ -197,318 +200,348 @@ export default function MyHotelPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 pb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Information */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-blue-600" />
-                Basic Information
-              </h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Hotel Name *
-                  </label>
-                  {editing ? (
-                    <input
-                      type="text"
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter hotel name"
-                    />
-                  ) : (
-                    <p className="text-gray-900 font-medium">{hotel?.name || "Not set"}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  {editing ? (
-                    <textarea
-                      value={form.description}
-                      onChange={(e) => setForm({ ...form, description: e.target.value })}
-                      rows={4}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Describe your hotel..."
-                    />
-                  ) : (
-                    <p className="text-gray-600">{hotel?.description || "No description"}</p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Hotel Type
-                    </label>
-                    {editing ? (
-                      <select
-                        value={form.hotel_type}
-                        onChange={(e) => setForm({ ...form, hotel_type: e.target.value as HotelCategory })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="luxury">Luxury</option>
-                        <option value="boutique">Boutique</option>
-                        <option value="business">Business</option>
-                        <option value="budget">Budget</option>
-                        <option value="resort">Resort</option>
-                      </select>
-                    ) : (
-                      <p className="text-gray-900 capitalize">{hotel?.hotel_type || "Not set"}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Star Rating
-                    </label>
-                    {editing ? (
-                      <select
-                        value={form.star_rating}
-                        onChange={(e) => setForm({ ...form, star_rating: parseInt(e.target.value) as 1 | 2 | 3 | 4 | 5 })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="1">1 Star</option>
-                        <option value="2">2 Stars</option>
-                        <option value="3">3 Stars</option>
-                        <option value="4">4 Stars</option>
-                        <option value="5">5 Stars</option>
-                      </select>
-                    ) : (
-                      <div className="flex items-center gap-1">
-                        {[...Array(hotel?.star_rating || 0)].map((_, i) => (
-                          <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Total Rooms
-                    </label>
-                    {editing ? (
-                      <input
-                        type="number"
-                        value={form.total_rooms}
-                        onChange={(e) => setForm({ ...form, total_rooms: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{hotel?.total_rooms || "0"}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Location Information */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-blue-600" />
-                Location
-              </h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Address
-                  </label>
-                  {editing ? (
-                    <input
-                      type="text"
-                      value={form.address}
-                      onChange={(e) => setForm({ ...form, address: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Street address"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{hotel?.address || "Not set"}</p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-                    {editing ? (
-                      <input
-                        type="text"
-                        value={form.city}
-                        onChange={(e) => setForm({ ...form, city: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{hotel?.city || "Not set"}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
-                    {editing ? (
-                      <input
-                        type="text"
-                        value={form.state}
-                        onChange={(e) => setForm({ ...form, state: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{hotel?.state || "Not set"}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                    {editing ? (
-                      <input
-                        type="text"
-                        value={form.country}
-                        onChange={(e) => setForm({ ...form, country: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <p className="text-gray-900">{hotel?.country || "Not set"}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="md:w-1/3">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Postal Code
-                  </label>
-                  {editing ? (
-                    <input
-                      type="text"
-                      value={form.postal_code}
-                      onChange={(e) => setForm({ ...form, postal_code: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{hotel?.postal_code || "Not set"}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Contact Information */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <Image src="/icons/call.svg" alt="Phone" width={20} height={20} />
-                Contact
-              </h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                  {editing ? (
-                    <input
-                      type="tel"
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{hotel?.phone || "Not set"}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  {editing ? (
-                    <input
-                      type="email"
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{hotel?.email || "Not set"}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
-                  {editing ? (
-                    <input
-                      type="url"
-                      value={form.website}
-                      onChange={(e) => setForm({ ...form, website: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="https://"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{hotel?.website || "Not set"}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Check-in/Check-out Times */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-blue-600" />
-                Operating Hours
-              </h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Check-in Time
-                  </label>
-                  {editing ? (
-                    <input
-                      type="time"
-                      value={form.check_in_time.slice(0, 5)}
-                      onChange={(e) => setForm({ ...form, check_in_time: e.target.value + ":00" })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{hotel?.check_in_time?.slice(0, 5) || "15:00"}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Check-out Time
-                  </label>
-                  {editing ? (
-                    <input
-                      type="time"
-                      value={form.check_out_time.slice(0, 5)}
-                      onChange={(e) => setForm({ ...form, check_out_time: e.target.value + ":00" })}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{hotel?.check_out_time?.slice(0, 5) || "11:00"}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Status Badge */}
-            {hotel && (
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-6 shadow-lg text-white">
-                <div className="flex items-center gap-3 mb-3">
-                  <CheckCircle2 className="w-6 h-6" />
-                  <h3 className="font-semibold text-lg">Profile Status</h3>
-                </div>
-                <p className="text-emerald-100 text-sm">
-                  Your hotel profile is {hotel.is_active ? "active" : "inactive"} and{" "}
-                  {hotel.is_verified ? "verified" : "pending verification"}.
-                </p>
-              </div>
-            )}
-          </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 pb-12 pt-6">
+        {/* Navigation Tabs */}
+        <div className="flex space-x-1 bg-white rounded-xl p-1 shadow-sm border border-gray-200 mb-6 overflow-x-auto relative z-10">
+          {[
+            { id: 'general', label: 'General Info' },
+            { id: 'facilities', label: 'Facilities' },
+            { id: 'policies', label: 'Policies' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex-1 min-w-[120px] px-4 py-2.5 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${activeTab === tab.id
+                ? "bg-blue-50 text-blue-700 font-semibold"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
+
+        {activeTab === 'general' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Basic Information */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-blue-600" />
+                  Basic Information
+                </h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Hotel Name *
+                    </label>
+                    {editing ? (
+                      <input
+                        type="text"
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter hotel name"
+                      />
+                    ) : (
+                      <p className="text-gray-900 font-medium">{hotel?.name || "Not set"}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Description
+                    </label>
+                    {editing ? (
+                      <textarea
+                        value={form.description}
+                        onChange={(e) => setForm({ ...form, description: e.target.value })}
+                        rows={4}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Describe your hotel..."
+                      />
+                    ) : (
+                      <p className="text-gray-600">{hotel?.description || "No description"}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Hotel Type
+                      </label>
+                      {editing ? (
+                        <select
+                          value={form.hotel_type}
+                          onChange={(e) => setForm({ ...form, hotel_type: e.target.value as HotelCategory })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="luxury">Luxury</option>
+                          <option value="boutique">Boutique</option>
+                          <option value="business">Business</option>
+                          <option value="budget">Budget</option>
+                          <option value="resort">Resort</option>
+                        </select>
+                      ) : (
+                        <p className="text-gray-900 capitalize">{hotel?.hotel_type || "Not set"}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Star Rating
+                      </label>
+                      {editing ? (
+                        <select
+                          value={form.star_rating}
+                          onChange={(e) => setForm({ ...form, star_rating: parseInt(e.target.value) as 1 | 2 | 3 | 4 | 5 })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          <option value="1">1 Star</option>
+                          <option value="2">2 Stars</option>
+                          <option value="3">3 Stars</option>
+                          <option value="4">4 Stars</option>
+                          <option value="5">5 Stars</option>
+                        </select>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          {[...Array(hotel?.star_rating || 0)].map((_, i) => (
+                            <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Total Rooms
+                      </label>
+                      {editing ? (
+                        <input
+                          type="number"
+                          value={form.total_rooms}
+                          onChange={(e) => setForm({ ...form, total_rooms: parseInt(e.target.value) })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      ) : (
+                        <p className="text-gray-900">{hotel?.total_rooms || "0"}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Location Information */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-blue-600" />
+                  Location
+                </h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Address
+                    </label>
+                    {editing ? (
+                      <input
+                        type="text"
+                        value={form.address}
+                        onChange={(e) => setForm({ ...form, address: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Street address"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{hotel?.address || "Not set"}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                      {editing ? (
+                        <input
+                          type="text"
+                          value={form.city}
+                          onChange={(e) => setForm({ ...form, city: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      ) : (
+                        <p className="text-gray-900">{hotel?.city || "Not set"}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                      {editing ? (
+                        <input
+                          type="text"
+                          value={form.state}
+                          onChange={(e) => setForm({ ...form, state: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      ) : (
+                        <p className="text-gray-900">{hotel?.state || "Not set"}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                      {editing ? (
+                        <input
+                          type="text"
+                          value={form.country}
+                          onChange={(e) => setForm({ ...form, country: e.target.value })}
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      ) : (
+                        <p className="text-gray-900">{hotel?.country || "Not set"}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="md:w-1/3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Postal Code
+                    </label>
+                    {editing ? (
+                      <input
+                        type="text"
+                        value={form.postal_code}
+                        onChange={(e) => setForm({ ...form, postal_code: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{hotel?.postal_code || "Not set"}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Contact Information */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                  <Image src="/icons/call.svg" alt="Phone" width={20} height={20} />
+                  Contact
+                </h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                    {editing ? (
+                      <input
+                        type="tel"
+                        value={form.phone}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{hotel?.phone || "Not set"}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    {editing ? (
+                      <input
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{hotel?.email || "Not set"}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                    {editing ? (
+                      <input
+                        type="url"
+                        value={form.website}
+                        onChange={(e) => setForm({ ...form, website: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="https://"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{hotel?.website || "Not set"}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Check-in/Check-out Times */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-blue-600" />
+                  Operating Hours
+                </h2>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Check-in Time
+                    </label>
+                    {editing ? (
+                      <input
+                        type="time"
+                        value={form.check_in_time.slice(0, 5)}
+                        onChange={(e) => setForm({ ...form, check_in_time: e.target.value + ":00" })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{hotel?.check_in_time?.slice(0, 5) || "15:00"}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Check-out Time
+                    </label>
+                    {editing ? (
+                      <input
+                        type="time"
+                        value={form.check_out_time.slice(0, 5)}
+                        onChange={(e) => setForm({ ...form, check_out_time: e.target.value + ":00" })}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{hotel?.check_out_time?.slice(0, 5) || "11:00"}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Badge */}
+              {hotel && (
+                <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-6 shadow-lg text-white">
+                  <div className="flex items-center gap-3 mb-3">
+                    <CheckCircle2 className="w-6 h-6" />
+                    <h3 className="font-semibold text-lg">Profile Status</h3>
+                  </div>
+                  <p className="text-emerald-100 text-sm">
+                    Your hotel profile is {hotel.is_active ? "active" : "inactive"} and{" "}
+                    {hotel.is_verified ? "verified" : "pending verification"}.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {hotel && activeTab === 'facilities' && (
+          <FacilitiesManager />
+        )}
+
+        {hotel && activeTab === 'policies' && (
+          <PoliciesManager />
+        )}
       </div>
     </div>
   );

@@ -30,10 +30,12 @@ import {
   Home,
   Star,
   MessageSquare,
+  Receipt,
 } from "lucide-react";
 import { Booking, BookingStatus } from "@/types/hotel.types";
+import BookingFolio from "@/components/bookings/BookingFolio";
 
-type BookingDetailTab = "overview" | "guest" | "payment" | "activity";
+type BookingDetailTab = "overview" | "guest" | "payment" | "folio" | "activity";
 
 export default function BookingDetailPage() {
   const router = useRouter();
@@ -45,6 +47,13 @@ export default function BookingDetailPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showCheckInModal, setShowCheckInModal] = useState(false);
   const [showCheckOutModal, setShowCheckOutModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  // Payment form state
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("transfer");
+  const [paymentTxId, setPaymentTxId] = useState("");
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
     if (bookingId) {
@@ -110,13 +119,29 @@ export default function BookingDetailPage() {
     }
   };
 
-  const handleProcessPayment = async (data: { amount: number; payment_method: string; transaction_id: string }) => {
+  const handleProcessPaymentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!paymentAmount) {
+      toast.error("Please enter an amount");
+      return;
+    }
+
     try {
-      await hotelService.processPayment(bookingId, data);
+      setIsProcessingPayment(true);
+      await hotelService.processPayment(bookingId, {
+        amount: parseFloat(paymentAmount),
+        payment_method: paymentMethod,
+        transaction_id: paymentTxId
+      });
       toast.success("Payment processed successfully");
+      setShowPaymentModal(false);
+      setPaymentAmount("");
+      setPaymentTxId("");
       fetchBooking();
     } catch (error: any) {
       toast.error(error.message || "Payment processing failed");
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -247,10 +272,11 @@ export default function BookingDetailPage() {
 
             {/* Tabs Navigation */}
             <div className="border-b border-[#E5E7EB] bg-white">
-              <div className="flex gap-1 px-8">
+              <div className="flex gap-1 px-8 overflow-x-auto scrollbar-hide">
                 {[
                   { id: "overview" as BookingDetailTab, label: "Overview", icon: FileText },
                   { id: "guest" as BookingDetailTab, label: "Guest Details", icon: User },
+                  { id: "folio" as BookingDetailTab, label: "Guest Folio", icon: Receipt },
                   { id: "payment" as BookingDetailTab, label: "Payment", icon: CreditCard },
                   { id: "activity" as BookingDetailTab, label: "Activity Log", icon: Clock },
                 ].map((tab) => {
@@ -600,7 +626,15 @@ export default function BookingDetailPage() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3 mt-4">
+                  {(parseFloat(booking.balance_due || "0") > 0) && (
+                    <button
+                      onClick={() => setShowPaymentModal(true)}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold flex items-center gap-2"
+                    >
+                      Process Payment
+                    </button>
+                  )}
                   <button className="flex items-center gap-2 px-6 py-3 bg-white border border-[#D3D9DD] rounded-xl hover:bg-gray-50 text-[#0F75BD] font-semibold transition-all">
                     <Download className="w-5 h-5" />
                     Download Invoice
@@ -615,6 +649,10 @@ export default function BookingDetailPage() {
                   </button>
                 </div>
               </div>
+            )}
+
+            {activeTab === "folio" && (
+              <BookingFolio bookingId={bookingId} />
             )}
 
             {activeTab === "activity" && (
@@ -936,6 +974,83 @@ export default function BookingDetailPage() {
                 Cancel Booking
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-900">Process Manual Payment</h3>
+              <button
+                onClick={() => setShowPaymentModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+              >
+                x
+              </button>
+            </div>
+            <form onSubmit={handleProcessPaymentSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount to Pay *</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 sm:text-sm">₦</span>
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={booking.balance_due || "0"}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method *</label>
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="transfer">Bank Transfer</option>
+                  <option value="cash">Cash</option>
+                  <option value="pos">POS Terminal</option>
+                  <option value="card_online">Online Card</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Transaction ID/Reference</label>
+                <input
+                  type="text"
+                  value={paymentTxId}
+                  onChange={(e) => setPaymentTxId(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g. TRX-12345678"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPaymentModal(false)}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isProcessingPayment || !paymentAmount}
+                  className="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors font-semibold disabled:opacity-50"
+                >
+                  {isProcessingPayment ? "Processing..." : "Confirm Payment"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
