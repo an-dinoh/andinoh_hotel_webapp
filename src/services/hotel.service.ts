@@ -33,7 +33,10 @@ import {
   UpdateEventSpaceRequest,
   EventSpaceFilters,
   BookingTrend,
+  BookingTrendResponse,
   RevenueByRoomType,
+  SegmentationResponse,
+  WalletStats,
   HotelFeed,
   DeviceRegistration,
   PaginatedResponse,
@@ -264,17 +267,26 @@ class HotelService {
   }
 
   // ==================== DASHBOARD & ANALYTICS ====================
-
   async getDashboardStats(): Promise<DashboardStats> {
     return apiClient.get<DashboardStats>('hotels/dashboard-stats/');
   }
 
-  async getBookingTrends(): Promise<BookingTrend[]> {
-    return apiClient.get<BookingTrend[]>('hotels/analytics/booking-trends/');
+  async getBookingTrends(startDate?: string, endDate?: string): Promise<BookingTrendResponse> {
+    return apiClient.get<BookingTrendResponse>('hotels/analytics/booking-trends/', {
+      params: { start_date: startDate, end_date: endDate }
+    });
   }
 
   async getRevenueByRoomType(): Promise<RevenueByRoomType[]> {
     return apiClient.get<RevenueByRoomType[]>('hotels/analytics/revenue-by-room-type/');
+  }
+
+  async getSegmentation(): Promise<SegmentationResponse> {
+    return apiClient.get<SegmentationResponse>('hotels/analytics/segmentation/');
+  }
+
+  async getWalletStats(): Promise<WalletStats> {
+    return apiClient.get<WalletStats>('hotels/wallet/stats/');
   }
 
   // ==================== EVENT SPACE MANAGEMENT ====================

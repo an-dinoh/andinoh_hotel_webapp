@@ -361,41 +361,70 @@ export interface CalendarDay {
 
 // Dashboard/Analytics Types
 export interface DashboardStats {
-  total_bookings: number;
-  active_bookings: number;
-  total_revenue: number;
-  occupancy_rate: number;
-  average_rating: number;
-  total_reviews: number;
-  room_stats?: {
-    total_rooms: number;
-    available_rooms: number;
-    occupied_rooms: number;
-    average_rate: number;
+  today: {
+    check_ins: number;
+    check_outs: number;
+    revenue: number;
+    pending_tasks: number;
   };
-  // Optional legacy fields
-  today_check_ins?: number;
-  today_check_outs?: number;
-  current_occupancy_rate?: number;
-  total_bookings_today?: number;
-  total_bookings_this_week?: number;
-  total_bookings_this_month?: number;
-  revenue_today?: string;
-  revenue_this_week?: string;
-  revenue_this_month?: string;
-  pending_tasks?: number;
+  performance: {
+    adr: number;
+    revpar: number;
+    occupancy_rate: number;
+    average_rating: number;
+  };
+  volume: {
+    total_bookings: number;
+    total_revenue: number;
+    total_reviews: number;
+  };
+  room_stats: {
+    total: number;
+    available: number;
+    occupied: number;
+  };
 }
 
 export interface BookingTrend {
   date: string;
+  label: string;
   count: number;
-  revenue?: string;
+  value: number;
+}
+
+export interface BookingTrendResponse {
+  series: BookingTrend[];
+  summary: {
+    current_period_total: number;
+    previous_period_total: number;
+    percentage_change: number;
+  };
 }
 
 export interface RevenueByRoomType {
-  room_type: RoomType;
-  revenue: string;
+  room_type: string;
+  revenue: number;
   bookings_count: number;
+}
+
+export interface SegmentationResponse {
+  by_source: Array<{
+    source: string;
+    revenue: number;
+    count: number;
+  }>;
+  by_payment: Array<{
+    method: string;
+    revenue: number;
+    count: number;
+  }>;
+}
+
+export interface WalletStats {
+  available_balance: number;
+  pending_clearance: number;
+  total_lifetime_revenue: number;
+  total_withdrawn: number;
 }
 
 // Event Space Types

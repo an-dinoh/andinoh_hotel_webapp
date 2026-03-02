@@ -6,19 +6,21 @@ import AnalyticsDatePicker from "@/components/ui/AnalyticsDatePicker";
 type AnalyticsView = "revenue" | "gigs";
 
 interface AnalyticsChartProps {
-  revenueData: number[];
-  gigsData: number[];
+  series: Array<{ label: string; value: number; count: number }>;
   currency?: string;
   initialView?: AnalyticsView;
 }
 
 export default function AnalyticsChart({
-  revenueData,
-  gigsData,
+  series = [],
   currency = "₦",
   initialView = "revenue"
 }: AnalyticsChartProps) {
   const [analyticsView, setAnalyticsView] = useState<AnalyticsView>(initialView);
+
+  const revenueData = series.map(s => s.value);
+  const gigsData = series.map(s => s.count);
+  const labels = series.map(s => s.label);
 
   // Helper function to generate SVG points from data
   const generateChartPoints = (data: number[], chartHeight: number, chartWidth: number) => {
@@ -56,21 +58,19 @@ export default function AnalyticsChart({
         <div className="flex items-center gap-3">
           <button
             onClick={() => setAnalyticsView("revenue")}
-            className={`px-6 py-2.5 text-sm font-semibold rounded-2xl transition-colors ${
-              analyticsView === "revenue"
+            className={`px-6 py-2.5 text-sm font-semibold rounded-2xl transition-colors ${analyticsView === "revenue"
                 ? "bg-[#0F75BD] text-white"
                 : "bg-transparent text-[#5C5B59] hover:bg-gray-100"
-            }`}
+              }`}
           >
             Total Revenue
           </button>
           <button
             onClick={() => setAnalyticsView("gigs")}
-            className={`px-6 py-2.5 text-sm font-medium rounded-2xl transition-colors ${
-              analyticsView === "gigs"
+            className={`px-6 py-2.5 text-sm font-medium rounded-2xl transition-colors ${analyticsView === "gigs"
                 ? "bg-[#0F75BD] text-white"
                 : "bg-transparent text-[#5C5B59] hover:bg-gray-100"
-            }`}
+              }`}
           >
             Total Bookings
           </button>
@@ -129,13 +129,20 @@ export default function AnalyticsChart({
 
             {/* X-axis labels */}
             <div className="flex justify-between pt-3 text-xs text-[#5C5B59]">
-              <span>1 - 4</span>
-              <span>5 - 9</span>
-              <span>10 - 14</span>
-              <span>15 - 19</span>
-              <span>20 - 24</span>
-              <span>25 - 29</span>
-              <span>30</span>
+              {labels.map((label, i) => (
+                <span key={i}>{label}</span>
+              ))}
+              {labels.length === 0 && (
+                <>
+                  <span>Mon</span>
+                  <span>Tue</span>
+                  <span>Wed</span>
+                  <span>Thu</span>
+                  <span>Fri</span>
+                  <span>Sat</span>
+                  <span>Sun</span>
+                </>
+              )}
             </div>
           </div>
         </div>
