@@ -95,7 +95,7 @@ export default function GlobalSearchResults({ query, onClose }: GlobalSearchResu
     return (
         <div
             ref={containerRef}
-            className="absolute top-full mt-2 w-full bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden z-50 shadow-xl max-h-[80vh] flex flex-col"
+            className="absolute top-full mt-2 w-full bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden z-50 max-h-[80vh] flex flex-col"
         >
             {loading ? (
                 <div className="p-8 flex flex-col items-center justify-center text-[#5C5B59]">

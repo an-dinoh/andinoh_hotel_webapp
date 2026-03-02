@@ -74,7 +74,7 @@ export default function Topbar() {
             <ChevronDown className="w-4 h-4 text-[#5C5B59]" />
           </button>
 
-          <div className="absolute right-0 mt-2 w-48 bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden shadow-xl z-50 invisible group-hover:visible translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-200">
+          <div className="absolute right-0 mt-2 w-48 bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden z-50 invisible group-hover:visible translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-200">
             <div className="py-2">
               {isLoading ? (
                 <div className="px-4 py-2 text-xs text-gray-500">Loading currencies...</div>
@@ -113,7 +113,7 @@ export default function Topbar() {
 
           {/* Notifications Dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-96 bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden z-50" style={{ boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)' }}>
+            <div className="absolute right-0 mt-2 w-96 bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden z-50 border-gray-200">
               {/* Header */}
               <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAFB]">
                 <div className="flex items-center justify-between">
@@ -189,7 +189,7 @@ export default function Topbar() {
             className="flex items-center gap-3 hover:bg-[#F9FAFB] rounded-2xl transition-all h-12 px-3 border border-transparent hover:border-[#E5E7EB]"
           >
             <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#0F75BD] to-[#02A5E6] rounded-full flex items-center justify-center ring-2 ring-white shadow-sm">
+              <div className="w-10 h-10 bg-gradient-to-br from-[#0F75BD] to-[#02A5E6] rounded-full flex items-center justify-center ring-2 ring-white">
                 <span className="text-white text-sm font-bold">AP</span>
               </div>
               <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
@@ -203,7 +203,7 @@ export default function Topbar() {
 
           {/* Profile Dropdown */}
           {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-64 bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden z-50 shadow-xl">
+            <div className="absolute right-0 mt-2 w-64 bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden z-50">
               {/* Profile Header */}
               <div className="px-4 py-4 bg-gradient-to-br from-[#0F75BD] to-[#02A5E6]">
                 <div className="flex items-center gap-3">
