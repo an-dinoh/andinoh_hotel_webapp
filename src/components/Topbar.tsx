@@ -45,7 +45,7 @@ export default function Topbar() {
             placeholder="Search bookings, rooms, guests..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 h-11 border border-[#D3D9DD] rounded-2xl text-sm focus:outline-none focus:ring-1 focus:ring-[#8E9397] focus:border-transparent text-gray-800 placeholder:text-[#8F8E8D] placeholder:text-sm"
+            className="w-full pl-12 pr-4 h-11 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] text-sm focus:outline-none focus:ring-1 focus:ring-[#0F75BD] focus:border-[#0F75BD] text-[#1A1A1A] placeholder:text-[#8F8E8D] transition-colors"
           />
           {searchQuery.length >= 3 && (
             <GlobalSearchResults
@@ -59,35 +59,35 @@ export default function Topbar() {
       {/* Right Section */}
       <div className="flex items-center gap-4 ml-6">
         {/* Verified Badge */}
-        <div className="flex items-center gap-2 px-3 py-2 bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl">
+        <div className="flex items-center gap-2 px-3 py-2 bg-[#F0FDF4] border border-[#A7F3D0] rounded-[16px]">
           <Shield className="w-4 h-4 text-[#059669]" />
-          <span className="text-sm font-semibold text-[#059669]">Verified</span>
+          <span className="text-sm font-bold text-[#059669]">Verified</span>
         </div>
 
         {/* Currency Switcher */}
         <div className="relative group">
-          <button className="flex items-center gap-2 px-3 py-2 bg-[#FAFAFB] border border-[#E5E7EB] rounded-xl hover:bg-[#F0F9FF] transition-colors">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] hover:bg-[#F3F4F6] transition-all hover:-translate-y-0.5">
             <DollarSign className="w-4 h-4 text-[#5C5B59]" />
-            <span className="text-sm font-semibold text-[#1A1A1A]">
+            <span className="text-sm font-bold text-[#1A1A1A]">
               {activeCurrency?.code || 'NGN'} ({activeCurrency?.symbol || '₦'})
             </span>
-            <ChevronDown className="w-4 h-4 text-[#5C5B59]" />
+            <ChevronDown className="w-4 h-4 text-[#5C5B59] group-hover:rotate-180 transition-transform duration-300" />
           </button>
 
-          <div className="absolute right-0 mt-2 w-48 bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden z-50 invisible group-hover:visible translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-200">
-            <div className="py-2">
+          <div className="absolute right-0 mt-3 w-52 bg-white/90 backdrop-blur-xl border border-white/60 rounded-[24px] overflow-hidden z-50 invisible group-hover:visible translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+            <div className="py-2 bg-white/40">
               {isLoading ? (
-                <div className="px-4 py-2 text-xs text-gray-500">Loading currencies...</div>
+                <div className="px-4 py-3 text-xs font-bold text-[#5C5B59] text-center">Loading currencies...</div>
               ) : Array.isArray(currencies) && (
                 currencies.map((currency) => (
                   <button
                     key={currency.id}
                     onClick={() => setCurrency(currency.code)}
-                    className={`w-full px-4 py-3 hover:bg-[#FAFAFB] transition-colors flex items-center justify-between text-left ${activeCurrency?.code === currency.code ? 'bg-[#F0F9FF] text-[#0F75BD]' : 'text-[#1A1A1A]'
+                    className={`w-full px-5 py-3 hover:bg-white/60 transition-colors flex items-center justify-between text-left ${activeCurrency?.code === currency.code ? 'bg-[#F0F9FF]/80 text-[#0F75BD]' : 'text-[#1A1A1A]'
                       }`}
                   >
-                    <span className="text-sm font-semibold">{currency.name}</span>
-                    <span className="text-xs font-medium text-[#5C5B59] bg-[#EEF0F2] px-2 py-0.5 rounded-lg">
+                    <span className="text-sm font-bold">{currency.name}</span>
+                    <span className="text-[10px] font-black tracking-wider text-[#5C5B59] bg-black/5 px-2 py-1 rounded-lg">
                       {currency.symbol} {currency.code}
                     </span>
                   </button>
@@ -101,41 +101,47 @@ export default function Topbar() {
         <div className="relative" ref={notificationRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative w-11 h-11 flex items-center justify-center hover:bg-[#FAFAFB] rounded-xl transition-colors"
+            className="relative w-12 h-12 flex items-center justify-center bg-[#FAFAFB] border border-[#E5E7EB] hover:bg-[#F3F4F6] rounded-[16px] transition-all hover:-translate-y-0.5"
           >
-            <NotificationIcon className="w-6 h-6 text-[#5C5B59]" />
+            <NotificationIcon className="w-[1.125rem] h-[1.125rem] text-[#5C5B59]" />
             {unreadCount > 0 && (
-              <span className="absolute top-2 right-2 w-3.5 h-3.5 bg-[#0F75BD] text-white text-xs font-medium rounded-full flex items-center justify-center">
-                {unreadCount}
-              </span>
+              <div className="absolute top-2 right-2 flex items-center justify-center">
+                <span className="absolute w-3 h-3 bg-[#0F75BD] rounded-full animate-ping opacity-75"></span>
+                <span className="relative w-3.5 h-3.5 bg-[#0F75BD] text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white">
+                  {unreadCount}
+                </span>
+              </div>
             )}
           </button>
 
           {/* Notifications Dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-96 bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden z-50 border-gray-200">
+            <div className="absolute right-0 mt-4 w-[26rem] bg-white/95 backdrop-blur-2xl border border-white/60 rounded-[32px] overflow-hidden z-50 origin-top-right animate-in fade-in duration-200">
               {/* Header */}
-              <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAFB]">
+              <div className="px-6 py-5 border-b border-[#E5E7EB]/50 bg-white/30 backdrop-blur-md">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-bold text-[#1A1A1A]">Notifications</h3>
-                    <p className="text-xs text-[#5C5B59] mt-0.5">{unreadCount} unread notifications</p>
+                    <h3 className="font-black text-[#1A1A1A] text-lg tracking-tight">Notifications</h3>
+                    <p className="text-[11px] font-bold tracking-wider uppercase text-[#0F75BD] mt-1">{unreadCount} unread incoming</p>
                   </div>
                   <button
                     onClick={() => setShowNotifications(false)}
-                    className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-lg transition-colors"
+                    className="w-8 h-8 flex items-center justify-center bg-white/50 hover:bg-white rounded-xl transition-all border border-black/5"
                   >
-                    <X className="w-4 h-4 text-[#5C5B59]" />
+                    <X className="w-4 h-4 text-[#1A1A1A]" />
                   </button>
                 </div>
               </div>
 
               {/* Notifications List */}
-              <div className="max-h-96 overflow-y-auto scrollbar-hide">
+              <div className="max-h-96 overflow-y-auto scrollbar-hide bg-white/10">
                 {notifications.length === 0 ? (
-                  <div className="px-6 py-12 text-center">
-                    <Bell className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-                    <p className="text-sm text-gray-500 font-medium">No notifications yet</p>
+                  <div className="px-6 py-16 text-center">
+                    <div className="w-16 h-16 bg-[#FAFAFB] border border-[#E5E7EB] rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3">
+                      <Bell className="w-8 h-8 text-[#5C5B59]" />
+                    </div>
+                    <p className="text-sm text-[#1A1A1A] font-bold">You're all caught up</p>
+                    <p className="text-xs text-[#5C5B59] mt-1">No new notifications at the moment.</p>
                   </div>
                 ) : (
                   notifications.map((notification: Notification) => {
@@ -145,23 +151,23 @@ export default function Topbar() {
                       <div
                         key={notification.id}
                         onClick={() => markAsRead(notification.id)}
-                        className={`px-6 py-4 border-b border-[#E5E7EB] hover:bg-[#FAFAFB] transition-colors cursor-pointer ${!notification.read ? "bg-[#F0F9FF]" : ""
+                        className={`px-6 py-4 border-b border-[#E5E7EB]/40 hover:bg-white/60 transition-colors cursor-pointer ${!notification.read ? "bg-[#F0F9FF]/60" : ""
                           }`}
                       >
-                        <div className="flex items-start gap-3">
-                          <div className={`w-10 h-10 ${iconStyles.bg} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                        <div className="flex items-start gap-4">
+                          <div className={`w-11 h-11 ${iconStyles.bg} rounded-2xl border border-black/5 flex items-center justify-center flex-shrink-0`}>
                             <Icon className={`w-5 h-5 ${iconStyles.color}`} />
                           </div>
-                          <div className="flex-1 min-w-0">
+                          <div className="flex-1 min-w-0 pt-0.5">
                             <div className="flex items-start justify-between gap-2">
-                              <h4 className="font-semibold text-sm text-[#1A1A1A]">{notification.title}</h4>
+                              <h4 className="font-bold text-sm text-[#1A1A1A] leading-tight">{notification.title}</h4>
                               {!notification.read && (
-                                <div className="w-2 h-2 bg-[#0F75BD] rounded-full flex-shrink-0 mt-1.5"></div>
+                                <div className="w-2 h-2 bg-[#0F75BD] rounded-full flex-shrink-0 mt-1"></div>
                               )}
                             </div>
-                            <p className="text-xs text-[#5C5B59] mt-1 line-clamp-2">{notification.message}</p>
-                            <div className="flex items-center gap-1 mt-2 text-xs text-[#5C5B59]">
-                              <Clock className="w-3 h-3" />
+                            <p className="text-[13px] text-[#5C5B59] mt-1.5 line-clamp-2 leading-relaxed">{notification.message}</p>
+                            <div className="flex items-center gap-1.5 mt-2.5 text-[11px] font-bold text-[#8F8E8D] uppercase tracking-wider">
+                              <Clock className="w-3.5 h-3.5" />
                               <span>{new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
                           </div>
@@ -173,8 +179,8 @@ export default function Topbar() {
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-3 bg-[#FAFAFB] border-t border-[#E5E7EB]">
-                <button className="w-full text-center text-sm font-semibold text-[#0F75BD] hover:text-[#0050C8] transition-colors">
+              <div className="px-6 py-4 bg-white/30 backdrop-blur-md border-t border-[#E5E7EB]/50">
+                <button className="w-full text-center text-sm font-bold text-[#0F75BD] hover:text-[#0050C8] transition-colors">
                   View All Notifications
                 </button>
               </div>
@@ -186,55 +192,56 @@ export default function Topbar() {
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center gap-3 hover:bg-[#F9FAFB] rounded-2xl transition-all h-12 px-3 border border-transparent hover:border-[#E5E7EB]"
+            className="flex items-center gap-3 bg-[#FAFAFB] border border-[#E5E7EB] hover:bg-[#F3F4F6] rounded-[16px] transition-all hover:-translate-y-0.5 h-12 px-3 pl-1.5"
           >
             <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#0F75BD] to-[#02A5E6] rounded-full flex items-center justify-center ring-2 ring-white">
-                <span className="text-white text-sm font-bold">AP</span>
+              <div className="w-9 h-9 bg-gradient-to-br from-[#0F75BD] to-[#02A5E6] rounded-[12px] flex items-center justify-center">
+                <span className="text-white text-sm font-black text-center ml-0.5">AP</span>
               </div>
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+              <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#10B981] border-2 border-white rounded-full"></div>
             </div>
-            <div className="text-left">
-              <p className="text-sm font-semibold text-[#1A1A1A]">Adeyanju</p>
-              <p className="text-xs text-[#5C5B59]">Hotel Owner</p>
+            <div className="text-left hidden sm:block">
+              <p className="text-sm font-bold text-[#1A1A1A] leading-tight">Adeyanju</p>
+              <p className="text-[10px] font-bold tracking-wider uppercase text-[#5C5B59]">Hotel Owner</p>
             </div>
-            <ChevronDown className={`w-4 h-4 text-[#5C5B59] transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-4 h-4 text-[#5C5B59] transition-transform duration-300 ml-1 ${showProfileMenu ? 'rotate-180' : ''}`} />
           </button>
 
           {/* Profile Dropdown */}
           {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-64 bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden z-50">
+            <div className="absolute right-0 mt-4 w-72 bg-white/95 backdrop-blur-2xl border border-white/60 rounded-[32px] overflow-hidden z-50 origin-top-right animate-in fade-in duration-200">
               {/* Profile Header */}
-              <div className="px-4 py-4 bg-gradient-to-br from-[#0F75BD] to-[#02A5E6]">
-                <div className="flex items-center gap-3">
+              <div className="px-6 py-6 bg-gradient-to-br from-[#0F75BD] to-[#02A5E6] relative overflow-hidden">
+                <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+                <div className="flex items-center gap-4 relative z-10">
                   <div className="relative">
-                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center ring-2 ring-white/30">
-                      <span className="text-white text-base font-bold">AP</span>
+                    <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-[18px] flex items-center justify-center border border-white/30">
+                      <span className="text-white text-xl font-black text-center ml-0.5">AP</span>
                     </div>
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#10B981] border-2 border-white/20 rounded-full"></div>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-white">Adeyanju</p>
-                    <p className="text-xs text-white/80">adeyanju@andinoh.com</p>
+                    <h3 className="text-lg font-black text-white tracking-tight">Adeyanju</h3>
+                    <p className="text-[11px] font-bold tracking-wider text-white/80 mt-0.5">adeyanju@andinoh.com</p>
                   </div>
                 </div>
               </div>
 
               {/* Menu Items */}
-              <div className="py-2">
+              <div className="p-2.5 space-y-1 bg-white/20">
                 <button
                   onClick={() => {
                     router.push('/settings');
                     setShowProfileMenu(false);
                   }}
-                  className="w-full px-4 py-3 hover:bg-[#FAFAFB] transition-colors flex items-center gap-3 text-left group"
+                  className="w-full p-3 hover:bg-white/80 rounded-[20px] transition-all flex items-center gap-4 text-left group"
                 >
-                  <div className="w-9 h-9 bg-[#F0F9FF] rounded-xl flex items-center justify-center group-hover:bg-[#0F75BD] transition-colors">
+                  <div className="w-11 h-11 bg-[#F0F9FF] border border-[#0F75BD]/10 rounded-2xl flex items-center justify-center group-hover:bg-[#0F75BD] transition-all">
                     <UserCircle className="w-5 h-5 text-[#0F75BD] group-hover:text-white transition-colors" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-[#1A1A1A]">My Profile</p>
-                    <p className="text-xs text-[#5C5B59]">View and edit profile</p>
+                    <p className="text-sm font-bold text-[#1A1A1A]">My Profile</p>
+                    <p className="text-[11px] font-medium text-[#5C5B59] mt-0.5">View and edit details</p>
                   </div>
                 </button>
 
@@ -243,14 +250,14 @@ export default function Topbar() {
                     router.push('/settings');
                     setShowProfileMenu(false);
                   }}
-                  className="w-full px-4 py-3 hover:bg-[#FAFAFB] transition-colors flex items-center gap-3 text-left group"
+                  className="w-full p-3 hover:bg-white/80 rounded-[20px] transition-all flex items-center gap-4 text-left group"
                 >
-                  <div className="w-9 h-9 bg-[#F5F3FF] rounded-xl flex items-center justify-center group-hover:bg-[#0F75BD] transition-colors">
+                  <div className="w-11 h-11 bg-[#F5F3FF] border border-purple-600/10 rounded-2xl flex items-center justify-center group-hover:bg-purple-600 transition-all">
                     <Building2 className="w-5 h-5 text-purple-600 group-hover:text-white transition-colors" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-[#1A1A1A]">Hotel Settings</p>
-                    <p className="text-xs text-[#5C5B59]">Manage your property</p>
+                    <p className="text-sm font-bold text-[#1A1A1A]">Hotel Settings</p>
+                    <p className="text-[11px] font-medium text-[#5C5B59] mt-0.5">Manage your property</p>
                   </div>
                 </button>
 
@@ -259,14 +266,14 @@ export default function Topbar() {
                     router.push('/settings');
                     setShowProfileMenu(false);
                   }}
-                  className="w-full px-4 py-3 hover:bg-[#FAFAFB] transition-colors flex items-center gap-3 text-left group"
+                  className="w-full p-3 hover:bg-white/80 rounded-[20px] transition-all flex items-center gap-4 text-left group border-t border-transparent"
                 >
-                  <div className="w-9 h-9 bg-[#FEF3C7] rounded-xl flex items-center justify-center group-hover:bg-[#0F75BD] transition-colors">
+                  <div className="w-11 h-11 bg-[#FEF3C7] border border-orange-600/10 rounded-2xl flex items-center justify-center group-hover:bg-orange-500 transition-all">
                     <Settings className="w-5 h-5 text-orange-600 group-hover:text-white transition-colors" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-[#1A1A1A]">Account Settings</p>
-                    <p className="text-xs text-[#5C5B59]">Privacy and security</p>
+                    <p className="text-sm font-bold text-[#1A1A1A]">Account Settings</p>
+                    <p className="text-[11px] font-medium text-[#5C5B59] mt-0.5">Privacy and security</p>
                   </div>
                 </button>
               </div>

@@ -5,16 +5,19 @@ import { Skeleton } from '@/components/ui/Skeleton';
 
 export default function RoomCardSkeleton() {
     return (
-        <div className="bg-white rounded-[22px] overflow-hidden border border-[#E5E7EB]">
+        <div className="bg-white rounded-[24px] overflow-hidden border border-[#E5E7EB]/60">
             {/* Room Image Skeleton */}
-            <div className="relative h-40 bg-[#FAFAFB]">
+            <div className="relative h-56 bg-[#FAFAFB]">
                 <Skeleton variant="rect" className="w-full h-full" />
 
-                {/* Unit Count Badge Skeleton */}
-                <div className="absolute top-4 right-4 h-12 w-20 bg-white/50 backdrop-blur-sm rounded-xl" />
+                {/* Unit Count Badge Skeleton - Glassmorphism */}
+                <div className="absolute top-4 right-4 h-[44px] w-[56px] bg-white/40 backdrop-blur-md rounded-xl border border-white/40" />
 
-                {/* Room Type Badge Skeleton */}
-                <div className="absolute top-4 left-4 h-7 w-24 bg-white/50 backdrop-blur-sm rounded-lg" />
+                {/* Room Type Badge Skeleton - Glassmorphism */}
+                <div className="absolute top-4 left-4 h-[30px] w-24 bg-white/40 backdrop-blur-md rounded-lg border border-white/40" />
+
+                {/* Availability Badge Skeleton */}
+                <div className="absolute bottom-3 right-3 h-[28px] w-[72px] bg-white/40 backdrop-blur-md rounded-lg border border-white/40" />
             </div>
 
             {/* Room Content Skeleton */}
