@@ -6,7 +6,7 @@ export const revalidate = 0;
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, Shield, CheckCircle, AlertCircle, Save, Trash2 } from "lucide-react";
-import { mockRoles } from "@/data/mockStaffData";
+import { hotelService } from "@/services/hotel.service";
 
 interface Permission {
   id: string;
@@ -30,6 +30,7 @@ export default function EditRolePage() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [successMessage, setSuccessMessage] = useState("");
   const [initialLoad, setInitialLoad] = useState(true);
+  const [availablePermissions, setAvailablePermissions] = useState<string[]>([]);
 
   const [form, setForm] = useState<RoleForm>({
     name: "",
@@ -72,20 +73,41 @@ export default function EditRolePage() {
     { id: "edit_settings", label: "Edit Settings", description: "Modify system configuration", category: "Settings" },
   ];
 
-  const categories = Array.from(new Set(permissionsData.map(p => p.category)));
-
   useEffect(() => {
-    // Load existing role data
-    const existingRole = mockRoles.find(r => r.id === roleId);
-    if (existingRole) {
-      setForm({
-        name: existingRole.name,
-        description: existingRole.description,
-        permissions: existingRole.permissions,
-      });
+    const fetchData = async () => {
+      try {
+        const [perms, role] = await Promise.all([
+          hotelService.getPermissions(),
+          hotelService.getRole(roleId)
+        ]);
+
+        setAvailablePermissions(perms);
+
+        if (role) {
+          setForm({
+            name: role.name || "",
+            description: role.description || "",
+            permissions: role.permissions || [],
+          });
+        }
+      } catch (error) {
+        console.error("Failed to load role data", error);
+        setErrors({ submit: "Failed to load role data. Please try again." });
+      } finally {
+        setInitialLoad(false);
+      }
+    };
+
+    if (roleId) {
+      fetchData();
     }
-    setInitialLoad(false);
   }, [roleId]);
+
+  const activePermissions = availablePermissions.length > 0
+    ? permissionsData.filter(p => availablePermissions.includes(p.id))
+    : permissionsData;
+
+  const categories = Array.from(new Set(activePermissions.map(p => p.category)));
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -107,8 +129,10 @@ export default function EditRolePage() {
       setErrors({});
       setSuccessMessage("");
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await hotelService.updateRole(roleId, {
+        name: form.name,
+        permissions: form.permissions,
+      });
 
       setSuccessMessage("Role updated successfully!");
       setTimeout(() => {
@@ -124,16 +148,11 @@ export default function EditRolePage() {
   };
 
   const handleDelete = async () => {
-    const existingRole = mockRoles.find(r => r.id === roleId);
-    if (!existingRole) return;
-
-    if (confirm(`Are you sure you want to delete the role "${existingRole.name}"?\n\nThis action cannot be undone and will affect ${existingRole.usersCount} user(s).`)) {
+    if (confirm(`Are you sure you want to delete the role "${form.name}"?\n\nThis action cannot be undone.`)) {
       try {
         setLoading(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        alert(`Role "${existingRole.name}" has been deleted successfully.`);
+        await hotelService.deleteRole(roleId);
+        alert(`Role "${form.name}" has been deleted successfully.`);
         router.push("/staff?tab=roles");
       } catch (error) {
         alert("Failed to delete role. Please try again.");
@@ -156,7 +175,7 @@ export default function EditRolePage() {
   };
 
   const selectAllInCategory = (category: string) => {
-    const categoryPermissions = permissionsData
+    const categoryPermissions = activePermissions
       .filter(p => p.category === category)
       .map(p => p.id);
 
@@ -241,11 +260,10 @@ export default function EditRolePage() {
                     if (errors.name) setErrors({ ...errors, name: "" });
                   }}
                   placeholder="e.g., Front Desk Manager, Housekeeping Staff"
-                  className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent placeholder:text-[#8F8E8D] placeholder:text-sm ${
-                    errors.name
+                  className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent placeholder:text-[#8F8E8D] placeholder:text-sm ${errors.name
                       ? "border-red-500 focus:ring-red-500"
                       : "border-[#D3D9DD] focus:ring-[#8E9397]"
-                  }`}
+                    }`}
                 />
                 {errors.name && (
                   <p className="mt-1 text-xs text-red-600">{errors.name}</p>
@@ -265,11 +283,10 @@ export default function EditRolePage() {
                   }}
                   rows={3}
                   placeholder="Describe the responsibilities and scope of this role..."
-                  className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent placeholder:text-[#8F8E8D] placeholder:text-sm resize-none ${
-                    errors.description
+                  className={`w-full rounded-xl border px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-1 focus:border-transparent placeholder:text-[#8F8E8D] placeholder:text-sm resize-none ${errors.description
                       ? "border-red-500 focus:ring-red-500"
                       : "border-[#D3D9DD] focus:ring-[#8E9397]"
-                  }`}
+                    }`}
                 />
                 {errors.description && (
                   <p className="mt-1 text-xs text-red-600">{errors.description}</p>
@@ -295,7 +312,7 @@ export default function EditRolePage() {
 
             <div className="space-y-6">
               {categories.map(category => {
-                const categoryPerms = permissionsData.filter(p => p.category === category);
+                const categoryPerms = activePermissions.filter(p => p.category === category);
                 const allSelected = categoryPerms.every(p => form.permissions.includes(p.id));
 
                 return (
@@ -318,11 +335,10 @@ export default function EditRolePage() {
                       {categoryPerms.map(permission => (
                         <label
                           key={permission.id}
-                          className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
-                            form.permissions.includes(permission.id)
+                          className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${form.permissions.includes(permission.id)
                               ? "border-[#0F75BD] bg-[#F0F9FF]"
                               : "border-[#E5E7EB] hover:border-[#D3D9DD] hover:bg-[#FAFAFB]"
-                          }`}
+                            }`}
                         >
                           <input
                             type="checkbox"

@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Search, MoreVertical, ChevronDown, Edit, Trash2, UserX, Shield, X, CheckCircle2, Save, Loader2 } from "lucide-react";
+import { Search, MoreVertical, ChevronDown, Edit, Trash2, UserX, Shield, X, CheckCircle2, Save, Loader2, Activity } from "lucide-react";
 import { HotelStaff, StaffRole } from "@/types/hotel.types";
 import { Role } from "@/types/staff.types";
 import { hotelService } from "@/services/hotel.service";
 import { toast } from "react-hot-toast";
+import StaffActivityModal from "./StaffActivityModal";
 
 interface UsersTableProps {
   users: HotelStaff[];
@@ -31,6 +32,7 @@ export default function UsersTable({
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+  const [showActivityModal, setShowActivityModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<HotelStaff | null>(null);
   const [selectedRole, setSelectedRole] = useState<StaffRole | "">("");
   const [saving, setSaving] = useState(false);
@@ -60,6 +62,10 @@ export default function UsersTable({
         setSelectedUser(user);
         setSelectedRole(user.role);
         setShowPermissionsModal(true);
+        break;
+      case "activity":
+        setSelectedUser(user);
+        setShowActivityModal(true);
         break;
       case "deactivate":
         handleToggleStatus(user);
@@ -264,6 +270,13 @@ export default function UsersTable({
                               Manage Permissions
                             </button>
                             <button
+                              onClick={() => handleAction("activity", user.id)}
+                              className="w-full px-4 py-2.5 text-left text-sm hover:bg-[#FAFAFB] transition-colors flex items-center gap-3 text-[#1A1A1A]"
+                            >
+                              <Activity className="w-4 h-4 text-blue-600" />
+                              Activity Audit
+                            </button>
+                            <button
                               onClick={() => handleAction("deactivate", user.id)}
                               className="w-full px-4 py-2.5 text-left text-sm hover:bg-[#FAFAFB] transition-colors flex items-center gap-3 text-orange-600"
                             >
@@ -445,6 +458,16 @@ export default function UsersTable({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Activity Audit Modal */}
+      {showActivityModal && selectedUser && (
+        <StaffActivityModal
+          isOpen={showActivityModal}
+          onClose={() => setShowActivityModal(false)}
+          staffId={selectedUser.id}
+          staffName={selectedUser.full_name}
+        />
       )}
     </div>
   );

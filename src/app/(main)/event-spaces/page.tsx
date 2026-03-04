@@ -9,6 +9,7 @@ import { EventSpace, EventSpaceType } from "@/types/hotel.types";
 import { hotelService } from "@/services/hotel.service";
 import { toast } from "react-hot-toast";
 import ErrorState from "@/components/ui/ErrorState";
+import EventBookingModal from "@/components/events/EventBookingModal";
 
 type EventSpaceDetailTab = "pictures" | "videos" | "reviews" | "3d-tour" | "equipment";
 
@@ -21,6 +22,7 @@ export default function EventSpacesPage() {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [sortBy, setSortBy] = useState("newly_added");
   const [selectedSpace, setSelectedSpace] = useState<EventSpace | null>(null);
+  const [showBookingModal, setShowBookingModal] = useState(false);
   const [activeTab, setActiveTab] = useState<EventSpaceDetailTab>("pictures");
   const [error, setError] = useState<string | null>(null);
 
@@ -328,13 +330,25 @@ export default function EventSpacesPage() {
                             ₦{space.base_rate_full_day}
                           </p>
                         </div>
-                        <button
-                          onClick={() => setSelectedSpace(space)}
-                          className="px-4 py-2 bg-[#0F75BD] text-white text-sm font-medium rounded-xl hover:bg-[#0050C8] transition-colors flex items-center gap-2"
-                        >
-                          <Eye className="w-4 h-4" />
-                          View
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setSelectedSpace(space)}
+                            className="p-2 border border-[#D3D9DD] text-[#5C5B59] rounded-xl hover:bg-gray-50 transition-colors"
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedSpace(space);
+                              setShowBookingModal(true);
+                            }}
+                            className="px-4 py-2 bg-[#0F75BD] text-white text-sm font-medium rounded-xl hover:bg-[#0050C8] transition-colors flex items-center gap-2"
+                          >
+                            <Calendar className="w-4 h-4" />
+                            Book
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -367,6 +381,17 @@ export default function EventSpacesPage() {
           </>
         )}
       </div>
+
+      {showBookingModal && selectedSpace && (
+        <EventBookingModal
+          isOpen={showBookingModal}
+          onClose={() => setShowBookingModal(false)}
+          space={selectedSpace}
+          onSuccess={() => {
+            fetchEventSpaces();
+          }}
+        />
+      )}
     </div>
   );
 }

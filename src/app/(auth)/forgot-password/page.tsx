@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import InputField from "@/components/ui/InputField";
 import Button from "@/components/ui/Button";
+import { authService } from "@/services/auth.service";
 import { useState, useMemo } from "react";
+import { toast } from "react-hot-toast";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -63,12 +65,13 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      // TODO: Send OTP to email via API
-      console.log("✅ OTP sent to:", email);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await authService.forgotPassword({ email });
+      toast.success("Reset code sent to your email!");
       setIsSubmitted(true);
-    } catch {
-      setErrors((prev) => ({ ...prev, global: "Failed to send OTP. Please try again." }));
+    } catch (error: any) {
+      const message = error.response?.data?.message || "Failed to send reset code. Please try again.";
+      setErrors((prev) => ({ ...prev, global: message }));
+      toast.error(message);
     } finally {
       setLoading(false);
     }

@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { Search, MessageCircle, Mail, Book, Video, ExternalLink, Clock, CheckCircle2, ArrowRight, Zap, Shield, HeadphonesIcon, MessageSquare } from "lucide-react";
 import Image from "next/image";
+import SupportTicketModal from "@/components/help/SupportTicketModal";
 
 export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showTicketModal, setShowTicketModal] = useState(false);
 
   const quickActions = [
     {
@@ -30,7 +32,7 @@ export default function HelpPage() {
       description: "Get help from our support team",
       bg: "bg-[#ECFDF5]",
       iconColor: "text-green-600",
-      link: "#"
+      action: () => setShowTicketModal(true),
     },
   ];
 
@@ -118,7 +120,8 @@ export default function HelpPage() {
       title: "Email Support",
       description: "Send us an email and we'll respond within 24 hours",
       availability: "Response within 24h",
-      action: "support@andinoh.com",
+      actionText: "support@andinoh.com",
+      action: () => setShowTicketModal(true),
       bg: "bg-[#F5F3FF]",
       iconColor: "text-purple-600",
       available: true,
@@ -129,7 +132,7 @@ export default function HelpPage() {
       title: "Phone Support",
       description: "Speak directly with our support team",
       availability: "Available 24/7",
-      action: "+234 7079726698",
+      actionText: "+234 7079726698",
       bg: "bg-[#ECFDF5]",
       iconColor: "text-green-600",
       available: true,
@@ -140,7 +143,7 @@ export default function HelpPage() {
       title: "WhatsApp Support",
       description: "Chat with us on WhatsApp for quick assistance",
       availability: "Available 24/7",
-      action: "+44 7400 730594",
+      actionText: "+44 7400 730594",
       bg: "bg-[#F0F9FF]",
       iconColor: "text-blue-600",
       available: true,
@@ -212,7 +215,10 @@ export default function HelpPage() {
                 </div>
                 <h3 className="font-semibold text-gray-800 text-lg mb-2">{action.title}</h3>
                 <p className="text-gray-500 text-sm mb-4">{action.description}</p>
-                <div className="flex items-center gap-2 text-[#0F75BD] font-medium text-sm group-hover:gap-3 transition-all">
+                <div
+                  className="flex items-center gap-2 text-[#0F75BD] font-medium text-sm group-hover:gap-3 transition-all cursor-pointer"
+                  onClick={action.action}
+                >
                   <span>Learn more</span>
                   <ArrowRight className="w-4 h-4" />
                 </div>
@@ -332,8 +338,11 @@ export default function HelpPage() {
                       <span>{channel.availability}</span>
                     </div>
 
-                    <button className="w-full py-3 bg-[#0F75BD] text-white font-semibold rounded-xl hover:bg-[#0050C8] transition-colors flex items-center justify-center gap-2">
-                      <span>{channel.action}</span>
+                    <button
+                      className="w-full py-3 bg-[#0F75BD] text-white font-semibold rounded-xl hover:bg-[#0050C8] transition-colors flex items-center justify-center gap-2"
+                      onClick={channel.action}
+                    >
+                      <span>{channel.actionText}</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -360,6 +369,10 @@ export default function HelpPage() {
           </div>
         </div>
       </div>
+      <SupportTicketModal
+        isOpen={showTicketModal}
+        onClose={() => setShowTicketModal(false)}
+      />
     </div>
   );
 }

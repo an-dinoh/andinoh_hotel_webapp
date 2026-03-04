@@ -1,10 +1,9 @@
 import Card from "@/components/ui/Card";
-import { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
   title: string;
   value: string | number;
-  icon: LucideIcon;
+  icon: any;
   trend?: {
     value: number;
     isPositive: boolean;
@@ -29,9 +28,8 @@ export default function StatCard({
           <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
           {trend && (
             <p
-              className={`text-sm mt-2 flex items-center gap-1 ${
-                trend.isPositive ? "text-green-600" : "text-red-600"
-              }`}
+              className={`text-sm mt-2 flex items-center gap-1 ${trend.isPositive ? "text-green-600" : "text-red-600"
+                }`}
             >
               <span>{trend.isPositive ? "↑" : "↓"}</span>
               <span>{Math.abs(trend.value)}%</span>

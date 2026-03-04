@@ -7,6 +7,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 
+import { authService } from "@/services/auth.service";
+import { toast } from "react-hot-toast";
+
 function VerifyOTPForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -90,34 +93,30 @@ function VerifyOTPForm() {
     setError("");
 
     try {
-      // TODO: Verify OTP with API
-      console.log("✅ Verifying OTP:", otpValue);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Simulate OTP verification (replace with actual API call)
-      if (otpValue === "123456") {
-        // Valid OTP - redirect to reset password
-        router.push(
-          `/reset-password?email=${encodeURIComponent(email)}&verified=true`
-        );
-      } else {
-        setError("Invalid OTP. Please try again.");
-        setOtp(["", "", "", "", "", ""]);
-        inputRefs.current[0]?.focus();
-      }
+      // With the new backend flow, we don't verify OTP standalone.
+      // We just pass it to the next page to be submitted with the new password.
+      router.push(
+        `/reset-password?email=${encodeURIComponent(email)}&otp=${otpValue}&verified=true`
+      );
     } catch {
-      setError("Verification failed. Please try again.");
+      setError("An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     setIsResending(true);
     setResendTimer(60);
-    console.log("✅ Resending OTP to:", email);
-    // TODO: Resend OTP via API
-    setTimeout(() => setIsResending(false), 1000);
+    try {
+      await authService.forgotPassword({ email });
+      toast.success("A new OTP has been sent to your email.");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to resend OTP.");
+      setResendTimer(0);
+    } finally {
+      setIsResending(false);
+    }
   };
 
   return (

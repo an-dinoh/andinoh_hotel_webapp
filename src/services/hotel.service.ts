@@ -40,6 +40,17 @@ import {
   HotelFeed,
   DeviceRegistration,
   PaginatedResponse,
+  Facility,
+  PricingRule,
+  PhysicalRoom,
+  BookingFolio,
+  BankAccount,
+  WithdrawalRequest,
+  ReportJob,
+  GlobalSearchResponse,
+  SupportTicket,
+  CreateSupportTicketRequest,
+  StaffActivity,
 } from '@/types/hotel.types';
 
 class HotelService {
@@ -67,6 +78,14 @@ class HotelService {
     return apiClient.delete<void>('hotels/my-hotel/');
   }
 
+  async getFacilities(): Promise<Facility[]> {
+    return apiClient.get<Facility[]>('hotels/my-hotel/facilities/');
+  }
+
+  async createFacility(data: Partial<Facility>): Promise<Facility> {
+    return apiClient.post<Facility>('hotels/my-hotel/facilities/', data);
+  }
+
   // ==================== ROOM MANAGEMENT ====================
 
   async getRooms(filters?: RoomFilters): Promise<PaginatedResponse<Room>> {
@@ -87,6 +106,26 @@ class HotelService {
 
   async deleteRoom(id: string): Promise<void> {
     return apiClient.delete<void>(`hotels/rooms/${id}/`);
+  }
+
+  async bulkUpdatePhysicalRooms(data: { room_ids: string[]; status: string; housekeeping_status: string; }): Promise<void> {
+    return apiClient.post<void>('hotels/physical-rooms/bulk-update/', data);
+  }
+
+  async getPhysicalRooms(typeId: string): Promise<PaginatedResponse<PhysicalRoom>> {
+    return apiClient.get<PaginatedResponse<PhysicalRoom>>(`hotels/rooms/${typeId}/physical-rooms/`);
+  }
+
+  async createPhysicalRoom(typeId: string, data: Partial<PhysicalRoom>): Promise<PhysicalRoom> {
+    return apiClient.post<PhysicalRoom>(`hotels/rooms/${typeId}/physical-rooms/`, data);
+  }
+
+  async getPricingRules(typeId: string): Promise<PaginatedResponse<PricingRule>> {
+    return apiClient.get<PaginatedResponse<PricingRule>>(`hotels/rooms/${typeId}/pricing-rules/`);
+  }
+
+  async createPricingRule(typeId: string, data: Partial<PricingRule>): Promise<PricingRule> {
+    return apiClient.post<PricingRule>(`hotels/rooms/${typeId}/pricing-rules/`, data);
   }
 
   // ==================== BOOKING MANAGEMENT ====================
@@ -121,6 +160,14 @@ class HotelService {
 
   async processPayment(bookingId: string, data: { amount: number; payment_method: string; transaction_id: string }): Promise<void> {
     return apiClient.post<void>(`hotels/bookings/${bookingId}/process-payment/`, data);
+  }
+
+  async getFolio(id: string): Promise<BookingFolio> {
+    return apiClient.get<BookingFolio>(`hotels/bookings/${id}/folio/`);
+  }
+
+  async addIncidental(id: string, data: { service_type: string; amount: string; description: string; }): Promise<void> {
+    return apiClient.post<void>(`hotels/bookings/${id}/incidentals/`, data);
   }
 
   // ==================== STAFF MANAGEMENT ====================
@@ -185,6 +232,26 @@ class HotelService {
     return apiClient.delete<void>(`hotels/roles/${id}/`);
   }
 
+  async getPermissions(): Promise<string[]> {
+    return apiClient.get<string[]>('hotels/permissions/');
+  }
+
+  async createRole(data: { name: string; permissions: string[] }): Promise<any> {
+    return apiClient.post<any>('hotels/roles/', data);
+  }
+
+  async getRole(id: string): Promise<any> {
+    return apiClient.get<any>(`hotels/roles/${id}/`);
+  }
+
+  async updateRole(id: string, data: { name: string; permissions: string[] }): Promise<any> {
+    return apiClient.put<any>(`hotels/roles/${id}/`, data);
+  }
+
+  async getStaffActivity(id: string): Promise<StaffActivity[]> {
+    return apiClient.get<StaffActivity[]>(`hotels/staff/${id}/activity/`);
+  }
+
   async getReviews(): Promise<PaginatedResponse<any>> {
     return apiClient.get<PaginatedResponse<any>>('hotels/reviews/');
   }
@@ -229,19 +296,19 @@ class HotelService {
   // ==================== POLICIES ====================
 
   async getPolicies(): Promise<Policy[]> {
-    return apiClient.get<Policy[]>('hotel/api/policies/');
+    return apiClient.get<Policy[]>('hotels/my-hotel/policies/');
   }
 
   async createPolicy(data: CreatePolicyRequest): Promise<Policy> {
-    return apiClient.post<Policy>('hotel/api/policies/', data);
+    return apiClient.post<Policy>('hotels/my-hotel/policies/', data);
   }
 
   async updatePolicy(id: string, data: Partial<CreatePolicyRequest>): Promise<Policy> {
-    return apiClient.patch<Policy>(`hotel/api/policies/${id}/`, data);
+    return apiClient.patch<Policy>(`hotels/my-hotel/policies/${id}/`, data);
   }
 
   async deletePolicy(id: string): Promise<void> {
-    return apiClient.delete<void>(`hotel/api/policies/${id}/`);
+    return apiClient.delete<void>(`hotels/my-hotel/policies/${id}/`);
   }
 
   // ==================== MEDIA UPLOAD ====================
@@ -285,8 +352,28 @@ class HotelService {
     return apiClient.get<SegmentationResponse>('hotels/analytics/segmentation/');
   }
 
+  async generateReport(data: { report_type: string; start_date: string; end_date: string; format: string; }): Promise<any> {
+    return apiClient.post<any>('hotels/reports/generate/', data);
+  }
+
+  async getReportJob(jobId: string): Promise<ReportJob> {
+    return apiClient.get<ReportJob>(`hotels/reports/jobs/${jobId}/`);
+  }
+
   async getWalletStats(): Promise<WalletStats> {
     return apiClient.get<WalletStats>('hotels/wallet/stats/');
+  }
+
+  async getBankAccounts(): Promise<BankAccount[]> {
+    return apiClient.get<BankAccount[]>('hotels/wallet/bank-accounts/');
+  }
+
+  async createBankAccount(data: Partial<BankAccount>): Promise<BankAccount> {
+    return apiClient.post<BankAccount>('hotels/wallet/bank-accounts/', data);
+  }
+
+  async requestWithdrawal(data: { amount: string; bank_account_id: string; }): Promise<WithdrawalRequest> {
+    return apiClient.post<WithdrawalRequest>('hotels/wallet/withdraw/', data);
   }
 
   // ==================== EVENT SPACE MANAGEMENT ====================
@@ -309,6 +396,23 @@ class HotelService {
 
   async deleteEventSpace(id: string): Promise<void> {
     return apiClient.delete<void>(`hotels/event-spaces/${id}/`);
+  }
+
+  async checkEventSpaceAvailability(id: string, date: string): Promise<any> {
+    return apiClient.get<any>(`hotels/event-spaces/${id}/availability/`, { params: { date } });
+  }
+
+  async createEventBooking(data: any): Promise<any> {
+    return apiClient.post<any>('hotels/event-bookings/', data);
+  }
+
+  // ==================== SEARCH & SUPPORT ====================
+  async globalSearch(query: string): Promise<GlobalSearchResponse> {
+    return apiClient.get<GlobalSearchResponse>('hotels/search/global/', { params: { q: query } });
+  }
+
+  async createSupportTicket(data: CreateSupportTicketRequest): Promise<SupportTicket> {
+    return apiClient.post<SupportTicket>('support/tickets/', data);
   }
 }
 

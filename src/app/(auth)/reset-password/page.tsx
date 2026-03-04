@@ -10,9 +10,13 @@ import { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { FormValidator } from "@/utils/FormValidator";
 
+import { authService } from "@/services/auth.service";
+import { toast } from "react-hot-toast";
+
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
+  const otp = searchParams.get("otp");
   const verified = searchParams.get("verified");
 
   const [form, setForm] = useState({
@@ -41,12 +45,12 @@ function ResetPasswordForm() {
 
   useEffect(() => {
     // Check if user came from OTP verification
-    if (!email || verified !== "true") {
+    if (!email || !otp || verified !== "true") {
       setIsVerified(false);
     } else {
       setIsVerified(true);
     }
-  }, [email, verified]);
+  }, [email, otp, verified]);
 
   const handleChange = (
     field: "password" | "confirmPassword",
@@ -92,6 +96,11 @@ function ResetPasswordForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!email || !otp) {
+      setErrors((prev) => ({ ...prev, global: "Session expired. Please start over." }));
+      return;
+    }
+
     const validator = new FormValidator({
       hotelName: "",
       email: email || "",
@@ -113,11 +122,17 @@ function ResetPasswordForm() {
     setLoading(true);
 
     try {
-      // TODO: Call API to reset password
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await authService.resetPassword({
+        email,
+        otp,
+        new_password: form.password
+      });
+      toast.success("Password reset successfully!");
       setIsSubmitted(true);
-    } catch {
-      setErrors((prev) => ({ ...prev, global: "Failed to reset password. Please try again." }));
+    } catch (error: any) {
+      const message = error.response?.data?.message || "Failed to reset password. Please try again.";
+      setErrors((prev) => ({ ...prev, global: message }));
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -170,7 +185,7 @@ function ResetPasswordForm() {
         </div>
 
         <Link href="/forgot-password">
-          <Button text="Start Password Reset" onClick={() => {}} />
+          <Button text="Start Password Reset" onClick={() => { }} />
         </Link>
       </div>
     );
@@ -205,7 +220,7 @@ function ResetPasswordForm() {
         </div>
 
         <Link href="/login">
-          <Button text="Continue to Sign In" onClick={() => {}} />
+          <Button text="Continue to Sign In" onClick={() => { }} />
         </Link>
       </div>
     );
