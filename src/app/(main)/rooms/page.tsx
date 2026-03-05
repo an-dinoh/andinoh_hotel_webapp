@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, Edit, Trash2, Eye, ChevronDown, Bookmark, MapPin, Star, Bed, Users, Maximize2, Sparkles, Image as ImageIcon, Video, MessageSquare, Box, Key, DollarSign } from "lucide-react";
 import Image from "next/image";
-import { Room, RoomType } from "@/types/hotel.types";
+import { Room, RoomType, PhysicalRoom } from "@/types/hotel.types";
 import { hotelService } from "@/services/hotel.service";
 import ErrorState from "@/components/ui/ErrorState";
 import PhysicalRoomList from "@/components/rooms/PhysicalRoomList";
@@ -12,6 +12,8 @@ import PricingRulesList from "@/components/rooms/PricingRulesList";
 import { useRooms } from "@/contexts/RoomsContext";
 import RoomCardSkeleton from "@/components/rooms/RoomCardSkeleton";
 import { Skeleton } from "@/components/ui/Skeleton";
+import PhysicalRoomCard from "@/components/rooms/PhysicalRoomCard";
+import UnitActionModal from "@/components/rooms/UnitActionModal";
 
 type RoomDetailTab = "pictures" | "videos" | "reviews" | "3d-tour" | "units" | "pricing";
 
@@ -35,30 +37,54 @@ export default function RoomsPage() {
     statsLoading,
     error,
     currentPage,
+    currentUnitPage,
     searchTerm,
     filterType,
+    filterCategoryId,
     sortBy,
     setCurrentPage,
+    setCurrentUnitPage,
     setSearchTerm,
     setFilterType,
+    setFilterCategoryId,
     setSortBy,
-    fetchRoomsData
+    fetchRoomsData,
+    fetchPhysicalRoomsData,
+    updatePhysicalRoom,
+    deletePhysicalRoom,
+    physicalRooms,
+    totalPhysicalCount,
+    isUnitsLoading,
   } = useRooms();
 
+  const [viewMode, setViewMode] = useState<"units" | "categories">("units");
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [activeTab, setActiveTab] = useState<RoomDetailTab>("pictures");
 
+  const [editingUnit, setEditingUnit] = useState<PhysicalRoom | null>(null);
+  const [isUnitModalOpen, setIsUnitModalOpen] = useState(false);
+
   useEffect(() => {
-    // Fetch data initially and when filters (currentPage, filterType) change
+    // Fetch data initially
     fetchRoomsData(rooms.length > 0);
-  }, [currentPage, filterType, fetchRoomsData]);
+    fetchPhysicalRoomsData(physicalRooms.length > 0);
+  }, [currentPage, filterType, fetchRoomsData, fetchPhysicalRoomsData, currentUnitPage, filterCategoryId]);
 
   const filteredRooms = rooms.filter((room) => {
     if (!searchTerm) return true;
     return (
       room.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       room.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
+  const filteredUnits = physicalRooms.filter((unit) => {
+    if (!searchTerm) return true;
+    const category = rooms.find(r => r.id === unit.room_type);
+    return (
+      unit.room_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      category?.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
@@ -459,15 +485,34 @@ export default function RoomsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-[#1A1A1A]">Rooms</h1>
-            <p className="text-[#5C5B59] mt-1">Manage your hotel rooms and availability</p>
+            <p className="text-[#5C5B59] mt-1">
+              {viewMode === "units" ? "Track and manage individual room units" : "Manage your room types and marketing templates"}
+            </p>
           </div>
-          <button
-            onClick={() => router.push("/rooms/create")}
-            className="px-4 py-2.5 bg-[#0F75BD] text-sm text-white font-regular rounded-2xl hover:bg-[#0050C8] transition-colors flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add New Room
-          </button>
+          <div className="flex items-center gap-3">
+            <div className="flex bg-[#EEF0F2] p-1 rounded-2xl mr-4 border border-[#E5E7EB]">
+              <button
+                onClick={() => setViewMode("units")}
+                className={`px-4 py-2 text-sm font-bold rounded-xl transition-all ${viewMode === "units" ? "bg-white text-[#0F75BD] shadow-sm shadow-black/5" : "text-[#5C5B59] hover:text-[#1A1A1A]"}`}
+              >
+                Actual Rooms
+              </button>
+              <button
+                onClick={() => setViewMode("categories")}
+                className={`px-4 py-2 text-sm font-bold rounded-xl transition-all ${viewMode === "categories" ? "bg-white text-[#0F75BD] shadow-sm shadow-black/5" : "text-[#5C5B59] hover:text-[#1A1A1A]"}`}
+              >
+                Categories
+              </button>
+            </div>
+
+            <button
+              onClick={() => router.push(viewMode === "units" ? "/rooms/units/create" : "/rooms/create")}
+              className="px-6 py-3 bg-[#0F75BD] text-sm text-white font-bold rounded-2xl hover:bg-[#0050C8] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              {viewMode === "units" ? "Add New Room" : "Create Category"}
+            </button>
+          </div>
         </div>
 
         {/* Search & Filters Bar */}
@@ -530,21 +575,18 @@ export default function RoomsPage() {
           <h3 className="text-sm font-semibold text-[#1A1A1A] mb-4">Filter by Room Type</h3>
           <div className="flex gap-3 flex-wrap overflow-x-auto scrollbar-hide pb-2">
             {[
-              { value: "all", label: "All Rooms" },
-              { value: "standard", label: "Standard" },
-              { value: "deluxe", label: "Deluxe" },
-              { value: "suite", label: "Suite" },
-              { value: "presidential", label: "Presidential" },
-            ].map((type) => (
+              { id: "all", title: "All Rooms" },
+              ...rooms.map(r => ({ id: r.id, title: r.title }))
+            ].map((cat) => (
               <button
-                key={type.value}
-                onClick={() => setFilterType(type.value as RoomType | "all")}
-                className={`px-6 py-2.5 rounded-[14px] text-sm font-semibold transition-all whitespace-nowrap ${filterType === type.value
+                key={cat.id}
+                onClick={() => setFilterCategoryId(cat.id)}
+                className={`px-6 py-2.5 rounded-[14px] text-sm font-semibold transition-all whitespace-nowrap ${filterCategoryId === cat.id
                   ? "bg-[#0F75BD] text-white"
                   : "bg-[#FAFAFB] text-[#5C5B59] border border-[#E5E7EB] hover:bg-[#F3F4F6] hover:text-[#1A1A1A]"
                   }`}
               >
-                {type.label}
+                {cat.title}
               </button>
             ))}
           </div>
@@ -566,214 +608,248 @@ export default function RoomsPage() {
         </div>
 
         {/* Rooms Grid */}
-        {/* Rooms Grid */}
-        {filteredRooms.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-16 md:p-24 bg-gradient-to-b from-[#FAFAFB] to-white border border-[#E5E7EB]/50 rounded-[32px] text-center relative overflow-hidden">
-
-            {/* Background Decorative Rings */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#0F75BD]/[0.03] rounded-full blur-[40px] pointer-events-none"></div>
-
-            {/* Layered Icon */}
-            <div className="relative mb-8">
-              <div className="absolute inset-0 bg-[#0F75BD]/15 blur-xl rounded-full"></div>
-              <div className="relative w-24 h-24 bg-white border border-[#E5E7EB] rounded-[28px] flex items-center justify-center rotate-3 hover:rotate-0 transition-transform duration-500">
-                <Sparkles className="w-10 h-10 text-[#0F75BD]" />
-              </div>
-            </div>
-
-            {/* Typography */}
-            <h3 className="text-2xl font-black text-[#1A1A1A] mb-3 tracking-tight z-10 relative">No rooms found</h3>
-            <p className="text-[#5C5B59] font-medium mb-10 max-w-sm z-10 relative">
-              Your property has no active room listings yet. Start building your portfolio by adding your first distinct room type.
-            </p>
-
-            {/* Call to Action */}
-            <button
-              onClick={() => router.push("/rooms/create")}
-              className="group relative px-8 py-3.5 bg-[#1A1A1A] text-white font-bold rounded-[16px] hover:bg-black transition-all hover:-translate-y-0.5 overflow-hidden z-10"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] skew-x-[-30deg] group-hover:translate-x-[150%] transition-transform duration-700"></div>
-              <div className="relative flex items-center gap-2">
-                <Plus className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" />
-                <span className="tracking-wide">Add Your First Room</span>
-              </div>
-            </button>
-          </div>
-        ) : (
+        {viewMode === "units" ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredRooms.map((room, index) => {
-                const roomNumber = `10${index + 1}`;
-
-                return (
-                  <div
-                    key={room.id}
-                    className="bg-white rounded-[24px] overflow-hidden border border-[#E5E7EB]/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col"
-                    onClick={() => {
-                      setSelectedRoom(room);
-                      setActiveTab("pictures");
-                    }}
-                  >
-                    {/* Room Image */}
-                    <div className="relative h-56 bg-[#FAFAFB] flex items-center justify-center overflow-hidden">
-                      {room.primary_image ? (
-                        <>
-                          <Image
-                            src={room.primary_image}
-                            alt={room.title}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-700"
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          />
-                          {/* Inner Gradient for readability of overlays */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent pointer-events-none"></div>
-                        </>
-                      ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#E8F4F8] to-[#F5F5F5] flex items-center justify-center">
-                          <Sparkles className="w-12 h-12 text-[#0F75BD]/30" />
-                        </div>
-                      )}
-
-                      {/* Unit Count Badge - True Glassmorphism */}
-                      <div className="absolute top-4 right-4 text-center px-4 py-2 bg-white/30 backdrop-blur-md rounded-2xl border border-white/50 shadow-sm">
-                        <span className="block text-xl font-black text-white leading-none mb-0.5 drop-shadow-md">{room.total_rooms || 0}</span>
-                        <span className="block text-[10px] font-bold text-white uppercase tracking-wider leading-none drop-shadow-md">Units</span>
-                      </div>
-
-                      {/* Room Type Badge - True Glassmorphism */}
-                      <div className="absolute top-4 left-4">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold tracking-widest text-white bg-white/30 backdrop-blur-md rounded-xl border border-white/50 shadow-sm shadow-black/5">
-                          <Sparkles className="w-3.5 h-3.5 text-white drop-shadow-sm" />
-                          <span className="drop-shadow-md">{room.room_type.toUpperCase()}</span>
-                        </span>
-                      </div>
-
-                      {/* Dynamic Amenities / Views (Bottom Left) */}
-                      <div className="absolute bottom-4 left-4 flex flex-wrap gap-2 max-w-[60%]">
-                        {room.has_balcony && (
-                          <span className="px-2.5 py-1 text-[10px] font-bold text-white bg-white/20 backdrop-blur-md rounded-lg border border-white/30 tracking-wider shadow-sm">Balcony</span>
-                        )}
-                        {room.has_sea_view && (
-                          <span className="px-2.5 py-1 text-[10px] font-bold text-white bg-white/20 backdrop-blur-md rounded-lg border border-white/30 tracking-wider shadow-sm">Sea View</span>
-                        )}
-                        {room.has_city_view && (
-                          <span className="px-2.5 py-1 text-[10px] font-bold text-white bg-white/20 backdrop-blur-md rounded-lg border border-white/30 tracking-wider shadow-sm">City View</span>
-                        )}
-                      </div>
-
-                      {/* Availability Badge - True Glassmorphism */}
-                      <div className="absolute bottom-4 right-4">
-                        <span
-                          className={`px-3.5 py-1.5 text-[11px] font-black tracking-wider uppercase rounded-xl backdrop-blur-md border shadow-sm flex items-center gap-1.5 ${room.is_available
-                            ? "bg-green-500/20 text-white border-green-400/50"
-                            : "bg-red-500/20 text-white border-red-400/50"
-                            }`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${room.is_available ? 'bg-green-400' : 'bg-red-400'} shadow-sm`}></span>
-                          {room.is_available ? "Available" : "Occupied"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Room Content */}
-                    <div className="p-5">
-                      {/* Room Title */}
-                      <h3 className="text-lg font-bold text-[#1A1A1A] mb-2 group-hover:text-[#0F75BD] transition-colors line-clamp-1">
-                        {room.title}
-                      </h3>
-
-                      {/* Description */}
-                      <p className="text-sm text-[#5C5B59] mb-3 line-clamp-2">
-                        {room.description}
-                      </p>
-
-                      {/* Room Details */}
-                      <div className="grid grid-cols-3 gap-2 mb-3">
-                        <div className="flex flex-col items-center p-2 bg-[#FAFAFB] rounded-lg">
-                          <Bed className="w-4 h-4 text-[#0F75BD] mb-1" />
-                          <span className="text-xs font-semibold text-[#1A1A1A] capitalize">{room.bed_type}</span>
-                        </div>
-                        <div className="flex flex-col items-center p-2 bg-[#FAFAFB] rounded-lg">
-                          <Users className="w-4 h-4 text-[#0F75BD] mb-1" />
-                          <span className="text-xs font-semibold text-[#1A1A1A]">{room.max_occupancy}</span>
-                        </div>
-                        <div className="flex flex-col items-center p-2 bg-[#FAFAFB] rounded-lg">
-                          <Maximize2 className="w-4 h-4 text-[#0F75BD] mb-1" />
-                          <span className="text-xs font-semibold text-[#1A1A1A]">{room.room_size} ft²</span>
-                        </div>
-                      </div>
-
-                      {/* Divider */}
-                      <div className="border-t border-[#E5E7EB] my-3"></div>
-
-                      {/* Price & Actions */}
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-[#5C5B59] mb-0.5">Starting from</p>
-                          <p className="text-xl font-bold text-[#1A1A1A]">
-                            ₦{parseFloat(room.base_price).toLocaleString()}
-                            <span className="text-xs font-medium text-[#5C5B59] uppercase tracking-wider ml-1">/night</span>
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => setSelectedRoom(room)}
-                          className="px-4 py-2 bg-[#0F75BD] text-white text-sm font-medium rounded-xl hover:bg-[#0050C8] transition-colors flex items-center gap-2"
-                        >
-                          <Eye className="w-4 h-4" />
-                          View
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 m-8">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="p-2 hover:bg-[#FAFAFB] rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <ChevronDown className="w-5 h-5 rotate-90 text-[#5C5B59]" />
-                </button>
-                {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                  let page: number;
-                  if (totalPages <= 7) {
-                    page = i + 1;
-                  } else if (currentPage <= 4) {
-                    page = i + 1;
-                  } else if (currentPage >= totalPages - 3) {
-                    page = totalPages - 6 + i;
-                  } else {
-                    page = currentPage - 3 + i;
-                  }
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 rounded-lg font-medium transition-colors ${currentPage === page
-                        ? "bg-[#0F75BD] text-white"
-                        : "hover:bg-[#FAFAFB] text-[#1A1A1A]"
-                        }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="p-2.5 hover:bg-[#FAFAFB] rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <ChevronDown className="w-5 h-5 -rotate-90 text-[#5C5B59]" />
-                </button>
+            {filteredUnits.length === 0 && !isUnitsLoading ? (
+              <div className="flex flex-col items-center justify-center p-16 md:p-24 bg-[#FAFAFB] border border-[#E5E7EB]/50 rounded-[32px] text-center">
+                <Key className="w-16 h-16 text-[#0F75BD]/20 mb-4" />
+                <h3 className="text-xl font-bold text-[#1A1A1A] mb-2">{searchTerm ? "No matching rooms found" : "No room units found"}</h3>
+                <p className="text-[#5C5B59] mb-8 max-w-sm mx-auto">
+                  {searchTerm ? `We couldn't find any room units matching "${searchTerm}". Try a different search term.` : "You haven't added any physical rooms to your inventory yet. Select a category to start provisioning units."}
+                </p>
+                {!searchTerm && <button className="px-6 py-3 bg-[#1A1A1A] text-white font-bold rounded-xl hover:bg-black transition-all">Provision First Room</button>}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {isUnitsLoading ? (
+                  Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="h-64 bg-[#FAFAFB] animate-pulse rounded-[24px]" />
+                  ))
+                ) : (
+                  filteredUnits.map((unit) => (
+                    <PhysicalRoomCard
+                      key={unit.id}
+                      unit={unit}
+                      category={rooms.find(r => r.id === unit.room_type)}
+                    />
+                  ))
+                )}
               </div>
             )}
           </>
+        ) : (
+          <>
+            {filteredRooms.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-16 md:p-24 bg-gradient-to-b from-[#FAFAFB] to-white border border-[#E5E7EB]/50 rounded-[32px] text-center relative overflow-hidden">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#0F75BD]/[0.03] rounded-full blur-[40px] pointer-events-none"></div>
+                <div className="relative mb-8">
+                  <div className="absolute inset-0 bg-[#0F75BD]/15 blur-xl rounded-full"></div>
+                  <div className="relative w-24 h-24 bg-white border border-[#E5E7EB] rounded-[28px] flex items-center justify-center rotate-3 hover:rotate-0 transition-transform duration-500">
+                    <Sparkles className="w-10 h-10 text-[#0F75BD]" />
+                  </div>
+                </div>
+                <h3 className="text-2xl font-black text-[#1A1A1A] mb-3 tracking-tight z-10 relative">No categories found</h3>
+                <p className="text-[#5C5B59] font-medium mb-10 max-w-sm z-10 relative">
+                  Your property has no active room listings yet. Start building your portfolio by adding your first distinct room type.
+                </p>
+                <button
+                  onClick={() => router.push("/rooms/create")}
+                  className="group relative px-8 py-3.5 bg-[#1A1A1A] text-white font-bold rounded-[16px] hover:bg-black transition-all hover:-translate-y-0.5 overflow-hidden z-10"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] skew-x-[-30deg] group-hover:translate-x-[150%] transition-transform duration-700"></div>
+                  <div className="relative flex items-center gap-2">
+                    <Plus className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" />
+                    <span className="tracking-wide">Add Your First Room</span>
+                  </div>
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredRooms.map((room, index) => {
+                    const roomNumber = `10${index + 1}`;
+
+                    return (
+                      <div
+                        key={room.id}
+                        className="bg-white rounded-[24px] overflow-hidden border border-[#E5E7EB]/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col"
+                        onClick={() => {
+                          setSelectedRoom(room);
+                          setActiveTab("pictures");
+                        }}
+                      >
+                        {/* Room Image */}
+                        <div className="relative h-56 bg-[#FAFAFB] flex items-center justify-center overflow-hidden">
+                          {room.primary_image ? (
+                            <>
+                              <Image
+                                src={room.primary_image}
+                                alt={room.title}
+                                fill
+                                className="object-cover group-hover:scale-105 transition-transform duration-700"
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              />
+                              {/* Inner Gradient for readability of overlays */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent pointer-events-none"></div>
+                            </>
+                          ) : (
+                            <div className="absolute inset-0 bg-gradient-to-br from-[#E8F4F8] to-[#F5F5F5] flex items-center justify-center">
+                              <Sparkles className="w-12 h-12 text-[#0F75BD]/30" />
+                            </div>
+                          )}
+
+                          {/* Unit Count Badge - True Glassmorphism */}
+                          <div className="absolute top-4 right-4 text-center px-4 py-2 bg-white/30 backdrop-blur-md rounded-2xl border border-white/50 shadow-sm">
+                            <span className="block text-xl font-black text-white leading-none mb-0.5 drop-shadow-md">{room.total_rooms || 0}</span>
+                            <span className="block text-[10px] font-bold text-white uppercase tracking-wider leading-none drop-shadow-md">Units</span>
+                          </div>
+
+                          {/* Room Type Badge - True Glassmorphism */}
+                          <div className="absolute top-4 left-4">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold tracking-widest text-white bg-white/30 backdrop-blur-md rounded-xl border border-white/50 shadow-sm shadow-black/5">
+                              <Sparkles className="w-3.5 h-3.5 text-white drop-shadow-sm" />
+                              <span className="drop-shadow-md">{room.room_type.toUpperCase()}</span>
+                            </span>
+                          </div>
+
+                          {/* Dynamic Amenities / Views (Bottom Left) */}
+                          <div className="absolute bottom-4 left-4 flex flex-wrap gap-2 max-w-[60%]">
+                            {room.has_balcony && (
+                              <span className="px-2.5 py-1 text-[10px] font-bold text-white bg-white/20 backdrop-blur-md rounded-lg border border-white/30 tracking-wider shadow-sm">Balcony</span>
+                            )}
+                            {room.has_sea_view && (
+                              <span className="px-2.5 py-1 text-[10px] font-bold text-white bg-white/20 backdrop-blur-md rounded-lg border border-white/30 tracking-wider shadow-sm">Sea View</span>
+                            )}
+                            {room.has_city_view && (
+                              <span className="px-2.5 py-1 text-[10px] font-bold text-white bg-white/20 backdrop-blur-md rounded-lg border border-white/30 tracking-wider shadow-sm">City View</span>
+                            )}
+                          </div>
+
+                          {/* Availability Badge - True Glassmorphism */}
+                          <div className="absolute bottom-4 right-4">
+                            <span
+                              className={`px-3.5 py-1.5 text-[11px] font-black tracking-wider uppercase rounded-xl backdrop-blur-md border shadow-sm flex items-center gap-1.5 ${room.is_available
+                                ? "bg-green-500/20 text-white border-green-400/50"
+                                : "bg-red-500/20 text-white border-red-400/50"
+                                }`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full ${room.is_available ? 'bg-green-400' : 'bg-red-400'} shadow-sm`}></span>
+                              {room.is_available ? "Available" : "Occupied"}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Room Content */}
+                        <div className="p-5">
+                          {/* Room Title */}
+                          <h3 className="text-lg font-bold text-[#1A1A1A] mb-2 group-hover:text-[#0F75BD] transition-colors line-clamp-1">
+                            {room.title}
+                          </h3>
+
+                          {/* Description */}
+                          <p className="text-sm text-[#5C5B59] mb-3 line-clamp-2">
+                            {room.description}
+                          </p>
+
+                          {/* Room Details */}
+                          <div className="grid grid-cols-3 gap-2 mb-3">
+                            <div className="flex flex-col items-center p-2 bg-[#FAFAFB] rounded-lg">
+                              <Bed className="w-4 h-4 text-[#0F75BD] mb-1" />
+                              <span className="text-xs font-semibold text-[#1A1A1A] capitalize">{room.bed_type}</span>
+                            </div>
+                            <div className="flex flex-col items-center p-2 bg-[#FAFAFB] rounded-lg">
+                              <Users className="w-4 h-4 text-[#0F75BD] mb-1" />
+                              <span className="text-xs font-semibold text-[#1A1A1A]">{room.max_occupancy}</span>
+                            </div>
+                            <div className="flex flex-col items-center p-2 bg-[#FAFAFB] rounded-lg">
+                              <Maximize2 className="w-4 h-4 text-[#0F75BD] mb-1" />
+                              <span className="text-xs font-semibold text-[#1A1A1A]">{room.room_size} ft²</span>
+                            </div>
+                          </div>
+
+                          {/* Divider */}
+                          <div className="border-t border-[#E5E7EB] my-3"></div>
+
+                          {/* Price & Actions */}
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-xs text-[#5C5B59] mb-0.5">Starting from</p>
+                              <p className="text-xl font-bold text-[#1A1A1A]">
+                                ₦{parseFloat(room.base_price).toLocaleString()}
+                                <span className="text-xs font-medium text-[#5C5B59] uppercase tracking-wider ml-1">/night</span>
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => setSelectedRoom(room)}
+                              className="px-4 py-2 bg-[#0F75BD] text-white text-sm font-medium rounded-xl hover:bg-[#0050C8] transition-colors flex items-center gap-2"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 m-8">
+                    <button
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="p-2 hover:bg-[#FAFAFB] rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <ChevronDown className="w-5 h-5 rotate-90 text-[#5C5B59]" />
+                    </button>
+                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                      let page: number;
+                      if (totalPages <= 7) {
+                        page = i + 1;
+                      } else if (currentPage <= 4) {
+                        page = i + 1;
+                      } else if (currentPage >= totalPages - 3) {
+                        page = totalPages - 6 + i;
+                      } else {
+                        page = currentPage - 3 + i;
+                      }
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-1 rounded-lg font-medium transition-colors ${currentPage === page
+                            ? "bg-[#0F75BD] text-white"
+                            : "hover:bg-[#FAFAFB] text-[#1A1A1A]"
+                            }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    })}
+                    <button
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-2.5 hover:bg-[#FAFAFB] rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <ChevronDown className="w-5 h-5 -rotate-90 text-[#5C5B59]" />
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </>
         )}
+
+        {/* Unit Management Modal */}
+        <UnitActionModal
+          isOpen={isUnitModalOpen}
+          onClose={() => setIsUnitModalOpen(false)}
+          unit={editingUnit}
+          category={rooms.find(r => r.id === editingUnit?.room_type)}
+          onUpdate={updatePhysicalRoom}
+          onDelete={deletePhysicalRoom}
+        />
       </div>
     </div>
   );

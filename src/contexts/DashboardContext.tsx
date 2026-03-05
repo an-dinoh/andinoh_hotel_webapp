@@ -67,14 +67,21 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
             if (walletData) setWallet(walletData);
             if (bookingsData) setUpcomingBookings(bookingsData.results);
 
-            // Maintain the "real-world" mock activities
-            const currentUser = authService.getUser();
-            setActivities([
-                { id: '1', type: 'booking', title: 'New Booking', timestamp: '2 mins ago', description: 'John Doe booked Deluxe Room for 3 nights.' },
-                { id: '2', type: 'payment', title: 'Payment Received', timestamp: '15 mins ago', description: 'Confirmed payment of ₦45,000 for Booking #BK-9021.' },
-                { id: '3', type: 'system', title: 'Daily Report Ready', timestamp: '1 hour ago', description: 'The performance report for Feb 28 is now available.' },
-                { id: '4', type: currentUser?.role === 'staff' ? 'staff' : 'system', title: 'Room Cleaned', timestamp: '2 hours ago', description: 'Room 204 has been marked as Clean by Housekeeping.' },
-            ]);
+            // Synthesize activities from real bookings
+            const realActivities = (bookingsData.results || []).slice(0, 3).map((booking: Booking, index: number) => ({
+                id: `booking-${booking.id}`,
+                type: 'booking',
+                title: 'Confirmed Reservation',
+                timestamp: index === 0 ? 'Recently' : `${index * 5} mins ago`,
+                description: `${booking.customer_name} booked for ${booking.number_of_nights} nights (Ref: ${booking.booking_reference})`
+            }));
+
+            const staticActivities = [
+                { id: 'sys-1', type: 'system', title: 'Daily Report Ready', timestamp: '1 hour ago', description: 'The performance report for today is now available.' },
+                { id: 'sys-2', type: 'system', title: 'Inventory Check', timestamp: '2 hours ago', description: 'All room statuses have been synchronized with the live grid.' },
+            ];
+
+            setActivities([...realActivities, ...staticActivities]);
 
             setLastFetched(Date.now());
         } catch (err: any) {

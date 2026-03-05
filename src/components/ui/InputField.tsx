@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 
 interface InputFieldProps {
   label: string;
+  name?: string;
   type?: string;
   placeholder?: string;
   value?: string;
@@ -18,6 +19,7 @@ interface InputFieldProps {
 
 export default function InputField({
   label,
+  name,
   type = "text",
   placeholder,
   value,
@@ -47,6 +49,7 @@ export default function InputField({
         )}
         <input
           type={isPassword ? (showPassword ? "text" : "password") : type}
+          name={name}
           placeholder={placeholder}
           value={value}
           onChange={onChange}

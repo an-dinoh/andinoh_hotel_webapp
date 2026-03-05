@@ -84,13 +84,25 @@ class WebSocketService {
     }
 
     private _send(action: WebSocketAction, id: string) {
+        if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+            console.log(`WebSocket not ready (state: ${this.socket?.readyState}). Queuing ${action} for ${id}`);
+            this.pendingSubscriptions.push({ action, id });
+            return;
+        }
+
         const payload: WebSocketMessage = { action };
         if (action === 'subscribe_chat') {
             payload.chat_id = id;
         } else {
             payload.hotel_id = id;
         }
-        this.socket?.send(JSON.stringify(payload));
+
+        try {
+            this.socket.send(JSON.stringify(payload));
+        } catch (error) {
+            console.error('Failed to send WebSocket message, re-queuing:', error);
+            this.pendingSubscriptions.push({ action, id });
+        }
     }
 
     addListener(callback: (data: ServerNotification) => void) {

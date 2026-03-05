@@ -28,11 +28,6 @@ class ApiClient {
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
           }
-
-          const currency = localStorage.getItem('user_currency');
-          if (currency) {
-            config.headers['X-User-Currency'] = currency;
-          }
         }
         return config;
       },
@@ -46,7 +41,22 @@ class ApiClient {
       (response) => {
         return response;
       },
-      (error) => {
+      async (error) => {
+        const config = error.config;
+
+        // Implementation of basic retry logic
+        if (config && (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK' || !error.response)) {
+          config.__retryCount = config.__retryCount || 0;
+
+          if (config.__retryCount < 2) {
+            config.__retryCount += 1;
+            // Exponential backoff or just a delay to let the server wake up
+            const delay = config.__retryCount * 2000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return this.client(config);
+          }
+        }
+
         // Handle 401 Unauthorized - Auth expired or invalid
         if (error.response?.status === 401) {
           if (typeof window !== 'undefined') {
@@ -142,12 +152,13 @@ class ApiClient {
 
   // For file uploads
   async uploadFile<T>(endpoint: string, formData: FormData): Promise<T> {
-    const response: AxiosResponse<T> = await this.client.post(endpoint, formData, {
+    const response: AxiosResponse<{ data?: T } & Record<string, unknown>> = await this.client.post(endpoint, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
-    return response.data;
+    // API returns: { error: false, data: {...}, message: "..." }
+    return response.data.data || (response.data as T);
   }
 }
 
