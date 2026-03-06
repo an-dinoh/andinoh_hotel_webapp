@@ -423,11 +423,8 @@ class HotelService {
   async getDashboardStats(): Promise<DashboardStats> {
     try {
       const stats = await apiClient.get<DashboardStats>('hotels/dashboard-stats/');
-
-      // If we get an empty or error response status-wise from the API, we synthesize
-      if (!stats || !stats.today || (stats.today.check_ins === 0 && stats.today.check_outs === 0 && stats.volume.total_bookings === 0)) {
-        throw new Error('Incomplete data');
-      }
+      // Trust the backend's response. Only synthesize if the API throws.
+      if (!stats) throw new Error('Empty response');
       return stats;
     } catch (error) {
       console.warn('Dashboard stats endpoint unavailable or incomplete. Synthesizing data...');
@@ -476,7 +473,8 @@ class HotelService {
           total_reviews: 0
         },
         room_stats: {
-          total: totalUnits || rooms.results.reduce((sum, r) => sum + (r.total_rooms || 0), 0),
+          // Use the actual unit count from the DB, not a sum of category integers (which can be stale)
+          total: units.count || units.results.length,
           available: units.results.filter(u => u.status === 'available').length,
           occupied: occupiedUnits
         }
@@ -507,7 +505,8 @@ class HotelService {
   }
 
   async getWalletStats(): Promise<WalletStats> {
-    return apiClient.get<WalletStats>('hotels/wallet/stats/');
+    // Per API guide: wallet balance is at /api/v1/hotels/wallet/ (not /hotels/wallet/stats/)
+    return apiClient.get<WalletStats>('hotels/wallet/');
   }
 
   async getBankAccounts(): Promise<BankAccount[]> {

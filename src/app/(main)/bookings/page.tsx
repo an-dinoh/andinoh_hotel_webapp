@@ -49,9 +49,20 @@ export default function BookingsPage() {
       setTotalItems(bookingsRes?.count || 0);
       setStats(statsRes);
     } catch (error: any) {
-      console.error("Error fetching bookings:", error);
-      toast.error(error.message || "Failed to fetch bookings");
-      setBookings([]);
+      // A 404 means the requested page is out of range (e.g. filter narrowed results).
+      // Reset to page 1 silently rather than showing an error toast.
+      if (error.message === 'Resource not found' || error.response?.status === 404) {
+        if (currentPage > 1) {
+          setCurrentPage(1);
+          return; // useEffect will re-run with page=1
+        }
+        setBookings([]);
+        setTotalItems(0);
+      } else {
+        console.error("Error fetching bookings:", error);
+        toast.error(error.message || "Failed to fetch bookings");
+        setBookings([]);
+      }
     } finally {
       setLoading(false);
     }
