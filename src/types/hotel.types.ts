@@ -129,6 +129,8 @@ export interface CreateRoomRequest {
   max_adults: number;
   max_children: number;
   base_price: string;
+  amenities?: string[];
+  primary_image?: string;
   weekend_price?: string;
   peak_season_price?: string;
   has_balcony?: boolean;

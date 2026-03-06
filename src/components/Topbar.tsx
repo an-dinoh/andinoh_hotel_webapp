@@ -180,7 +180,13 @@ export default function Topbar() {
 
               {/* Footer */}
               <div className="px-6 py-4 bg-white/30 backdrop-blur-md border-t border-[#E5E7EB]/50">
-                <button className="w-full text-center text-sm font-bold text-[#0F75BD] hover:text-[#0050C8] transition-colors">
+                <button
+                  onClick={() => {
+                    router.push('/notifications');
+                    setShowNotifications(false);
+                  }}
+                  className="w-full text-center text-sm font-bold text-[#0F75BD] hover:text-[#0050C8] transition-colors"
+                >
                   View All Notifications
                 </button>
               </div>
