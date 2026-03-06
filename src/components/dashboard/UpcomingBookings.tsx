@@ -41,27 +41,35 @@ export default function UpcomingBookings({ bookings, loading = false }: Upcoming
                         <p className="text-sm text-[#5C5B59]">No upcoming check-ins for now.</p>
                     </div>
                 ) : (
-                    bookings.slice(0, 5).map((booking, index) => (
-                        <div key={index} className="flex items-center gap-4 p-3 rounded-2xl border border-transparent hover:border-gray-100 hover:bg-gray-50 transition-all group">
-                            <div className="w-11 h-11 bg-[#F3F4F6] rounded-full flex items-center justify-center font-bold text-[#1A1A1A] text-sm group-hover:bg-white transition-colors">
-                                {booking.guest_name?.charAt(0) || "G"}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-[#1A1A1A] truncate">{booking.guest_name}</p>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-[11px] text-[#5C5B59] bg-white border border-gray-100 px-2 py-0.5 rounded-md">
-                                        Room {booking.room_number || "TBD"}
-                                    </span>
-                                    <span className="text-[11px] text-[#5C5B59]">
-                                        {new Date(booking.check_in).toLocaleDateString()}
-                                    </span>
+                    bookings.slice(0, 5).map((booking, index) => {
+                        const guestName = booking.guest_details?.full_name ||
+                            booking.customer_name ||
+                            booking.guest_name ||
+                            (typeof booking.customer === 'object' && (booking.customer?.full_name || booking.customer?.name)) ||
+                            "Guest";
+
+                        return (
+                            <div key={index} className="flex items-center gap-4 p-3 rounded-2xl border border-transparent hover:border-gray-100 hover:bg-gray-50 transition-all group">
+                                <div className="w-11 h-11 bg-[#F3F4F6] rounded-full flex items-center justify-center font-bold text-[#1A1A1A] text-sm group-hover:bg-white transition-colors">
+                                    {guestName.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-[#1A1A1A] truncate">{guestName}</p>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <span className="text-[11px] text-[#5C5B59] bg-white border border-gray-100 px-2 py-0.5 rounded-md">
+                                            Room {booking.room_number || "TBD"}
+                                        </span>
+                                        <span className="text-[11px] text-[#5C5B59]">
+                                            {new Date(booking.check_in).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs font-bold text-green-600">Pending</p>
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-xs font-bold text-green-600">Pending</p>
-                            </div>
-                        </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
         </div>

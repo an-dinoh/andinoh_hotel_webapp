@@ -167,6 +167,11 @@ export const RoomsProvider = ({ children }: { children: ReactNode }) => {
             if (filterCategoryId !== "all") filters.room_type_id = filterCategoryId;
 
             const response = await hotelService.getAllPhysicalRooms(filters);
+
+            // DEBUG CHECK FOR DB MISMATCH
+            const expectedSum = dataRef.current.rooms.reduce((sum, r) => sum + (r.total_rooms || 0), 0);
+            console.log(`[DEBUG] Physical DB says ${response.count} units. Categories DB sum says ${expectedSum} units.`);
+
             setPhysicalRooms(response.results || []);
             setTotalPhysicalCount(response.count ?? 0);
         } catch (err: any) {

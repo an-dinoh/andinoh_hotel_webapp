@@ -173,6 +173,12 @@ export interface Booking {
   customer_name: string;
   customer_email: string;
   customer_phone: string;
+  guest_details: {
+    full_name: string;
+    email: string;
+    phone_number: string;
+  };
+  customer: string | any; // Could be UUID or full object
   booking_reference: string;
   check_in_date: string;
   check_out_date: string;
@@ -180,6 +186,7 @@ export interface Booking {
   number_of_adults: number;
   number_of_children: number;
   total_amount: string;
+  room_charges: string; // Explicitly mentioned as fixed/dynamic now
   amount_paid: string;
   balance_due: string;
   booking_status: BookingStatus;
@@ -228,6 +235,11 @@ export interface CreateBookingRequest {
   customer_name: string;
   customer_email: string;
   customer_phone: string;
+  guest_details: {
+    full_name: string;
+    email: string;
+    phone_number: string;
+  };
   check_in_date: string;
   check_out_date: string;
   number_of_adults: number;
@@ -252,6 +264,7 @@ export interface BookingFilters {
   check_out_to?: string;
   room?: string;
   booking_source?: BookingSource;
+  search?: string;
 }
 
 export interface CheckInRequest {
@@ -514,6 +527,18 @@ export interface WalletStats {
   pending_clearance: number;
   total_lifetime_revenue: number;
   total_withdrawn: number;
+}
+
+export interface WalletTransaction {
+  id: string;
+  hotel: string;
+  booking?: string; // UUID linked to booking
+  amount: string;
+  transaction_type: 'credit' | 'debit';
+  status: 'pending' | 'completed' | 'failed';
+  gateway_reference?: string; // Flutterwave/Gateway ID
+  description?: string;
+  created_at: string;
 }
 
 export interface BankAccount {

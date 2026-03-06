@@ -247,7 +247,11 @@ export default function BookingDetailPage() {
                         <span className="text-2xl font-bold text-white">{booking.booking_reference}</span>
                       </div>
                     </div>
-                    <h2 className="text-4xl font-bold text-white mb-3">{booking.customer_name || "Guest"}</h2>
+                    {/* Standardized guest info from backend */}
+                    {(() => {
+                      const guestName = booking.guest_details?.full_name || "Guest";
+                      return <h2 className="text-4xl font-bold text-white mb-3">{guestName}</h2>;
+                    })()}
                     <p className="text-white/90 text-lg max-w-3xl">
                       {booking.number_of_nights} {booking.number_of_nights === 1 ? "Night" : "Nights"} Stay • Room {(booking.room || "N/A").toUpperCase()}
                     </p>
@@ -459,66 +463,77 @@ export default function BookingDetailPage() {
                 <div className="bg-[#F9FAFB] border border-[#D3D9DD] rounded-xl p-6">
                   <div className="flex items-start justify-between mb-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 bg-gradient-to-br from-[#0F75BD] to-[#02A5E6] rounded-full flex items-center justify-center">
-                        <span className="text-white font-bold text-3xl">
-                          {(booking.customer_name || "Guest").charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <h3 className="text-2xl font-bold text-gray-900">{booking.customer_name || "Guest"}</h3>
-                        <p className="text-sm text-gray-500">Primary Guest</p>
-                        <div className="flex items-center gap-1 mt-2">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`w-4 h-4 ${star <= 5 ? "fill-[#FBB81F] text-[#FBB81F]" : "text-gray-300"}`}
-                            />
-                          ))}
-                          <span className="text-xs text-gray-500 ml-2">VIP Guest</span>
-                        </div>
-                      </div>
+                      {(() => {
+                        const guestName = booking.guest_details?.full_name || "Guest";
+                        const guestEmail = booking.guest_details?.email || "No email";
+                        return (
+                          <>
+                            <div className="w-16 h-16 bg-[#0F75BD] rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+                              {guestName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <h3 className="text-2xl font-bold text-gray-900">{guestName}</h3>
+                              <div className="flex items-center gap-4 mt-1 text-gray-500">
+                                <span className="flex items-center gap-1.5 text-sm">
+                                  <Mail className="w-4 h-4" />
+                                  {guestEmail}
+                                </span>
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-4 h-4 ${star <= 5 ? "fill-[#FBB81F] text-[#FBB81F]" : "text-gray-300"}`}
+                        />
+                      ))}
+                      <span className="text-xs text-gray-500 ml-2">VIP Guest</span>
                     </div>
                   </div>
+                </div>
 
-                  {/* Contact Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Contact Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-5 bg-white border border-[#D3D9DD] rounded-xl">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Mail className="w-5 h-5 text-[#0F75BD]" />
+                      <p className="text-xs font-semibold text-gray-500 uppercase">Email Address</p>
+                    </div>
+                    <p className="text-base font-medium text-gray-900">{booking.guest_details?.email || "No email"}</p>
+                  </div>
+
+                  {booking.guest_details?.phone_number && (
                     <div className="p-5 bg-white border border-[#D3D9DD] rounded-xl">
                       <div className="flex items-center gap-3 mb-2">
-                        <Mail className="w-5 h-5 text-[#0F75BD]" />
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Email Address</p>
+                        <Image src="/icons/call.svg" alt="Phone" width={20} height={20} />
+                        <p className="text-xs font-semibold text-gray-500 uppercase">Phone Number</p>
                       </div>
-                      <p className="text-base font-medium text-gray-900">{booking.customer_email}</p>
+                      <p className="text-base font-medium text-gray-900">{booking.guest_details?.phone_number}</p>
                     </div>
+                  )}
 
-                    {booking.customer_phone && (
-                      <div className="p-5 bg-white border border-[#D3D9DD] rounded-xl">
-                        <div className="flex items-center gap-3 mb-2">
-                          <Image src="/icons/call.svg" alt="Phone" width={20} height={20} />
-                          <p className="text-xs font-semibold text-gray-500 uppercase">Phone Number</p>
-                        </div>
-                        <p className="text-base font-medium text-gray-900">{booking.customer_phone}</p>
-                      </div>
-                    )}
-
-                    <div className="p-5 bg-white border border-[#D3D9DD] rounded-xl">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Calendar className="w-5 h-5 text-[#0F75BD]" />
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Stay Duration</p>
-                      </div>
-                      <p className="text-base font-medium text-gray-900">
-                        {booking.number_of_nights} {booking.number_of_nights === 1 ? "Night" : "Nights"}
-                      </p>
+                  <div className="p-5 bg-white border border-[#D3D9DD] rounded-xl">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Calendar className="w-5 h-5 text-[#0F75BD]" />
+                      <p className="text-xs font-semibold text-gray-500 uppercase">Stay Duration</p>
                     </div>
+                    <p className="text-base font-medium text-gray-900">
+                      {booking.number_of_nights} {booking.number_of_nights === 1 ? "Night" : "Nights"}
+                    </p>
+                  </div>
 
-                    <div className="p-5 bg-white border border-[#D3D9DD] rounded-xl">
-                      <div className="flex items-center gap-3 mb-2">
-                        <MapPin className="w-5 h-5 text-[#0F75BD]" />
-                        <p className="text-xs font-semibold text-gray-500 uppercase">Booking Source</p>
-                      </div>
-                      <p className="text-base font-medium text-gray-900 capitalize">
-                        {(booking.booking_source || "direct").replace("_", " ")}
-                      </p>
+                  <div className="p-5 bg-white border border-[#D3D9DD] rounded-xl">
+                    <div className="flex items-center gap-3 mb-2">
+                      <MapPin className="w-5 h-5 text-[#0F75BD]" />
+                      <p className="text-xs font-semibold text-gray-500 uppercase">Booking Source</p>
                     </div>
+                    <p className="text-base font-medium text-gray-900 capitalize">
+                      {(booking.booking_source || "direct").replace("_", " ")}
+                    </p>
                   </div>
                 </div>
 
@@ -869,191 +884,199 @@ export default function BookingDetailPage() {
       </div>
 
       {/* Modals */}
-      {showCheckInModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 bg-emerald-100 rounded-xl flex items-center justify-center">
-                <LogIn className="w-8 h-8 text-emerald-600" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">Check-In Guest</h3>
-                <p className="text-sm text-gray-500">Confirm guest arrival</p>
-              </div>
-            </div>
-            <p className="text-gray-600 mb-8">
-              Are you sure you want to check in <span className="font-bold">{booking.customer_name}</span>?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowCheckInModal(false)}
-                className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-semibold"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowCheckInModal(false);
-                  alert("Guest checked in successfully!");
-                }}
-                className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-semibold"
-              >
-                Confirm Check-In
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showCheckOutModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center">
-                <LogOut className="w-8 h-8 text-orange-600" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">Check-Out Guest</h3>
-                <p className="text-sm text-gray-500">Confirm guest departure</p>
-              </div>
-            </div>
-            <p className="text-gray-600 mb-8">
-              Are you sure you want to check out <span className="font-bold">{booking.customer_name}</span>?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowCheckOutModal(false)}
-                className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-semibold"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowCheckOutModal(false);
-                  alert("Guest checked out successfully!");
-                }}
-                className="flex-1 px-6 py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all font-semibold"
-              >
-                Confirm Check-Out
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showCancelModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center">
-                <XCircle className="w-8 h-8 text-red-600" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">Cancel Booking</h3>
-                <p className="text-sm text-gray-500">This action cannot be undone</p>
-              </div>
-            </div>
-            <p className="text-gray-600 mb-8">
-              Are you sure you want to cancel this booking? This will free up the room for other guests.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowCancelModal(false)}
-                className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-semibold"
-              >
-                Keep Booking
-              </button>
-              <button
-                onClick={() => {
-                  setShowCancelModal(false);
-                  alert("Booking cancelled successfully!");
-                  router.push("/bookings");
-                }}
-                className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-semibold"
-              >
-                Cancel Booking
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900">Process Manual Payment</h3>
-              <button
-                onClick={() => setShowPaymentModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
-              >
-                x
-              </button>
-            </div>
-            <form onSubmit={handleProcessPaymentSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Amount to Pay *</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 sm:text-sm">₦</span>
-                  </div>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={paymentAmount}
-                    onChange={(e) => setPaymentAmount(e.target.value)}
-                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder={booking.balance_due || "0"}
-                  />
+      {
+        showCheckInModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-emerald-100 rounded-xl flex items-center justify-center">
+                  <LogIn className="w-8 h-8 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Check-In Guest</h3>
+                  <p className="text-sm text-gray-500">Confirm guest arrival</p>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method *</label>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="transfer">Bank Transfer</option>
-                  <option value="cash">Cash</option>
-                  <option value="pos">POS Terminal</option>
-                  <option value="card_online">Online Card</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Transaction ID/Reference</label>
-                <input
-                  type="text"
-                  value={paymentTxId}
-                  onChange={(e) => setPaymentTxId(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g. TRX-12345678"
-                />
-              </div>
-
-              <div className="pt-4 flex gap-3">
+              <p className="text-gray-600 mb-8">
+                Are you sure you want to check in <span className="font-bold">{booking.guest_details?.full_name || "this guest"}</span>?
+              </p>
+              <div className="flex gap-3">
                 <button
-                  type="button"
-                  onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors font-semibold"
+                  onClick={() => setShowCheckInModal(false)}
+                  className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-semibold"
                 >
                   Cancel
                 </button>
                 <button
-                  type="submit"
-                  disabled={isProcessingPayment || !paymentAmount}
-                  className="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors font-semibold disabled:opacity-50"
+                  onClick={() => {
+                    setShowCheckInModal(false);
+                    alert("Guest checked in successfully!");
+                  }}
+                  className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-semibold"
                 >
-                  {isProcessingPayment ? "Processing..." : "Confirm Payment"}
+                  Confirm Check-In
                 </button>
               </div>
-            </form>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+
+      {
+        showCheckOutModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center">
+                  <LogOut className="w-8 h-8 text-orange-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Check-Out Guest</h3>
+                  <p className="text-sm text-gray-500">Confirm guest departure</p>
+                </div>
+              </div>
+              <p className="text-gray-600 mb-8">
+                Are you sure you want to check out <span className="font-bold">{booking.guest_details?.full_name || "this guest"}</span>?
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCheckOutModal(false)}
+                  className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCheckOutModal(false);
+                    alert("Guest checked out successfully!");
+                  }}
+                  className="flex-1 px-6 py-3 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-all font-semibold"
+                >
+                  Confirm Check-Out
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {
+        showCancelModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center">
+                  <XCircle className="w-8 h-8 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Cancel Booking</h3>
+                  <p className="text-sm text-gray-500">This action cannot be undone</p>
+                </div>
+              </div>
+              <p className="text-gray-600 mb-8">
+                Are you sure you want to cancel this booking? This will free up the room for other guests.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCancelModal(false)}
+                  className="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-semibold"
+                >
+                  Keep Booking
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCancelModal(false);
+                    alert("Booking cancelled successfully!");
+                    router.push("/bookings");
+                  }}
+                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-semibold"
+                >
+                  Cancel Booking
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {
+        showPaymentModal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
+              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900">Process Manual Payment</h3>
+                <button
+                  onClick={() => setShowPaymentModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  x
+                </button>
+              </div>
+              <form onSubmit={handleProcessPaymentSubmit} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount to Pay *</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 sm:text-sm">₦</span>
+                    </div>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={paymentAmount}
+                      onChange={(e) => setPaymentAmount(e.target.value)}
+                      className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder={booking.balance_due || "0"}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method *</label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="transfer">Bank Transfer</option>
+                    <option value="cash">Cash</option>
+                    <option value="pos">POS Terminal</option>
+                    <option value="card_online">Online Card</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Transaction ID/Reference</label>
+                  <input
+                    type="text"
+                    value={paymentTxId}
+                    onChange={(e) => setPaymentTxId(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="e.g. TRX-12345678"
+                  />
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowPaymentModal(false)}
+                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isProcessingPayment || !paymentAmount}
+                    className="flex-1 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors font-semibold disabled:opacity-50"
+                  >
+                    {isProcessingPayment ? "Processing..." : "Confirm Payment"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )
+      }
+    </div >
   );
 }

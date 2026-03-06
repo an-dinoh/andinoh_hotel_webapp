@@ -30,58 +30,52 @@ export default function WalletPage() {
   const [showBankAccountsModal, setShowBankAccountsModal] = useState(false);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [walletStats, setWalletStats] = useState<WalletStats | null>(null);
+  const [realTransactions, setRealTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchWalletData = async () => {
       try {
         setLoading(true);
-        const stats = await hotelService.getWalletStats();
+        // Only fetch stats on first load to save bandwidth, ledger updates per page
+        const statsPromise = walletStats ? Promise.resolve(walletStats) : hotelService.getWalletStats();
+
+        const [stats, ledger] = await Promise.all([
+          statsPromise,
+          hotelService.getWalletLedger({ page: currentPage, page_size: itemsPerPage })
+        ]);
+
         setWalletStats(stats);
+        setRealTransactions(ledger.results || []);
+        setTotalItems(ledger.count || 0);
       } catch (error) {
-        console.error("Failed to load wallet stats:", error);
+        console.error("Failed to load wallet data:", error);
       } finally {
         setLoading(false);
       }
     };
     fetchWalletData();
-  }, []);
+  }, [currentPage]);
 
-  // Mock transaction data
-  const transactions: Transaction[] = [
-    { id: "TXN-001", type: "Room Booking Payment", guest: "John Doe", room: "Suite 201", amount: 45000, date: "Dec 14, 2025", status: "Completed", paymentMethod: "Card", time: "10:30 AM", description: "3-night stay payment" },
-    { id: "TXN-002", type: "Room Booking Payment", guest: "Jane Smith", room: "Deluxe 105", amount: 32000, date: "Dec 13, 2025", status: "Completed", paymentMethod: "Bank Transfer", time: "2:15 PM", description: "Standard booking" },
-    { id: "TXN-003", type: "Booking Refund", guest: "Mike Johnson", room: "Standard 303", amount: -15000, date: "Dec 12, 2025", status: "Completed", paymentMethod: "Card Refund", time: "11:45 AM", description: "Cancellation refund" },
-    { id: "TXN-004", type: "Room Booking Payment", guest: "Sarah Williams", room: "Presidential Suite", amount: 58000, date: "Dec 11, 2025", status: "Pending", paymentMethod: "Pending", time: "9:00 AM", description: "Awaiting payment confirmation" },
-    { id: "TXN-005", type: "Room Service Payment", guest: "David Brown", room: "Suite 201", amount: 8000, date: "Dec 10, 2025", status: "Completed", paymentMethod: "Cash", time: "7:30 PM", description: "In-room dining" },
-    { id: "TXN-006", type: "Room Booking Payment", guest: "Emily Davis", room: "Deluxe 108", amount: 35000, date: "Dec 10, 2025", status: "Completed", paymentMethod: "Card", time: "1:20 PM", description: "Weekend stay" },
-    { id: "TXN-007", type: "Event Booking Payment", guest: "Robert Wilson", room: "Grand Ballroom", amount: 125000, date: "Dec 9, 2025", status: "Completed", paymentMethod: "Bank Transfer", time: "3:45 PM", description: "Corporate event" },
-    { id: "TXN-008", type: "Room Booking Payment", guest: "Lisa Anderson", room: "Deluxe 204", amount: 42000, date: "Dec 8, 2025", status: "Completed", paymentMethod: "Card", time: "10:10 AM", description: "Business trip booking" },
-    { id: "TXN-009", type: "Room Booking Payment", guest: "James Taylor", room: "Suite 305", amount: 55000, date: "Dec 7, 2025", status: "Completed", paymentMethod: "Card", time: "4:30 PM", description: "Honeymoon package" },
-    { id: "TXN-010", type: "Booking Refund", guest: "Patricia Moore", room: "Standard 101", amount: -18000, date: "Dec 6, 2025", status: "Completed", paymentMethod: "Card Refund", time: "12:00 PM", description: "Emergency cancellation" },
-    { id: "TXN-011", type: "Room Booking Payment", guest: "Christopher Lee", room: "Presidential Suite", amount: 95000, date: "Dec 5, 2025", status: "Completed", paymentMethod: "Bank Transfer", time: "9:15 AM", description: "VIP booking" },
-    { id: "TXN-012", type: "Room Service Payment", guest: "Mary White", room: "Deluxe 210", amount: 12000, date: "Dec 4, 2025", status: "Completed", paymentMethod: "Card", time: "8:45 PM", description: "Room service" },
-    { id: "TXN-013", type: "Event Booking Payment", guest: "Daniel Harris", room: "Conference Room A", amount: 75000, date: "Dec 3, 2025", status: "Pending", paymentMethod: "Pending", time: "11:00 AM", description: "Business conference" },
-    { id: "TXN-014", type: "Room Booking Payment", guest: "Jennifer Martin", room: "Suite 402", amount: 48000, date: "Dec 2, 2025", status: "Completed", paymentMethod: "Card", time: "2:30 PM", description: "Weekend getaway" },
-    { id: "TXN-015", type: "Room Booking Payment", guest: "Thomas Garcia", room: "Deluxe 115", amount: 38000, date: "Dec 1, 2025", status: "Completed", paymentMethod: "Cash", time: "5:00 PM", description: "Standard booking" },
-    { id: "TXN-016", type: "Room Booking Payment", guest: "Nancy Rodriguez", room: "Standard 205", amount: 28000, date: "Nov 30, 2025", status: "Completed", paymentMethod: "Card", time: "10:45 AM", description: "Single night stay" },
-    { id: "TXN-017", type: "Room Service Payment", guest: "Kevin Martinez", room: "Suite 301", amount: 15000, date: "Nov 29, 2025", status: "Completed", paymentMethod: "Card", time: "9:30 PM", description: "Dinner service" },
-    { id: "TXN-018", type: "Event Booking Payment", guest: "Sandra Lopez", room: "Rooftop Terrace", amount: 180000, date: "Nov 28, 2025", status: "Completed", paymentMethod: "Bank Transfer", time: "1:00 PM", description: "Wedding reception" },
-    { id: "TXN-019", type: "Room Booking Payment", guest: "Brian Gonzalez", room: "Deluxe 320", amount: 44000, date: "Nov 27, 2025", status: "Completed", paymentMethod: "Card", time: "11:15 AM", description: "Business stay" },
-    { id: "TXN-020", type: "Booking Refund", guest: "Karen Hernandez", room: "Suite 105", amount: -22000, date: "Nov 26, 2025", status: "Completed", paymentMethod: "Card Refund", time: "3:20 PM", description: "Change of plans" },
-    { id: "TXN-021", type: "Room Booking Payment", guest: "Steven Young", room: "Presidential Suite", amount: 98000, date: "Nov 25, 2025", status: "Completed", paymentMethod: "Bank Transfer", time: "10:00 AM", description: "Executive booking" },
-    { id: "TXN-022", type: "Room Booking Payment", guest: "Betty King", room: "Deluxe 112", amount: 36000, date: "Nov 24, 2025", status: "Completed", paymentMethod: "Card", time: "4:15 PM", description: "Family vacation" },
-    { id: "TXN-023", type: "Event Booking Payment", guest: "Edward Wright", room: "Banquet Hall", amount: 150000, date: "Nov 23, 2025", status: "Pending", paymentMethod: "Pending", time: "2:00 PM", description: "Gala dinner" },
-    { id: "TXN-024", type: "Room Booking Payment", guest: "Dorothy Scott", room: "Suite 208", amount: 52000, date: "Nov 22, 2025", status: "Completed", paymentMethod: "Card", time: "12:30 PM", description: "Anniversary stay" },
-    { id: "TXN-025", type: "Room Service Payment", guest: "Ronald Green", room: "Deluxe 405", amount: 9500, date: "Nov 21, 2025", status: "Completed", paymentMethod: "Cash", time: "7:00 PM", description: "Mini bar and snacks" },
-  ];
+  // Map backend transactions to UI Transaction interface
+  const transactions: Transaction[] = realTransactions.map(tx => ({
+    id: tx.id.substring(0, 8).toUpperCase(),
+    type: tx.transaction_type === 'credit' ? 'Revenue Credit' : 'Withdrawal/Debit',
+    guest: tx.description || (tx.booking ? `Booking ${tx.booking.substring(0, 8)}` : "System Transaction"),
+    room: tx.gateway_reference || "N/A",
+    amount: parseFloat(tx.amount || "0") * (tx.transaction_type === 'debit' ? -1 : 1),
+    date: new Date(tx.created_at).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' }),
+    status: tx.status.charAt(0).toUpperCase() + tx.status.slice(1),
+    paymentMethod: tx.gateway_reference ? "Gateway" : "Wallet",
+    time: new Date(tx.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    description: tx.description
+  }));
 
-  // Pagination calculations
-  const totalPages = Math.ceil(transactions.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedTransactions = transactions.slice(startIndex, endIndex);
+  // Server-side pagination total
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const paginatedTransactions = transactions;
 
   const handleExport = (format: string) => {
     setShowExportModal(false);

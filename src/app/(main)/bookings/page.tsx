@@ -10,22 +10,44 @@ import { toast } from "react-hot-toast";
 export default function BookingsPage() {
   const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [stats, setStats] = useState<any>(null); // Using any to avoid strict type issues with DashboardStats during dev
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<BookingStatus | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 10;
 
   useEffect(() => {
     fetchBookings();
-  }, [statusFilter]);
+  }, [statusFilter, searchTerm, currentPage]);
 
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const response = await hotelService.getBookings();
-      const results = Array.isArray(response?.results) ? response.results : [];
-      setBookings(results);
+
+      const filters: any = {
+        page: currentPage,
+        page_size: itemsPerPage,
+      };
+
+      if (statusFilter !== "all") {
+        filters.booking_status = statusFilter;
+      }
+
+      if (searchTerm) {
+        filters.search = searchTerm;
+      }
+
+      const [bookingsRes, statsRes] = await Promise.all([
+        hotelService.getBookings(filters),
+        hotelService.getDashboardStats()
+      ]);
+
+      setBookings(Array.isArray(bookingsRes?.results) ? bookingsRes.results : []);
+      // Use the count from the active API response instead of the global stats
+      setTotalItems(bookingsRes?.count || 0);
+      setStats(statsRes);
     } catch (error: any) {
       console.error("Error fetching bookings:", error);
       toast.error(error.message || "Failed to fetch bookings");
@@ -35,14 +57,11 @@ export default function BookingsPage() {
     }
   };
 
-  // Get today's bookings
-  const today = new Date().toISOString().split("T")[0];
-  const bookingsArray = Array.isArray(bookings) ? bookings : [];
-  const arrivalsToday = bookingsArray.filter((b) => b.check_in_date === today);
-  const departuresToday = bookingsArray.filter((b) => b.check_out_date === today);
-
-  // Calculate occupancy (mock calculation - adjust based on actual logic)
-  const occupancyRate = bookingsArray.filter((b) => b.booking_status === "checked_in").length;
+  // Stats from backend
+  const arrivalsToday = stats?.today?.check_ins || 0;
+  const departuresToday = stats?.today?.check_outs || 0;
+  const totalBookings = stats?.volume?.total_bookings || 0;
+  const activeBookings = stats?.room_stats?.occupied || 0;
 
   const getStatusConfig = (status: BookingStatus) => {
     const configs = {
@@ -81,24 +100,11 @@ export default function BookingsPage() {
   };
 
 
-  // Filter bookings based on search and status
-  const filteredBookings = bookingsArray.filter((booking) => {
-    const matchesSearch =
-      (booking.customer_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (booking.customer_email?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (booking.booking_reference?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-      (booking.customer_phone?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+  // Use bookings directly since backend handles filtering
+  const paginatedBookings = bookings;
 
-    const matchesStatus = statusFilter === "all" || booking.booking_status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedBookings = filteredBookings.slice(startIndex, endIndex);
+  // Total pages from backend based on the count of the current filtered results
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -126,12 +132,13 @@ export default function BookingsPage() {
         {/* Stats Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Total Bookings", value: bookingsArray.length, bg: "bg-[#F5F5F5]" },
-            { label: "Check-ins Today", value: arrivalsToday.length, bg: "bg-[#F0F9FF]" },
-            { label: "Check-outs Today", value: departuresToday.length, bg: "bg-[#FEF3C7]" },
-            { label: "Active", value: occupancyRate, bg: "bg-[#F5F3FF]" },
+            { label: "Total Bookings", value: totalBookings, bg: "bg-[#F5F5F5]" },
+            { label: "Check-ins Today", value: arrivalsToday, bg: "bg-[#F0F9FF]" },
+            { label: "Check-outs Today", value: departuresToday, bg: "bg-[#FEF3C7]" },
+            { label: "Active", value: activeBookings, bg: "bg-[#F5F3FF]" },
           ].map((stat, index) => (
-            <div key={index} className={`${stat.bg} rounded-2xl p-5`}>
+            <div key={index} className={`${stat.bg} rounded-2xl p-5 relative overflow-hidden`}>
+              {loading && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10" />}
               <p className="text-[#5C5B59] text-sm mb-1">{stat.label}</p>
               <p className="text-2xl font-bold text-[#1A1A1A]">{stat.value}</p>
             </div>
@@ -172,7 +179,7 @@ export default function BookingsPage() {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 text-[#0F75BD] animate-spin" />
           </div>
-        ) : filteredBookings.length === 0 ? (
+        ) : bookings.length === 0 ? (
           <div className="bg-[#FAFAFB] border border-[#E5E7EB] rounded-3xl p-16 text-center">
             <div className="w-16 h-16 bg-[#0F75BD]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <CalendarIcon className="w-8 h-8 text-[#0F75BD]" />
@@ -221,8 +228,13 @@ export default function BookingsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {paginatedBookings.map((booking) => {
+                  {bookings.map((booking: any) => {
                     const statusConfig = getStatusConfig(booking.booking_status);
+
+                    // Use standardized guest_details from backend
+                    const guestName = booking.guest_details?.full_name || "Guest";
+                    const guestEmail = booking.guest_details?.email || "No email";
+                    const guestPhone = booking.guest_details?.phone_number || "";
 
                     return (
                       <tr
@@ -235,12 +247,21 @@ export default function BookingsPage() {
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-[#0F75BD] rounded-full flex items-center justify-center">
                               <span className="text-white font-semibold text-sm">
-                                {(booking.customer_name || "Guest").charAt(0).toUpperCase()}
+                                {guestName.charAt(0).toUpperCase()}
                               </span>
                             </div>
                             <div>
-                              <p className="text-sm font-semibold text-[#1A1A1A]">{booking.customer_name || "Guest"}</p>
-                              <p className="text-xs text-[#5C5B59]">{booking.customer_email}</p>
+                              <p className="text-sm font-semibold text-[#1A1A1A]">
+                                {guestName}
+                              </p>
+                              <p className="text-xs text-[#5C5B59]">
+                                {guestEmail}
+                              </p>
+                              {guestPhone && (
+                                <p className="text-[10px] text-[#8F8E8D] mt-0.5">
+                                  {guestPhone}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </td>
@@ -301,56 +322,54 @@ export default function BookingsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <>
-                <div className="flex items-center justify-center gap-2 m-8">
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    className="p-2 hover:bg-[#FAFAFB] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronDown className="w-5 h-5 rotate-90 text-[#5C5B59] text-xs" />
-                  </button>
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
+              <div className="flex items-center justify-center gap-2 m-8">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 hover:bg-[#FAFAFB] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronDown className="w-5 h-5 rotate-90 text-[#5C5B59] text-xs" />
+                </button>
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
 
-                    if (pageNum === 2 && currentPage > 3 && totalPages > 5) {
-                      return <span key="dots1" className="px-2 text-[#5C5B59]">...</span>;
-                    }
-                    if (pageNum === totalPages - 1 && currentPage < totalPages - 2 && totalPages > 5) {
-                      return <span key="dots2" className="px-2 text-[#5C5B59]">...</span>;
-                    }
+                  if (pageNum === 2 && currentPage > 3 && totalPages > 5) {
+                    return <span key="dots1" className="px-2 text-[#5C5B59]">...</span>;
+                  }
+                  if (pageNum === totalPages - 1 && currentPage < totalPages - 2 && totalPages > 5) {
+                    return <span key="dots2" className="px-2 text-[#5C5B59]">...</span>;
+                  }
 
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`px-2 py-1 rounded-lg font-medium transition-colors ${currentPage === pageNum
-                          ? "bg-[#0F75BD] text-white"
-                          : "hover:bg-[#FAFAFB] text-[#1A1A1A] font-regular"
-                          }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                    className="p-2.5 hover:bg-[#FAFAFB] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronDown className="w-5 h-5 -rotate-90 text-[#5C5B59]" />
-                  </button>
-                </div>
-              </>
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-2 py-1 rounded-lg font-medium transition-colors ${currentPage === pageNum
+                        ? "bg-[#0F75BD] text-white"
+                        : "hover:bg-[#FAFAFB] text-[#1A1A1A] font-regular"
+                        }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2.5 hover:bg-[#FAFAFB] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronDown className="w-5 h-5 -rotate-90 text-[#5C5B59]" />
+                </button>
+              </div>
             )}
           </div>
         )}

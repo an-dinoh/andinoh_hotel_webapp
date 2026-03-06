@@ -45,6 +45,7 @@ import {
   PhysicalRoom,
   BookingFolio,
   BankAccount,
+  WalletTransaction,
   WithdrawalRequest,
   ReportJob,
   GlobalSearchResponse,
@@ -120,12 +121,12 @@ class HotelService {
       if (error.response?.status === 404) {
         console.warn('Global physical-rooms endpoint not found (404). Falling back to category-based aggregation...');
 
-        // 2. Fetch all categories
-        const categories = await this.getRooms();
+        // 2. Fetch all categories (large page size to get all)
+        const categories = await this.getRooms({ page_size: 100 });
 
         // 3. Fetch physical rooms for each category concurrently
         const unitPromises = categories.results.map(category =>
-          this.getPhysicalRooms(category.id).catch(err => {
+          this.getPhysicalRooms(category.id, { page_size: 100 }).catch(err => {
             console.error(`Failed to fetch units for category ${category.id}:`, err);
             return { count: 0, results: [], next: null, previous: null } as PaginatedResponse<PhysicalRoom>;
           })
@@ -155,8 +156,8 @@ class HotelService {
     }
   }
 
-  async getPhysicalRooms(typeId: string): Promise<PaginatedResponse<PhysicalRoom>> {
-    return apiClient.get<PaginatedResponse<PhysicalRoom>>(`hotels/rooms/${typeId}/physical-rooms/`);
+  async getPhysicalRooms(typeId: string, filters?: any): Promise<PaginatedResponse<PhysicalRoom>> {
+    return apiClient.get<PaginatedResponse<PhysicalRoom>>(`hotels/rooms/${typeId}/physical-rooms/`, { params: filters });
   }
 
   async updatePhysicalRoom(id: string, data: Partial<PhysicalRoom>): Promise<PhysicalRoom> {
@@ -438,8 +439,8 @@ class HotelService {
         this.getBookings().catch(() => ({ count: 0, results: [] })),
         this.getBookings({ check_in_from: today, check_in_to: today }).catch(() => ({ count: 0, results: [] })),
         this.getBookings({ check_out_from: today, check_out_to: today }).catch(() => ({ count: 0, results: [] })),
-        this.getRooms().catch(() => ({ count: 0, results: [] })),
-        this.getAllPhysicalRooms().catch(() => ({ count: 0, results: [] })),
+        this.getRooms({ page_size: 100 }).catch(() => ({ count: 0, results: [] })),
+        this.getAllPhysicalRooms({ page_size: 100 }).catch(() => ({ count: 0, results: [] })),
       ]);
 
       const totalBookings = allBookings.count || allBookings.results.length;
@@ -519,6 +520,10 @@ class HotelService {
 
   async requestWithdrawal(data: { amount: string; bank_account_id: string; }): Promise<WithdrawalRequest> {
     return apiClient.post<WithdrawalRequest>('hotels/wallet/withdraw/', data);
+  }
+
+  async getWalletLedger(filters?: any): Promise<PaginatedResponse<WalletTransaction>> {
+    return apiClient.get<PaginatedResponse<WalletTransaction>>('hotels/wallet/transactions/', { params: filters });
   }
 
   // ==================== EVENT SPACE MANAGEMENT ====================
