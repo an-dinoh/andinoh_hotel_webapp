@@ -631,6 +631,10 @@ export default function RoomsPage() {
                       key={unit.id}
                       unit={unit}
                       category={rooms.find(r => r.id === unit.room_type)}
+                      onEdit={(unit) => {
+                        setEditingUnit(unit);
+                        setIsUnitModalOpen(true);
+                      }}
                     />
                   ))
                 )}

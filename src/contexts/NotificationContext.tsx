@@ -1,11 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { authService } from '@/services/auth.service';
 import { webSocketService } from '@/services/websocket.service';
 import { hotelService } from '@/services/hotel.service';
 import { chatService } from '@/services/chat.service';
+import { useCurrency } from './CurrencyContext';
+import { useDashboard } from './DashboardContext';
 
 export interface Notification {
     id: string;
@@ -32,6 +34,47 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [totalUnreadChats, setTotalUnreadChats] = useState(0);
+    const { activities } = useDashboard();
+    const isFirstMount = useRef(true);
+
+    // PERSISTENCE: Load from localStorage on initial mount
+    useEffect(() => {
+        const saved = localStorage.getItem('andinoh_notifications');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                setNotifications(parsed.map((n: any) => ({
+                    ...n,
+                    timestamp: new Date(n.timestamp)
+                })));
+            } catch (e) {
+                console.error('Failed to parse saved notifications:', e);
+            }
+        }
+    }, []);
+
+    // SEEDING: If empty and we have dashboard activities, seed some
+    useEffect(() => {
+        if (notifications.length === 0 && activities.length > 0) {
+            const initialNotifications: Notification[] = activities.map((act: any) => ({
+                id: act.id,
+                type: act.type === 'booking' ? 'booking_update' : 'reception_alert',
+                title: act.title,
+                message: act.description,
+                timestamp: new Date(),
+                read: true, // Seeded are marked as read
+            }));
+            setNotifications(initialNotifications);
+        }
+    }, [activities, notifications.length]);
+
+    // PERSISTENCE: Save to localStorage whenever notifications change
+    useEffect(() => {
+        if (!isFirstMount.current || notifications.length > 0) {
+            localStorage.setItem('andinoh_notifications', JSON.stringify(notifications));
+        }
+        isFirstMount.current = false;
+    }, [notifications]);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -42,21 +85,29 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             return;
         }
 
+        const message = (() => {
+            const m = payload.message;
+            if (typeof m === 'string') return m;
+            // new_chat_message: m = { chat_id, ..., message: {text, sender_type} }
+            const inner = m?.message;
+            if (typeof inner === 'string') return inner;
+            if (typeof inner?.text === 'string') return inner.text;
+            // fallback for simple {text: "..."} shape
+            if (typeof m?.text === 'string') return m.text;
+            return 'New notification received';
+        })();
+
+        // SILENCE TECHNICAL MESSAGES: Do not show nor save subscription confirmations
+        if (message.toLowerCase().includes('subscribed to')) {
+            console.log('Suppressed technical notification:', message);
+            return;
+        }
+
         const newNotification: Notification = {
             id: Math.random().toString(36).substring(7),
             type: payload.type,
             title: getTitleByType(payload.type),
-            message: (() => {
-                const m = payload.message;
-                if (typeof m === 'string') return m;
-                // new_chat_message: m = { chat_id, ..., message: {text, sender_type} }
-                const inner = m?.message;
-                if (typeof inner === 'string') return inner;
-                if (typeof inner?.text === 'string') return inner.text;
-                // fallback for simple {text: "..."} shape
-                if (typeof m?.text === 'string') return m.text;
-                return 'New notification received';
-            })(),
+            message,
             timestamp: new Date(),
             read: false,
             data: payload.data,

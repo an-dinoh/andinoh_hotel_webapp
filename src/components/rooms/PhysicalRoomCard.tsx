@@ -89,7 +89,8 @@ export default function PhysicalRoomCard({ unit, category, onEdit, onStatusChang
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -8, transition: { duration: 0.3, ease: "easeOut" } }}
-            className="group relative bg-white rounded-[32px] border border-[#E5E7EB]/60 hover:border-[#0F75BD] transition-all duration-500 overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_30px_60px_rgba(15,117,189,0.12)] flex flex-col h-full"
+            onClick={() => onEdit?.(unit)}
+            className="group relative bg-white rounded-[32px] border border-[#E5E7EB]/60 hover:border-[#0F75BD] transition-all duration-500 overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_30px_60px_rgba(15,117,189,0.12)] flex flex-col h-full cursor-pointer"
         >
             {/* Glossy Backdrop Gradient */}
             <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#0F75BD]/[0.02] to-transparent pointer-events-none" />
