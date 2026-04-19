@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
 
 interface LoadingProps {
   size?: "sm" | "md" | "lg";
@@ -11,119 +10,87 @@ interface LoadingProps {
 
 export default function Loading({ size = "md", text, fullPage = false }: LoadingProps) {
   const sizeMap = {
-    sm: { container: 40, circle: 24, logo: 12 },
-    md: { container: 80, circle: 48, logo: 24 },
-    lg: { container: 120, circle: 72, logo: 36 },
+    sm: { container: "w-10 h-10", circle: "w-6 h-6", logo: "8px" },
+    md: { container: "w-20 h-20", circle: "w-12 h-12", logo: "16px" },
+    lg: { container: "w-32 h-32", circle: "w-20 h-20", logo: "24px" },
   };
 
-  const currentSize = sizeMap[size];
+  const current = sizeMap[size];
 
   const loaderContent = (
     <div className="flex flex-col items-center justify-center gap-6">
-      <div className="relative" style={{ width: currentSize.container, height: currentSize.container }}>
-        {/* Main Pulsing Glow */}
-        <motion.div
-          className="absolute inset-0 rounded-full bg-primary/20 blur-xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
+      <div className={`relative ${current.container}`}>
+        {/* Pulsing Glow */}
+        <div className="absolute inset-0 rounded-full bg-[#0F75BD]/20 blur-xl animate-pulse" />
 
         {/* Outer Rotating Ring */}
-        <motion.div
-          className="absolute inset-0 rounded-full border-t-2 border-r-2 border-primary"
-          animate={{ rotate: 360 }}
-          transition={{
-            duration: 1.5,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        />
+        <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-[#0F75BD] animate-spin" style={{ animationDuration: '1.5s' }} />
 
         {/* Inner Counter-Rotating Ring */}
-        <motion.div
-          className="absolute inset-2 rounded-full border-b-2 border-l-2 border-secondary"
-          animate={{ rotate: -360 }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        />
+        <div className="absolute inset-2 rounded-full border-b-2 border-l-2 border-[#FCC317] animate-spin-reverse" style={{ animationDuration: '2s' }} />
 
-        {/* Central Brand Element */}
+        {/* Central Logo */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <motion.div
-            className="rounded-full bg-white flex items-center justify-center shadow-2xl overflow-hidden border-2 border-primary/10"
-            style={{ width: currentSize.circle, height: currentSize.circle }}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ 
-              scale: [0.8, 1.05, 1],
-              opacity: 1
-            }}
-            transition={{
-              duration: 1,
-              ease: "easeOut",
-            }}
+          <div 
+            className={`${current.circle} rounded-full bg-white flex items-center justify-center shadow-2xl overflow-hidden border-2 border-[#0F75BD]/10 animate-bounce-subtle`}
           >
-            <motion.img 
+            <img 
               src="/logos/ANDINOH-FAV.jpg" 
               alt="Andinoh Logo"
               className="w-full h-full object-cover p-1"
-              animate={{
-                filter: ["brightness(1)", "brightness(1.1)", "brightness(1)"],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
             />
-          </motion.div>
+          </div>
         </div>
       </div>
 
       {/* Elegant Loading Text */}
       {(text || size !== "sm") && (
-        <motion.div
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center"
-        >
-          <span className="text-primary-dark font-medium tracking-widest text-xs uppercase">
+        <div className="flex flex-col items-center animate-fade-in">
+          <span className="text-[#002968] font-medium tracking-[0.2em] text-[10px] uppercase">
             {text || "Loading Experience"}
           </span>
-          <motion.div 
-            className="h-0.5 bg-secondary mt-1 rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: "100%" }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        </motion.div>
+          <div className="h-0.5 bg-[#FCC317] mt-2 rounded-full w-12 animate-shimmer-width" />
+        </div>
       )}
+
+      <style jsx>{`
+        @keyframes spin-reverse {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(-360deg); }
+        }
+        .animate-spin-reverse {
+          animation: spin-reverse linear infinite;
+        }
+        @keyframes bounce-subtle {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+        .animate-bounce-subtle {
+          animation: bounce-subtle 2s ease-in-out infinite;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.8s ease-out forwards;
+        }
+        @keyframes shimmer-width {
+          0%, 100% { width: 10px; opacity: 0.5; }
+          50% { width: 48px; opacity: 1; }
+        }
+        .animate-shimmer-width {
+          animation: shimmer-width 2s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 
   if (fullPage) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 flex items-center justify-center bg-white/80 backdrop-blur-md z-[9999]"
-      >
+      <div className="fixed inset-0 flex items-center justify-center bg-white/80 backdrop-blur-md z-[9999] animate-fade-in">
         {loaderContent}
-      </motion.div>
+      </div>
     );
   }
 
