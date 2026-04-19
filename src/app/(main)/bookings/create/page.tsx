@@ -127,6 +127,12 @@ export default function CreateBookingPage() {
 
       await hotelService.createBooking({
         room: form.room_id,
+        guest_details: {
+          full_name: form.customer_name,
+          email: form.customer_email,
+          phone_number: form.customer_phone,
+        },
+        // Keep these if backend still needs them for a while, but the field changed note suggests nesting
         customer_name: form.customer_name,
         customer_email: form.customer_email,
         customer_phone: form.customer_phone,

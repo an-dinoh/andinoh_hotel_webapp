@@ -13,7 +13,9 @@ const eslintConfig = [
   {
     ignores: [".next/**", "node_modules/**", "out/**", "build/**"],
   },
-  ...compat.extends("next/core-web-vitals"),
+  ...compat.config({
+    extends: ["next/core-web-vitals"],
+  }),
   {
     rules: {
       "@typescript-eslint/no-unused-vars": "off",
@@ -24,3 +26,4 @@ const eslintConfig = [
 ];
 
 export default eslintConfig;
+

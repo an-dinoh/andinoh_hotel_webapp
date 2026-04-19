@@ -88,7 +88,9 @@ export default function RoomsPage() {
     );
   });
 
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const totalPages = viewMode === "units"
+    ? Math.ceil(totalPhysicalCount / PAGE_SIZE) || 1
+    : Math.ceil(totalCount / PAGE_SIZE) || 1;
 
   if (isLoading) {
     return (

@@ -68,13 +68,16 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
             if (bookingsData) setUpcomingBookings(bookingsData.results);
 
             // Synthesize activities from real bookings
-            const realActivities = (bookingsData.results || []).slice(0, 3).map((booking: Booking, index: number) => ({
-                id: `booking-${booking.id}`,
-                type: 'booking',
-                title: 'Confirmed Reservation',
-                timestamp: index === 0 ? 'Recently' : `${index * 5} mins ago`,
-                description: `${booking.customer_name} booked for ${booking.number_of_nights} nights (Ref: ${booking.booking_reference})`
-            }));
+            const realActivities = (bookingsData.results || []).slice(0, 3).map((booking: any, index: number) => {
+                const guestName = booking.guest_details?.full_name || "Guest";
+                return {
+                    id: `booking-${booking.id}`,
+                    type: 'booking',
+                    title: 'Confirmed Reservation',
+                    timestamp: index === 0 ? 'Recently' : `${index * 5} mins ago`,
+                    description: `${guestName} booked for ${booking.number_of_nights} nights (Ref: ${booking.booking_reference})`
+                };
+            });
 
             const staticActivities = [
                 { id: 'sys-1', type: 'system', title: 'Daily Report Ready', timestamp: '1 hour ago', description: 'The performance report for today is now available.' },

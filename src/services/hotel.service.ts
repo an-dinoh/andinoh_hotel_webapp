@@ -45,6 +45,7 @@ import {
   PhysicalRoom,
   BookingFolio,
   BankAccount,
+  WalletTransaction,
   WithdrawalRequest,
   ReportJob,
   GlobalSearchResponse,
@@ -120,12 +121,12 @@ class HotelService {
       if (error.response?.status === 404) {
         console.warn('Global physical-rooms endpoint not found (404). Falling back to category-based aggregation...');
 
-        // 2. Fetch all categories
-        const categories = await this.getRooms();
+        // 2. Fetch all categories (large page size to get all)
+        const categories = await this.getRooms({ page_size: 100 });
 
         // 3. Fetch physical rooms for each category concurrently
         const unitPromises = categories.results.map(category =>
-          this.getPhysicalRooms(category.id).catch(err => {
+          this.getPhysicalRooms(category.id, { page_size: 100 }).catch(err => {
             console.error(`Failed to fetch units for category ${category.id}:`, err);
             return { count: 0, results: [], next: null, previous: null } as PaginatedResponse<PhysicalRoom>;
           })
@@ -155,8 +156,8 @@ class HotelService {
     }
   }
 
-  async getPhysicalRooms(typeId: string): Promise<PaginatedResponse<PhysicalRoom>> {
-    return apiClient.get<PaginatedResponse<PhysicalRoom>>(`hotels/rooms/${typeId}/physical-rooms/`);
+  async getPhysicalRooms(typeId: string, filters?: any): Promise<PaginatedResponse<PhysicalRoom>> {
+    return apiClient.get<PaginatedResponse<PhysicalRoom>>(`hotels/rooms/${typeId}/physical-rooms/`, { params: filters });
   }
 
   async updatePhysicalRoom(id: string, data: Partial<PhysicalRoom>): Promise<PhysicalRoom> {
@@ -422,11 +423,8 @@ class HotelService {
   async getDashboardStats(): Promise<DashboardStats> {
     try {
       const stats = await apiClient.get<DashboardStats>('hotels/dashboard-stats/');
-
-      // If we get an empty or error response status-wise from the API, we synthesize
-      if (!stats || !stats.today || (stats.today.check_ins === 0 && stats.today.check_outs === 0 && stats.volume.total_bookings === 0)) {
-        throw new Error('Incomplete data');
-      }
+      // Trust the backend's response. Only synthesize if the API throws.
+      if (!stats) throw new Error('Empty response');
       return stats;
     } catch (error) {
       console.warn('Dashboard stats endpoint unavailable or incomplete. Synthesizing data...');
@@ -438,8 +436,8 @@ class HotelService {
         this.getBookings().catch(() => ({ count: 0, results: [] })),
         this.getBookings({ check_in_from: today, check_in_to: today }).catch(() => ({ count: 0, results: [] })),
         this.getBookings({ check_out_from: today, check_out_to: today }).catch(() => ({ count: 0, results: [] })),
-        this.getRooms().catch(() => ({ count: 0, results: [] })),
-        this.getAllPhysicalRooms().catch(() => ({ count: 0, results: [] })),
+        this.getRooms({ page_size: 100 }).catch(() => ({ count: 0, results: [] })),
+        this.getAllPhysicalRooms({ page_size: 100 }).catch(() => ({ count: 0, results: [] })),
       ]);
 
       const totalBookings = allBookings.count || allBookings.results.length;
@@ -475,7 +473,8 @@ class HotelService {
           total_reviews: 0
         },
         room_stats: {
-          total: totalUnits || rooms.results.reduce((sum, r) => sum + (r.total_rooms || 0), 0),
+          // Use the actual unit count from the DB, not a sum of category integers (which can be stale)
+          total: units.count || units.results.length,
           available: units.results.filter(u => u.status === 'available').length,
           occupied: occupiedUnits
         }
@@ -506,7 +505,8 @@ class HotelService {
   }
 
   async getWalletStats(): Promise<WalletStats> {
-    return apiClient.get<WalletStats>('hotels/wallet/stats/');
+    // Per API guide: wallet balance is at /api/v1/hotels/wallet/ (not /hotels/wallet/stats/)
+    return apiClient.get<WalletStats>('hotels/wallet/');
   }
 
   async getBankAccounts(): Promise<BankAccount[]> {
@@ -519,6 +519,10 @@ class HotelService {
 
   async requestWithdrawal(data: { amount: string; bank_account_id: string; }): Promise<WithdrawalRequest> {
     return apiClient.post<WithdrawalRequest>('hotels/wallet/withdraw/', data);
+  }
+
+  async getWalletLedger(filters?: any): Promise<PaginatedResponse<WalletTransaction>> {
+    return apiClient.get<PaginatedResponse<WalletTransaction>>('hotels/wallet/transactions/', { params: filters });
   }
 
   // ==================== EVENT SPACE MANAGEMENT ====================
