@@ -89,6 +89,7 @@ export default function RegisterPage() {
         password: form.password,
         hotel_name: form.hotelName,
         hotel_license_number: form.hotelLicenseNumber,
+        role: "hotel", // Correct role for hotel owner
       } as any);
 
       if (response && response.access_token) {
