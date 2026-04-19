@@ -118,9 +118,3 @@ Simply update line 78 with the correct value.
 
 ## Next Steps
 
-1. ✅ Find the correct role value from backend
-2. ✅ Update `src/app/(auth)/register/page.tsx` line 78
-3. ✅ Test registration again
-4. ✅ Everything else will work!
-
-The frontend code is 100% correct - we just need the right role value from your backend configuration.
