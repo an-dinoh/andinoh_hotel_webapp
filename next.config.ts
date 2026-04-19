@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -24,7 +25,7 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  // Webpack fallback for compatibility
+  // Webpack fallback for SVG compatibility
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/i,
