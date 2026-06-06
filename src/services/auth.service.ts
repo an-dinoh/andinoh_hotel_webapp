@@ -81,6 +81,11 @@ class AuthService {
   }
 
 
+  isOwner(): boolean {
+    const role = this.getUserRole();
+    return role === 'owner' || role === 'hotel_owner';
+  }
+
   isManager(): boolean {
     const role = this.getUserRole();
     return role === 'manager' || role === 'owner';
