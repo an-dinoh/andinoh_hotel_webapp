@@ -16,7 +16,7 @@ import CalendarIcon from "@/icons/CalendarIcon";
 import DashboardIcon from "@/icons/DashboardIcon";
 import DangerIcon from "@/icons/DangerIcon";
 import HelpIcon from "@/icons/HelpIcon";
-import EventIcon from "@/icons/EventIcon";
+// import EventIcon from "@/icons/EventIcon";
 
 import ArrowRightIcon from "@/icons/ArrowRightIcon";
 import ArrowLeftIcon from "@/icons/ArrowLeftIcon";
@@ -27,7 +27,7 @@ import MessageIcon from "@/icons/MessageIcon";
 const navigationMain = [
   { name: "Dashboard", href: "/dashboard", icon: DashboardIcon, badge: null },
   { name: "Rooms", href: "/rooms", icon: BookingIcon, badge: null },
-  { name: "Event Spaces", href: "/event-spaces", icon: EventIcon, badge: null },
+  // { name: "Event Spaces", href: "/event-spaces", icon: EventIcon, badge: null },
   { name: "Bookings", href: "/bookings", icon: CalendarIcon, badge: null },
   { name: "Wallet", href: "/wallet", icon: WalletIcon, badge: null },
   { name: "Chats", href: "/chats", icon: MessageIcon, badge: null },

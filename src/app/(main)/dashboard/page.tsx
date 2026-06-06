@@ -71,7 +71,7 @@ export default function DashboardPage() {
       hoverBgColor: "hover:bg-[#117C35]",
       onClick: () => router.push("/bookings"),
     },
-    {
+    /* {
       title: "Manage Event Spaces",
       description: "Add or update available venues.",
       buttonText: "View Spaces",
@@ -80,7 +80,7 @@ export default function DashboardPage() {
       textColor: "text-[#065CA8]",
       hoverBgColor: "hover:bg-[#065CA8]",
       onClick: () => router.push("/event-spaces"),
-    },
+    }, */
   ];
 
   const bookingStats = [

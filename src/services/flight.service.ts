@@ -1,3 +1,4 @@
+/*
 import { apiClient } from '@/utils/api';
 import { Airport } from '@/types/hotel.types';
 
@@ -13,3 +14,6 @@ class FlightService {
 }
 
 export const flightService = new FlightService();
+*/
+export {};
+

@@ -22,7 +22,7 @@ import {
     FiLock,
     FiCheckCircle,
 } from "react-icons/fi";
-import { MdHotel, MdFlight, MdEvent, MdExplore } from "react-icons/md";
+import { MdHotel, /* MdFlight, MdEvent, */ MdExplore } from "react-icons/md";
 import { HiOutlineUserGroup, HiOutlineThumbUp } from "react-icons/hi";
 import { RiSmartphoneLine } from "react-icons/ri";
 import { BiWorld } from "react-icons/bi";
@@ -54,8 +54,8 @@ const baseFeatures = [
     { icon: RiSmartphoneLine, name: "Mobile App" },
     { icon: FiTrendingUp, name: "Price Match" },
     { icon: MdHotel, name: "Hotels & Stays", size: "large" },
-    { icon: MdFlight, name: "Flight Booking", size: "large" },
-    { icon: MdEvent, name: "Events & Venues", size: "large" },
+    // { icon: MdFlight, name: "Flight Booking", size: "large" },
+    // { icon: MdEvent, name: "Events & Venues", size: "large" },
 ];
 
 // Grid configuration

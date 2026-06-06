@@ -1,5 +1,15 @@
 "use client";
 
+export default function EventSpacesPage() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center bg-white rounded-3xl border border-gray-100">
+      <h2 className="text-xl font-bold text-gray-800">Event Spaces Feature Offline</h2>
+      <p className="text-gray-500 mt-2">This section has been temporarily disabled.</p>
+    </div>
+  );
+}
+
+/* Original code:
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, Eye, ChevronDown, Sparkles, Users, Maximize2, Calendar, Banknote, Zap, PartyPopper } from "lucide-react";
@@ -13,7 +23,7 @@ import EventBookingModal from "@/components/events/EventBookingModal";
 
 type EventSpaceDetailTab = "pictures" | "videos" | "reviews" | "3d-tour" | "equipment";
 
-export default function EventSpacesPage() {
+export function OriginalEventSpacesPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [eventSpaces, setEventSpaces] = useState<EventSpace[]>([]);
@@ -42,7 +52,6 @@ export default function EventSpacesPage() {
       const response = await hotelService.getEventSpaces(filters);
       setEventSpaces(response.results || []);
     } catch (err: any) {
-      // 404 = endpoint exists but no data yet, treat as empty
       if (err?.message === 'Resource not found') {
         setEventSpaces([]);
         return;
@@ -89,7 +98,6 @@ export default function EventSpacesPage() {
   return (
     <div className="h-full bg-white overflow-y-auto scrollbar-hide pt-8 pb-8">
       <div className="space-y-6">
-        {/* Header Section */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-[#1A1A1A]">Event Spaces</h1>
@@ -104,9 +112,7 @@ export default function EventSpacesPage() {
           </button>
         </div>
 
-        {/* Search & Filters Bar */}
         <div className="flex items-center gap-4">
-          {/* Search */}
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#8F8E8D]" />
             <input
@@ -118,7 +124,6 @@ export default function EventSpacesPage() {
             />
           </div>
 
-          {/* Sort Dropdown */}
           <div className="relative">
             <button
               onClick={() => setShowSortDropdown(!showSortDropdown)}
@@ -161,7 +166,6 @@ export default function EventSpacesPage() {
           </div>
         </div>
 
-        {/* Space Type Filters */}
         <div>
           <h3 className="text-sm font-semibold text-[#1A1A1A] mb-4">Filter by Space Type</h3>
           <div className="flex gap-3 flex-wrap overflow-x-auto scrollbar-hide pb-2">
@@ -189,7 +193,6 @@ export default function EventSpacesPage() {
           </div>
         </div>
 
-        {/* Stats Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: "Total Spaces", value: eventSpaces.length, bg: "bg-[#F5F5F5]", icon: PartyPopper },
@@ -212,7 +215,6 @@ export default function EventSpacesPage() {
           })}
         </div>
 
-        {/* Event Spaces Grid */}
         {filteredSpaces.length === 0 ? (
           <div className="bg-[#FAFAFB] border border-[#E5E7EB] rounded-2xl p-16 text-center">
             <div className="w-16 h-16 bg-[#E8F4F8] rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -239,16 +241,13 @@ export default function EventSpacesPage() {
                     key={space.id}
                     className="bg-white rounded-[22px] overflow-hidden border border-[#E5E7EB] hover:border-[#0F75BD] transition-all group hover:shadow-lg"
                   >
-                    {/* Space Image */}
                     <div className="relative h-48 bg-gradient-to-br from-[#E8F4F8] to-[#F0F9FF] flex items-center justify-center overflow-hidden">
                       <span className="text-7xl">🎭</span>
 
-                      {/* Space Number */}
                       <div className="absolute top-4 right-4 w-14 h-14 bg-white/90 backdrop-blur-sm rounded-xl flex items-center justify-center">
                         <span className="text-xs font-bold text-[#0F75BD]">{spaceNumber}</span>
                       </div>
 
-                      {/* Space Type Badge */}
                       <div className="absolute top-4 left-4">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-sm text-[#0F75BD] text-xs font-medium rounded-lg">
                           <Sparkles className="w-3 h-3" />
@@ -256,7 +255,6 @@ export default function EventSpacesPage() {
                         </span>
                       </div>
 
-                      {/* Availability Badge */}
                       <div className="absolute bottom-3 right-3">
                         <span
                           className={`px-2.5 py-1 text-xs font-semibold rounded-lg ${space.is_available
@@ -269,19 +267,15 @@ export default function EventSpacesPage() {
                       </div>
                     </div>
 
-                    {/* Space Content */}
                     <div className="p-5">
-                      {/* Space Title */}
                       <h3 className="text-lg font-bold text-[#1A1A1A] mb-2 group-hover:text-[#0F75BD] transition-colors">
                         {space.title}
                       </h3>
 
-                      {/* Description */}
                       <p className="text-sm text-[#5C5B59] mb-4 line-clamp-2">
                         {space.description}
                       </p>
 
-                      {/* Space Details */}
                       <div className="grid grid-cols-3 gap-2 mb-4">
                         <div className="flex flex-col items-center p-2 bg-[#FAFAFB] rounded-lg">
                           <Users className="w-4 h-4 text-[#0F75BD] mb-1" />
@@ -300,7 +294,6 @@ export default function EventSpacesPage() {
                         </div>
                       </div>
 
-                      {/* Features Pills */}
                       <div className="flex flex-wrap gap-2 mb-4">
                         {space.has_audio_visual && (
                           <span className="px-2 py-1 bg-[#F0F9FF] text-[#0F75BD] text-xs font-medium rounded-lg">
@@ -319,10 +312,8 @@ export default function EventSpacesPage() {
                         )}
                       </div>
 
-                      {/* Divider */}
                       <div className="border-t border-[#E5E7EB] my-3"></div>
 
-                      {/* Pricing & Actions */}
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-xs text-[#5C5B59] mb-0.5">Full Day Rate</p>
@@ -356,7 +347,6 @@ export default function EventSpacesPage() {
               })}
             </div>
 
-            {/* Pagination */}
             <div className="flex items-center justify-center gap-2 m-8">
               <button className="p-2 hover:bg-[#FAFAFB] rounded-lg transition-colors">
                 <ChevronDown className="w-5 h-5 rotate-90 text-[#5C5B59] text-xs" />
@@ -395,3 +385,5 @@ export default function EventSpacesPage() {
     </div>
   );
 }
+*/
+

@@ -1,5 +1,15 @@
 "use client";
 
+export default function CreateEventSpacePage() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center bg-white rounded-3xl border border-gray-100">
+      <h2 className="text-xl font-bold text-gray-800">Add Event Space Feature Offline</h2>
+      <p className="text-gray-500 mt-2">This section has been temporarily disabled.</p>
+    </div>
+  );
+}
+
+/* Original code:
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -39,7 +49,7 @@ interface EventSpaceForm {
   has_outdoor_access: boolean;
 }
 
-export default function CreateEventSpacePage() {
+export function OriginalCreateEventSpacePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -118,7 +128,7 @@ export default function CreateEventSpacePage() {
     try {
       await hotelService.createEventSpace({
         ...form,
-        hotel: "current_hotel_id", // The backend usually infers this or it needs to be provided
+        hotel: "current_hotel_id",
         space_size: parseFloat(form.space_size),
         max_capacity_theater: parseInt(form.max_capacity_theater),
         max_capacity_banquet: parseInt(form.max_capacity_banquet),
@@ -147,7 +157,6 @@ export default function CreateEventSpacePage() {
   return (
     <div className="h-full bg-[#F9FAFB] overflow-y-auto scrollbar-hide">
       <div className="max-w-5xl mx-auto px-8 py-8">
-        {/* Back Button */}
         <button
           onClick={() => router.back()}
           className="flex items-center gap-2 text-[#0F75BD] hover:text-[#0050C8] font-medium mb-6"
@@ -156,14 +165,12 @@ export default function CreateEventSpacePage() {
           Back to Event Spaces
         </button>
 
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-semibold text-gray-800 mb-2">Add New Event Space</h1>
           <p className="text-gray-500 text-sm">Create a new event venue for your hotel</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Basic Information */}
           <div className="bg-white rounded-2xl p-8 space-y-5">
             <h2 className="text-lg font-semibold text-gray-800 mb-6">Basic Information</h2>
 
@@ -232,7 +239,6 @@ export default function CreateEventSpacePage() {
             </div>
           </div>
 
-          {/* Space Specifications */}
           <div className="bg-white rounded-2xl p-8 space-y-5">
             <h2 className="text-lg font-semibold text-gray-800 mb-6">Space Specifications</h2>
 
@@ -309,7 +315,6 @@ export default function CreateEventSpacePage() {
             </div>
           </div>
 
-          {/* Pricing */}
           <div className="bg-white rounded-2xl p-8 space-y-5">
             <h2 className="text-lg font-semibold text-gray-800 mb-6">Pricing</h2>
 
@@ -359,7 +364,6 @@ export default function CreateEventSpacePage() {
             />
           </div>
 
-          {/* Features & Amenities */}
           <div className="bg-white rounded-2xl p-8 space-y-5">
             <h2 className="text-lg font-semibold text-gray-800 mb-6">Features & Amenities</h2>
 
@@ -391,7 +395,6 @@ export default function CreateEventSpacePage() {
             </div>
           </div>
 
-          {/* Form Actions */}
           <div className="flex gap-4 pt-4">
             <Button
               type="button"
@@ -415,3 +418,5 @@ export default function CreateEventSpacePage() {
     </div>
   );
 }
+*/
+

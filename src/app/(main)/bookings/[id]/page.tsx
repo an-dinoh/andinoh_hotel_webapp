@@ -59,7 +59,6 @@ export default function BookingDetailPage() {
     if (bookingId) {
       fetchBooking();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
 
   const fetchBooking = async () => {
