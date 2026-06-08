@@ -134,44 +134,36 @@ export default function WalletPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-[#F5F5F5] rounded-2xl p-5 relative overflow-hidden">
-            {loading && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10" />}
-            <p className="text-[#5C5B59] text-sm mb-1">Total Revenue</p>
-            <p className="text-2xl font-bold text-[#1A1A1A]">₦{(walletStats?.total_lifetime_revenue || 0).toLocaleString()}</p>
-            <div className="flex items-center gap-1 mt-2">
-              <TrendingUp className="w-4 h-4 text-green-600" />
-              <span className="text-xs font-medium text-green-600">Lifetime</span>
+          {[
+            { label: "Total Revenue", value: `₦${(walletStats?.total_lifetime_revenue || 0).toLocaleString()}`, sub: "Lifetime" },
+            { label: "Total Withdrawals", value: `₦${(walletStats?.total_withdrawn || 0).toLocaleString()}`, sub: "Withdrawn" },
+            { label: "Pending Clearance", value: `₦${(walletStats?.pending_clearance || 0).toLocaleString()}`, sub: "Awaiting settlement" },
+            { label: "Available Balance", value: `₦${(walletStats?.available_balance || 0).toLocaleString()}`, sub: null, action: true },
+          ].map((stat, index) => (
+            <div key={index} className="bg-[#FAFAFB] border border-[#E5E7EB] rounded-[24px] p-6">
+              {loading ? (
+                <>
+                  <div className="w-28 h-4 bg-[#EBEBEB] rounded-[10px] animate-pulse mb-3" />
+                  <div className="w-20 h-8 bg-[#EBEBEB] rounded-[10px] animate-pulse mb-2" />
+                  <div className="w-16 h-3 bg-[#EBEBEB] rounded-[10px] animate-pulse" />
+                </>
+              ) : (
+                <>
+                  <p className="text-[#5C5B59] text-sm font-bold uppercase tracking-wider mb-1">{stat.label}</p>
+                  <p className="text-2xl font-black text-[#1A1A1A] tracking-tight">{stat.value}</p>
+                  {stat.sub && <p className="text-xs text-[#5C5B59] mt-1">{stat.sub}</p>}
+                  {stat.action && (
+                    <button
+                      onClick={() => setShowWithdrawalModal(true)}
+                      className="text-xs font-semibold text-[#0F75BD] mt-1 hover:underline"
+                    >
+                      Withdraw Funds
+                    </button>
+                  )}
+                </>
+              )}
             </div>
-          </div>
-
-          <div className="bg-[#F0F9FF] rounded-2xl p-5 relative overflow-hidden">
-            {loading && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10" />}
-            <p className="text-[#5C5B59] text-sm mb-1">Total Withdrawals</p>
-            <p className="text-2xl font-bold text-[#1A1A1A]">₦{(walletStats?.total_withdrawn || 0).toLocaleString()}</p>
-            <div className="flex items-center gap-1 mt-2">
-              <TrendingDown className="w-4 h-4 text-orange-600" />
-              <span className="text-xs font-medium text-orange-600">Withdrawn</span>
-            </div>
-          </div>
-
-          <div className="bg-[#FEF3C7] rounded-2xl p-5 relative overflow-hidden">
-            {loading && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10" />}
-            <p className="text-[#5C5B59] text-sm mb-1">Pending Clearance</p>
-            <p className="text-2xl font-bold text-[#1A1A1A]">₦{(walletStats?.pending_clearance || 0).toLocaleString()}</p>
-            <p className="text-xs text-[#5C5B59] mt-2">Awaiting settlement</p>
-          </div>
-
-          <div className="bg-[#F5F3FF] rounded-2xl p-5 relative overflow-hidden">
-            {loading && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10" />}
-            <p className="text-[#5C5B59] text-sm mb-1">Available Balance</p>
-            <p className="text-2xl font-bold text-[#1A1A1A]">₦{(walletStats?.available_balance || 0).toLocaleString()}</p>
-            <button
-              onClick={() => setShowWithdrawalModal(true)}
-              className="text-xs font-medium text-[#0F75BD] mt-2 hover:underline"
-            >
-              Withdraw Funds
-            </button>
-          </div>
+          ))}
         </div>
 
         {/* Filter and Actions */}
@@ -187,7 +179,7 @@ export default function WalletPage() {
             </button>
 
             {showPeriodDropdown && (
-              <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-[#E5E7EB] rounded-xl z-10 py-2 shadow-lg">
+              <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-[#E5E7EB] rounded-[16px] z-10 py-2">
                 {["Today", "This Week", "This Month", "This Year", "Custom Range"].map((period) => (
                   <button
                     key={period}
@@ -258,14 +250,8 @@ export default function WalletPage() {
                       <p className="text-sm text-[#5C5B59]">{transaction.date}</p>
                     </td>
                     <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${transaction.status === "Completed"
-                          ? "bg-[#ECFDF5] text-green-700"
-                          : transaction.status === "Pending"
-                            ? "bg-[#FEF3C7] text-yellow-700"
-                            : "bg-[#FEE2E2] text-red-700"
-                          }`}
-                      >
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 bg-[#FAFAFB] border border-[#E5E7EB] rounded-full text-xs font-semibold text-[#1A1A1A]`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${transaction.status === "Completed" ? "bg-emerald-500" : transaction.status === "Pending" ? "bg-amber-400" : "bg-red-400"}`} />
                         {transaction.status}
                       </span>
                     </td>
@@ -334,13 +320,10 @@ export default function WalletPage() {
       {/* Transaction Details Modal */}
       {selectedTransaction && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-[24px] max-w-2xl w-full border border-[#E5E7EB] max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="sticky top-0 bg-gradient-to-br from-[#0F75BD] to-[#02A5E6] p-6 relative overflow-hidden">
-              <div className="absolute inset-0 opacity-20">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl"></div>
-              </div>
-              <div className="relative z-10 flex items-start justify-between">
+            <div className="sticky top-0 bg-[#0F75BD] p-6">
+              <div className="flex items-start justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-2">Transaction Details</h2>
                   <p className="text-white/80">{selectedTransaction.id}</p>
@@ -357,9 +340,9 @@ export default function WalletPage() {
             {/* Content */}
             <div className="p-6 space-y-6">
               {/* Amount Card */}
-              <div className={`p-6 rounded-2xl ${selectedTransaction.amount > 0 ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200' : 'bg-gradient-to-br from-red-50 to-rose-50 border-2 border-red-200'}`}>
-                <p className="text-sm font-semibold text-gray-600 uppercase mb-2">Transaction Amount</p>
-                <p className={`text-4xl font-bold ${selectedTransaction.amount > 0 ? 'text-green-700' : 'text-red-700'}`}>
+              <div className={`p-6 rounded-[16px] border border-[#E5E7EB] bg-[#FAFAFB]`}>
+                <p className="text-sm font-semibold text-[#5C5B59] uppercase mb-2">Transaction Amount</p>
+                <p className={`text-4xl font-bold ${selectedTransaction.amount > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                   {selectedTransaction.amount > 0 ? "+" : ""}₦{Math.abs(selectedTransaction.amount).toLocaleString()}
                 </p>
                 <div className="mt-3 flex items-center gap-2">
@@ -435,7 +418,7 @@ export default function WalletPage() {
       {/* Export Modal */}
       {showExportModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
+          <div className="bg-white rounded-[24px] max-w-md w-full p-8 border border-[#E5E7EB]">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-[#1A1A1A]">Export Report</h3>
               <button

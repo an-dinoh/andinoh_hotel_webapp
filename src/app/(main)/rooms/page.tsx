@@ -120,26 +120,26 @@ export default function RoomsPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <Skeleton variant="text" className="w-48 h-8 mb-2" />
-              <Skeleton variant="text" className="w-64 h-4" />
+              <div className="w-48 h-8 bg-[#F3F4F6] rounded-[16px] animate-pulse mb-2" />
+              <div className="w-64 h-4 bg-[#F3F4F6] rounded-[12px] animate-pulse" />
             </div>
-            <Skeleton variant="rect" className="w-36 h-10 rounded-2xl" />
+            <div className="w-36 h-11 bg-[#F3F4F6] rounded-[16px] animate-pulse" />
           </div>
 
           <div className="flex items-center gap-4">
-            <Skeleton variant="rect" className="w-full h-10 rounded-xl" />
-            <Skeleton variant="rect" className="w-32 h-10 rounded-xl" />
+            <div className="flex-1 h-11 bg-[#F3F4F6] rounded-[16px] animate-pulse" />
+            <div className="w-32 h-11 bg-[#F3F4F6] rounded-[16px] animate-pulse" />
           </div>
 
           <div>
-            <Skeleton variant="text" className="w-32 h-4 mb-4" />
+            <div className="w-32 h-4 bg-[#F3F4F6] rounded-[12px] animate-pulse mb-4" />
             <div className="flex gap-3">
-              {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} variant="rect" className="w-24 h-10 rounded-xl" />)}
+              {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-24 h-10 bg-[#F3F4F6] rounded-[14px] animate-pulse" />)}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map(i => <Skeleton key={i} variant="rect" className="w-full h-24 rounded-2xl" />)}
+            {[1, 2, 3, 4].map(i => <div key={i} className="w-full h-24 bg-[#F3F4F6] rounded-[24px] animate-pulse" />)}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -641,7 +641,13 @@ export default function RoomsPage() {
                 <p className="text-[#5C5B59] mb-8 max-w-sm mx-auto">
                   {searchTerm ? `We couldn't find any room units matching "${searchTerm}". Try a different search term.` : "You haven't added any physical rooms to your inventory yet. Select a category to start provisioning units."}
                 </p>
-                {!searchTerm && <button className="px-6 py-3 bg-[#1A1A1A] text-white font-bold rounded-xl hover:bg-black transition-all">Provision First Room</button>}
+                {!searchTerm && <button
+                  onClick={() => router.push("/rooms/units/create")}
+                  className="px-6 py-3 bg-[#0F75BD] text-white font-bold rounded-[16px] hover:bg-[#0050C8] transition-all flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Provision First Room
+                </button>}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -668,27 +674,20 @@ export default function RoomsPage() {
         ) : (
           <>
             {filteredRooms.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-16 md:p-24 bg-gradient-to-b from-[#FAFAFB] to-white border border-[#E5E7EB]/50 rounded-[32px] text-center relative overflow-hidden">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#0F75BD]/[0.03] rounded-full blur-[40px] pointer-events-none"></div>
-                <div className="relative mb-8">
-                  <div className="absolute inset-0 bg-[#0F75BD]/15 blur-xl rounded-full"></div>
-                  <div className="relative w-24 h-24 bg-white border border-[#E5E7EB] rounded-[28px] flex items-center justify-center rotate-3 hover:rotate-0 transition-transform duration-500">
-                    <Sparkles className="w-10 h-10 text-[#0F75BD]" />
-                  </div>
+              <div className="flex flex-col items-center justify-center p-16 md:p-24 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[32px] text-center">
+                <div className="w-20 h-20 bg-white border border-[#E5E7EB] rounded-[24px] flex items-center justify-center mb-6">
+                  <Sparkles className="w-9 h-9 text-[#0F75BD]" />
                 </div>
-                <h3 className="text-2xl font-black text-[#1A1A1A] mb-3 tracking-tight z-10 relative">No categories found</h3>
-                <p className="text-[#5C5B59] font-medium mb-10 max-w-sm z-10 relative">
+                <h3 className="text-2xl font-black text-[#1A1A1A] mb-3 tracking-tight">No categories found</h3>
+                <p className="text-[#5C5B59] font-medium mb-8 max-w-sm">
                   Your property has no active room listings yet. Start building your portfolio by adding your first distinct room type.
                 </p>
                 <button
                   onClick={() => router.push("/rooms/create")}
-                  className="group relative px-8 py-3.5 bg-[#1A1A1A] text-white font-bold rounded-[16px] hover:bg-black transition-all hover:-translate-y-0.5 overflow-hidden z-10"
+                  className="flex items-center gap-2 px-6 py-3 bg-[#0F75BD] text-white font-bold rounded-[16px] hover:bg-[#0050C8] transition-colors"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] skew-x-[-30deg] group-hover:translate-x-[150%] transition-transform duration-700"></div>
-                  <div className="relative flex items-center gap-2">
-                    <Plus className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" />
-                    <span className="tracking-wide">Add Your First Room</span>
-                  </div>
+                  <Plus className="w-4 h-4" />
+                  Add Your First Room
                 </button>
               </div>
             ) : (

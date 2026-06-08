@@ -87,6 +87,11 @@ class ApiClient {
           error.message ||
           'An unexpected error occurred';
 
+        // Better error message for rate-limiting / throttling (HTTP 429)
+        if (error.response?.status === 429 || message.toLowerCase().includes('throttled')) {
+          message = 'The server is experiencing high traffic. Please try again in a few moments.';
+        }
+
         // Better error message for timeouts
         if (error.code === 'ECONNABORTED' || message.includes('timeout')) {
           message = 'Request timed out. The server might be starting up (this can take 30-60 seconds on first request). Please try again.';

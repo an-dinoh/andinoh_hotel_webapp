@@ -26,22 +26,64 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        const CACHE_KEY = 'andinoh_currencies';
+        const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+        const getCachedCurrencies = (): Currency[] | null => {
+            try {
+                const raw = localStorage.getItem(CACHE_KEY);
+                if (!raw) return null;
+                const { data, timestamp } = JSON.parse(raw);
+                if (Date.now() - timestamp > CACHE_TTL) {
+                    localStorage.removeItem(CACHE_KEY);
+                    return null;
+                }
+                return data as Currency[];
+            } catch {
+                return null;
+            }
+        };
+
+        const saveCurrencyCache = (data: Currency[]) => {
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+            } catch { /* storage full — ignore */ }
+        };
+
         const initCurrency = async () => {
+            // Use cached currencies if still fresh
+            const cached = getCachedCurrencies();
+            if (cached && cached.length > 0) {
+                setCurrencies(cached);
+                setupActiveCurrency(cached);
+                setIsLoading(false);
+                return;
+            }
+
             try {
                 const response = await currencyService.getCurrencies();
                 const availableCurrencies = response.results || [];
 
                 if (availableCurrencies.length > 0) {
+                    saveCurrencyCache(availableCurrencies);
                     setCurrencies(availableCurrencies);
                     setupActiveCurrency(availableCurrencies);
                 } else {
                     setCurrencies(DEFAULT_CURRENCIES);
                     setupActiveCurrency(DEFAULT_CURRENCIES);
                 }
-            } catch (error) {
-                console.error('Failed to initialize currency, using fallbacks:', error);
-                setCurrencies(DEFAULT_CURRENCIES);
-                setupActiveCurrency(DEFAULT_CURRENCIES);
+            } catch (error: any) {
+                // Rate-limited or network error — fall back to cache or defaults silently
+                const stale = (() => {
+                    try {
+                        const raw = localStorage.getItem(CACHE_KEY);
+                        return raw ? (JSON.parse(raw).data as Currency[]) : null;
+                    } catch { return null; }
+                })();
+
+                const fallback = stale?.length ? stale : DEFAULT_CURRENCIES;
+                setCurrencies(fallback);
+                setupActiveCurrency(fallback);
             } finally {
                 setIsLoading(false);
             }
@@ -57,7 +99,6 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
                     setActiveCurrency(availableCurrencies[0] || null);
                 }
             } else if (availableCurrencies.length > 0) {
-                // Default to NGN if available, else first one
                 const defaultCurrency = availableCurrencies.find(c => c.code === 'NGN') || availableCurrencies[0];
                 setActiveCurrency(defaultCurrency || null);
                 if (defaultCurrency) {

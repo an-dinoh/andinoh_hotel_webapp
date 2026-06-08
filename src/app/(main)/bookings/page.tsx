@@ -90,36 +90,12 @@ export default function BookingsPage() {
 
   const getStatusConfig = (status: BookingStatus) => {
     const configs = {
-      pending: {
-        color: "bg-amber-100 text-amber-700 border-amber-200",
-        icon: Clock,
-        label: "Pending",
-      },
-      confirmed: {
-        color: "bg-blue-100 text-blue-700 border-blue-200",
-        icon: CheckCircle,
-        label: "Confirmed",
-      },
-      checked_in: {
-        color: "bg-emerald-100 text-emerald-700 border-emerald-200",
-        icon: LogIn,
-        label: "Checked In",
-      },
-      checked_out: {
-        color: "bg-gray-100 text-gray-700 border-gray-200",
-        icon: LogOut,
-        label: "Checked Out",
-      },
-      cancelled: {
-        color: "bg-red-100 text-red-700 border-red-200",
-        icon: XCircle,
-        label: "Cancelled",
-      },
-      no_show: {
-        color: "bg-orange-100 text-orange-700 border-orange-200",
-        icon: XCircle,
-        label: "No Show",
-      },
+      pending: { dot: "bg-amber-400", label: "Pending" },
+      confirmed: { dot: "bg-[#0F75BD]", label: "Confirmed" },
+      checked_in: { dot: "bg-emerald-500", label: "Checked In" },
+      checked_out: { dot: "bg-[#5C5B59]", label: "Checked Out" },
+      cancelled: { dot: "bg-red-400", label: "Cancelled" },
+      no_show: { dot: "bg-orange-400", label: "No Show" },
     };
     return configs[status as keyof typeof configs] || configs.pending;
   };
@@ -157,38 +133,43 @@ export default function BookingsPage() {
         {/* Stats Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Total Bookings", value: totalBookings, bg: "bg-[#F5F5F5]" },
-            { label: "Check-ins Today", value: arrivalsToday, bg: "bg-[#F0F9FF]" },
-            { label: "Check-outs Today", value: departuresToday, bg: "bg-[#FEF3C7]" },
-            { label: "Active", value: activeBookings, bg: "bg-[#F5F3FF]" },
+            { label: "Total Bookings", value: totalBookings },
+            { label: "Check-ins Today", value: arrivalsToday },
+            { label: "Check-outs Today", value: departuresToday },
+            { label: "Active", value: activeBookings },
           ].map((stat, index) => (
-            <div key={index} className={`${stat.bg} rounded-2xl p-5 relative overflow-hidden`}>
-              {loading && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10" />}
-              <p className="text-[#5C5B59] text-sm mb-1">{stat.label}</p>
-              <p className="text-2xl font-bold text-[#1A1A1A]">{stat.value}</p>
+            <div key={index} className="bg-[#FAFAFB] border border-[#E5E7EB] rounded-[24px] p-6">
+              {loading ? (
+                <>
+                  <div className="w-24 h-4 bg-[#EBEBEB] rounded-[10px] animate-pulse mb-3" />
+                  <div className="w-16 h-8 bg-[#EBEBEB] rounded-[10px] animate-pulse" />
+                </>
+              ) : (
+                <>
+                  <p className="text-[#5C5B59] text-sm font-bold uppercase tracking-wider mb-1">{stat.label}</p>
+                  <p className="text-3xl font-black text-[#1A1A1A] tracking-tight">{stat.value}</p>
+                </>
+              )}
             </div>
           ))}
         </div>
 
         {/* Search & Filters Bar */}
         <div className="flex items-center gap-4">
-          {/* Search */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#8F8E8D]" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#8F8E8D]" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search bookings by name, email, or reference..."
-              className="w-full pl-10 pr-3 py-2 border border-[#D3D9DD] rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#8E9397] focus:border-transparent placeholder:text-[#8F8E8D] placeholder:text-sm"
+              className="w-full pl-12 pr-4 py-3 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] text-sm text-[#1A1A1A] focus:outline-none focus:ring-1 focus:ring-[#0F75BD] focus:border-[#0F75BD] placeholder:text-[#8F8E8D] transition-all"
             />
           </div>
-
-          {/* Status Filter */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as BookingStatus | "all")}
-            className="px-4 py-2 border border-[#D3D9DD] rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-1 focus:ring-[#8E9397] focus:border-transparent appearance-none bg-white bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNCA2TDggMTBMMTIgNiIgc3Ryb2tlPSIjOEY4RThEIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[length:16px_16px] bg-[right_12px_center] bg-no-repeat pr-10"
+            className="px-4 py-3 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] text-sm text-[#1A1A1A] focus:outline-none focus:ring-1 focus:ring-[#0F75BD] appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNCA2TDggMTBMMTIgNiIgc3Ryb2tlPSIjOEY4RThEIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPg==')] bg-[length:16px_16px] bg-[right_12px_center] bg-no-repeat pr-10"
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
@@ -201,8 +182,21 @@ export default function BookingsPage() {
 
         {/* Bookings List */}
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 text-[#0F75BD] animate-spin" />
+          <div className="bg-white rounded-[24px] border border-[#E5E7EB] overflow-hidden">
+            <div className="divide-y divide-[#E5E7EB]">
+              {[1,2,3,4,5].map(i => (
+                <div key={i} className="px-6 py-4 flex items-center gap-4">
+                  <div className="w-10 h-10 bg-[#F3F4F6] rounded-full animate-pulse flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="w-32 h-4 bg-[#F3F4F6] rounded-[10px] animate-pulse" />
+                    <div className="w-48 h-3 bg-[#F3F4F6] rounded-[10px] animate-pulse" />
+                  </div>
+                  <div className="w-20 h-4 bg-[#F3F4F6] rounded-[10px] animate-pulse" />
+                  <div className="w-20 h-4 bg-[#F3F4F6] rounded-[10px] animate-pulse" />
+                  <div className="w-16 h-6 bg-[#F3F4F6] rounded-[10px] animate-pulse" />
+                </div>
+              ))}
+            </div>
           </div>
         ) : bookings.length === 0 ? (
           <div className="bg-[#FAFAFB] border border-[#E5E7EB] rounded-3xl p-16 text-center">
@@ -319,9 +313,8 @@ export default function BookingsPage() {
 
                         {/* Status */}
                         <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${statusConfig.color}`}
-                          >
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#FAFAFB] border border-[#E5E7EB] rounded-full text-xs font-semibold text-[#1A1A1A]">
+                            <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot}`} />
                             {statusConfig.label}
                           </span>
                         </td>

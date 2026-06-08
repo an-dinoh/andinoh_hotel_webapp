@@ -35,8 +35,11 @@ function StaffContent() {
       const response = await hotelService.getStaff();
       setStaff(response.results || []);
     } catch (error: any) {
-      console.error("Error fetching staff:", error);
-      toast.error(error.message || "Failed to fetch staff");
+      if (error?.message !== 'Resource not found') {
+        console.error("Error fetching staff:", error);
+        toast.error(error.message || "Failed to fetch staff");
+      }
+      setStaff([]);
     } finally {
       setLoading(false);
     }
@@ -132,14 +135,23 @@ function StaffContent() {
         {/* Stats Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Total Staff", value: stats.total, bg: "bg-[#F5F5F5]" },
-            { label: "Active Staff", value: stats.active, bg: "bg-[#F0F9FF]" },
-            { label: "Inactive Staff", value: stats.inactive, bg: "bg-[#FEF3C7]" },
-            { label: "Pending Invitations", value: stats.pending, bg: "bg-[#FEE2E2]" },
+            { label: "Total Staff", value: stats.total },
+            { label: "Active Staff", value: stats.active },
+            { label: "Inactive Staff", value: stats.inactive },
+            { label: "Pending Invitations", value: stats.pending },
           ].map((stat, index) => (
-            <div key={index} className={`${stat.bg} rounded-2xl p-5`}>
-              <p className="text-[#5C5B59] text-sm mb-1">{stat.label}</p>
-              <p className="text-2xl font-bold text-[#1A1A1A]">{stat.value}</p>
+            <div key={index} className="bg-[#FAFAFB] border border-[#E5E7EB] rounded-[24px] p-6">
+              {loading ? (
+                <>
+                  <div className="w-28 h-4 bg-[#EBEBEB] rounded-[10px] animate-pulse mb-3" />
+                  <div className="w-12 h-8 bg-[#EBEBEB] rounded-[10px] animate-pulse" />
+                </>
+              ) : (
+                <>
+                  <p className="text-[#5C5B59] text-sm font-bold uppercase tracking-wider mb-1">{stat.label}</p>
+                  <p className="text-3xl font-black text-[#1A1A1A] tracking-tight">{stat.value}</p>
+                </>
+              )}
             </div>
           ))}
         </div>
