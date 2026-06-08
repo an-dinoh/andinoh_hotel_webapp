@@ -94,7 +94,7 @@ export default function RegisterPage() {
 
       if (response && response.access_token) {
         // Save auth data
-        authService.saveAuth(response.access_token, response.user);
+        authService.saveAuth(response.access_token, response.user, response.refresh_token);
 
         toast.success("Account created successfully!");
 

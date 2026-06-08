@@ -91,7 +91,7 @@ export default function LoginPage() {
 
       if (response && response.access_token) {
         // Save auth data
-        authService.saveAuth(response.access_token, response.user);
+        authService.saveAuth(response.access_token, response.user, response.refresh_token);
 
         toast.success("Login successful!");
 

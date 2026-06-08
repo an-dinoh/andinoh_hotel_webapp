@@ -1,16 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Search, MessageCircle, Mail, Book, Video, ExternalLink,
-  CheckCircle2, ArrowRight, HeadphonesIcon, MessageSquare, ChevronDown, Phone
+  CheckCircle2, ArrowRight, HeadphonesIcon, MessageSquare, ChevronDown, Phone,
+  BedDouble, Calendar, Users, CreditCard, UserCog, BarChart3
 } from "lucide-react";
 import SupportTicketModal from "@/components/help/SupportTicketModal";
+import { toast } from "react-hot-toast";
 
 export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+
+  const faqRef = useRef<HTMLDivElement>(null);
 
   const quickActions = [
     {
@@ -18,23 +23,20 @@ export default function HelpPage() {
       title: "Getting Started Guide",
       description: "Learn the basics of setting up, managing, and customizing your hotel system.",
       bg: "bg-blue-50 text-blue-600",
-      iconColor: "text-blue-600",
-      action: () => {},
+      action: () => toast.success("Opening system documentation guides..."),
     },
     {
       icon: Video,
       title: "Video Tutorials",
       description: "Watch quick, step-by-step visual guides on managing rooms, bookings, and roles.",
       bg: "bg-purple-50 text-purple-600",
-      iconColor: "text-purple-600",
-      action: () => {},
+      action: () => toast.success("Loading video library database..."),
     },
     {
       icon: MessageCircle,
       title: "Submit Support Ticket",
       description: "Create a support request and track status directly inside the web app.",
       bg: "bg-emerald-50 text-emerald-600",
-      iconColor: "text-emerald-600",
       action: () => setShowTicketModal(true),
     },
   ];
@@ -48,7 +50,7 @@ export default function HelpPage() {
     },
     {
       title: "Managing guest check-in and check-out",
-      category: "Bookings",
+      category: "Booking Management",
       views: "980 views",
       answer: "From the Bookings list screen, select the active booking to view the details drawer. Click the green 'Check-In' button when the guest arrives to mark the room as occupied. For check-out, select 'Check-Out' to settle the folio balance and update housekeeping status."
     },
@@ -60,7 +62,7 @@ export default function HelpPage() {
     },
     {
       title: "How to process refunds for cancelled bookings",
-      category: "Payments",
+      category: "Payments & Billing",
       views: "743 views",
       answer: "Open the cancelled booking in the Bookings detail panel. Go to the payment ledger, select the processed transaction, and click 'Initiate Refund'. The backend will process the reversal to the original bank account or card details."
     },
@@ -72,7 +74,7 @@ export default function HelpPage() {
     },
     {
       title: "Understanding your revenue reports",
-      category: "Analytics",
+      category: "Reports & Analytics",
       views: "589 views",
       answer: "The Reports page displays real-time performance indicators like Average Daily Rate (ADR) and Revenue Per Available Room (RevPAR). You can export monthly summaries in PDF or CSV formats from the Generate Report control card."
     },
@@ -82,42 +84,48 @@ export default function HelpPage() {
     {
       title: "Room Management",
       description: "Add, edit, and organize your hotel rooms",
-      icon: "🏨",
+      icon: BedDouble,
+      bg: "bg-blue-50 text-blue-600",
       articleCount: 12,
       topics: ["Adding new rooms", "Room pricing", "Room availability", "Room amenities"]
     },
     {
       title: "Booking Management",
       description: "Handle reservations and guest bookings",
-      icon: "📅",
+      icon: Calendar,
+      bg: "bg-purple-50 text-purple-600",
       articleCount: 15,
       topics: ["Creating bookings", "Check-in process", "Check-out process", "Cancellations"]
     },
     {
       title: "Guest Management",
       description: "Manage guest profiles and preferences",
-      icon: "👥",
+      icon: Users,
+      bg: "bg-emerald-50 text-emerald-600",
       articleCount: 8,
       topics: ["Guest profiles", "Guest history", "Special requests", "VIP guests"]
     },
     {
       title: "Payments & Billing",
       description: "Process payments and manage invoices",
-      icon: "💳",
+      icon: CreditCard,
+      bg: "bg-amber-50 text-amber-600",
       articleCount: 10,
       topics: ["Payment methods", "Invoicing", "Refunds", "Financial reports"]
     },
     {
       title: "Staff Management",
       description: "Add and manage your hotel staff",
-      icon: "👨‍💼",
+      icon: UserCog,
+      bg: "bg-indigo-50 text-indigo-600",
       articleCount: 6,
       topics: ["Adding staff", "Staff roles", "Permissions", "Staff schedule"]
     },
     {
       title: "Reports & Analytics",
       description: "View and export performance reports",
-      icon: "📊",
+      icon: BarChart3,
+      bg: "bg-rose-50 text-rose-600",
       articleCount: 9,
       topics: ["Revenue reports", "Occupancy rates", "Performance metrics", "Export data"]
     },
@@ -159,11 +167,24 @@ export default function HelpPage() {
     },
   ];
 
-  const filteredTopics = popularTopics.filter(topic =>
-    topic.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    topic.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    topic.answer.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTopics = popularTopics.filter(topic => {
+    const matchesCategory = selectedCategory ? topic.category === selectedCategory : true;
+    const matchesSearch = searchQuery
+      ? topic.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        topic.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        topic.answer.toLowerCase().includes(searchQuery.toLowerCase())
+      : true;
+    return matchesCategory && matchesSearch;
+  });
+
+  const handleCategoryClick = (categoryTitle: string) => {
+    setSelectedCategory(selectedCategory === categoryTitle ? null : categoryTitle);
+    
+    // Smooth scroll to FAQ section
+    setTimeout(() => {
+      faqRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  };
 
   return (
     <div className="h-full bg-white flex flex-col overflow-hidden">
@@ -217,7 +238,10 @@ export default function HelpPage() {
             {["Add rooms", "Check-in guests", "Process payments", "View reports"].map((tag, i) => (
               <button
                 key={i}
-                onClick={() => setSearchQuery(tag)}
+                onClick={() => {
+                  setSearchQuery(tag);
+                  setSelectedCategory(null); // Clear category filter to show searches globally
+                }}
                 className="px-3 py-1.5 bg-white border border-gray-200 hover:border-[#0F75BD] text-gray-600 hover:text-[#0F75BD] text-xs font-semibold rounded-xl transition-all cursor-pointer"
               >
                 {tag}
@@ -253,15 +277,30 @@ export default function HelpPage() {
         </div>
 
         {/* Popular FAQ Topics Section */}
-        <div>
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">Frequently Asked Questions</h2>
-            <p className="text-xs text-gray-500">Find quick answers to common support topics</p>
+        <div ref={faqRef} className="scroll-mt-6">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-1">Frequently Asked Questions</h2>
+              <p className="text-xs text-gray-500">
+                {selectedCategory 
+                  ? `Showing questions for ${selectedCategory}` 
+                  : "Find quick answers to common support topics"
+                }
+              </p>
+            </div>
+            {selectedCategory && (
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className="self-start sm:self-auto px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+              >
+                Clear Category Filter ({selectedCategory})
+              </button>
+            )}
           </div>
 
           {filteredTopics.length === 0 ? (
             <div className="text-center py-12 border border-dashed border-gray-200 rounded-3xl bg-gray-50/20">
-              <p className="text-sm text-gray-400 font-semibold">No results found matching "{searchQuery}"</p>
+              <p className="text-sm text-gray-400 font-semibold">No results found matching your criteria.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -307,36 +346,47 @@ export default function HelpPage() {
         <div>
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-1">Browse by Category</h2>
-            <p className="text-xs text-gray-500">Explore support resources organized by feature module</p>
+            <p className="text-xs text-gray-500">Explore support resources organized by feature module (click to filter FAQs)</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {helpCategories.map((category, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-3xl p-6 border border-gray-100 hover:border-[#0F75BD] transition-all group cursor-pointer flex flex-col justify-between"
-              >
-                <div>
-                  <div className="text-3xl mb-4 transition-transform group-hover:scale-105 w-fit">{category.icon}</div>
-                  <h3 className="font-bold text-gray-800 text-base mb-1.5 group-hover:text-[#0F75BD] transition-colors">
-                    {category.title}
-                  </h3>
-                  <p className="text-gray-500 text-xs leading-relaxed mb-4">{category.description}</p>
-                  <div className="space-y-2 mb-6">
-                    {category.topics.slice(0, 3).map((topic, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-gray-500 font-medium">
-                        <div className="w-1 h-1 bg-[#0F75BD] rounded-full"></div>
-                        <span>{topic}</span>
-                      </div>
-                    ))}
+            {helpCategories.map((category, index) => {
+              const CategoryIcon = category.icon;
+              const isSelected = selectedCategory === category.title;
+              return (
+                <div
+                  key={index}
+                  onClick={() => handleCategoryClick(category.title)}
+                  className={`rounded-3xl p-6 border transition-all group cursor-pointer flex flex-col justify-between ${
+                    isSelected 
+                      ? "border-[#0F75BD] bg-[#0F75BD]/5" 
+                      : "bg-white border-gray-100 hover:border-[#0F75BD]"
+                  }`}
+                >
+                  <div>
+                    <div className={`w-12 h-12 ${category.bg} rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-105`}>
+                      <CategoryIcon className="w-6 h-6" />
+                    </div>
+                    <h3 className="font-bold text-gray-800 text-base mb-1.5 group-hover:text-[#0F75BD] transition-colors">
+                      {category.title}
+                    </h3>
+                    <p className="text-gray-500 text-xs leading-relaxed mb-4">{category.description}</p>
+                    <div className="space-y-2 mb-6">
+                      {category.topics.slice(0, 3).map((topic, i) => (
+                        <div key={i} className="flex items-center gap-2 text-xs text-gray-500 font-medium">
+                          <div className="w-1.5 h-1.5 bg-[#0F75BD] rounded-full"></div>
+                          <span>{topic}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                    <span className="text-xs text-gray-400 font-semibold">{category.articleCount} articles</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-[#0F75BD] transition-transform group-hover:translate-x-0.5" />
                   </div>
                 </div>
-                <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                  <span className="text-xs text-gray-400 font-semibold">{category.articleCount} articles</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-[#0F75BD] transition-transform group-hover:translate-x-0.5" />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -391,7 +441,10 @@ export default function HelpPage() {
           <p className="text-gray-500 text-xs max-w-md mb-6 leading-relaxed">
             Read comprehensive step-by-step documentations, configuration details, and system administration manuals.
           </p>
-          <button className="px-6 py-2.5 border border-gray-200 hover:border-[#0F75BD] text-[#0F75BD] text-xs font-bold rounded-xl hover:bg-[#0F75BD]/5 transition-all inline-flex items-center gap-1.5 cursor-pointer">
+          <button 
+            onClick={() => toast.success("Opening complete knowledge base index...")}
+            className="px-6 py-2.5 border border-gray-200 hover:border-[#0F75BD] text-[#0F75BD] text-xs font-bold rounded-xl hover:bg-[#0F75BD]/5 transition-all inline-flex items-center gap-1.5 cursor-pointer"
+          >
             <span>Visit Knowledge Base</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </button>

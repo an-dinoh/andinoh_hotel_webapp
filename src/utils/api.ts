@@ -4,6 +4,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://andinoh-backend
 
 // DEBUG logs muted for production
 
+let isRefreshing = false;
+let failedQueue: { resolve: (token: string) => void; reject: (err: any) => void }[] = [];
+
 class ApiClient {
   private client: AxiosInstance;
 
@@ -58,16 +61,83 @@ class ApiClient {
         }
 
         // Handle 401 Unauthorized - Auth expired or invalid
-        if (error.response?.status === 401) {
+        if (error.response?.status === 401 && config && !config._retry) {
           if (typeof window !== 'undefined') {
-            const { toast } = require('react-hot-toast');
-            const currentPath = window.location.pathname;
-            // Only redirect if not already on an auth page to avoid loops
-            if (!['/login', '/register'].includes(currentPath)) {
-              localStorage.removeItem('token');
-              localStorage.removeItem('user');
-              toast.error('Session expired. Please log in again.');
-              window.location.href = '/login';
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (refreshToken) {
+              config._retry = true;
+
+              if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                  failedQueue.push({
+                    resolve: (token: string) => {
+                      config.headers.Authorization = `Bearer ${token}`;
+                      resolve(this.client(config));
+                    },
+                    reject: (err: any) => {
+                      reject(err);
+                    }
+                  });
+                });
+              }
+
+              isRefreshing = true;
+
+              try {
+                // Call raw axios to prevent infinite interceptor loops
+                const response = await axios.post(`${API_BASE_URL}/auth/refresh/`, {
+                  refresh_token: refreshToken
+                });
+
+                const responseData = response.data;
+                // Support both standard envelope or flat structure
+                const newAccessToken = responseData?.data?.access_token || responseData?.access_token;
+                const newRefreshToken = responseData?.data?.refresh_token || responseData?.refresh_token;
+
+                if (newAccessToken) {
+                  localStorage.setItem('token', newAccessToken);
+                  if (newRefreshToken) {
+                    localStorage.setItem('refresh_token', newRefreshToken);
+                  }
+
+                  // Update current request headers and retry
+                  config.headers.Authorization = `Bearer ${newAccessToken}`;
+
+                  // Process queued requests
+                  failedQueue.forEach((prom) => prom.resolve(newAccessToken));
+                  failedQueue = [];
+                  isRefreshing = false;
+
+                  return this.client(config);
+                }
+              } catch (refreshError) {
+                // Refresh token is expired or invalid - log out
+                failedQueue.forEach((prom) => prom.reject(refreshError));
+                failedQueue = [];
+                isRefreshing = false;
+
+                const currentPath = window.location.pathname;
+                if (!['/login', '/register'].includes(currentPath)) {
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('user');
+                  localStorage.removeItem('refresh_token');
+                  const { toast } = require('react-hot-toast');
+                  toast.error('Session expired. Please log in again.');
+                  window.location.href = '/login';
+                }
+                return Promise.reject(refreshError);
+              }
+            } else {
+              // No refresh token available, redirect immediately
+              const currentPath = window.location.pathname;
+              if (!['/login', '/register'].includes(currentPath)) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('refresh_token');
+                const { toast } = require('react-hot-toast');
+                toast.error('Session expired. Please log in again.');
+                window.location.href = '/login';
+              }
             }
           }
         }

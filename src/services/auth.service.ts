@@ -39,10 +39,13 @@ class AuthService {
 
   // ==================== TOKEN MANAGEMENT ====================
 
-  saveAuth(token: string, user: User): void {
+  saveAuth(token: string, user: User, refreshToken?: string): void {
     if (typeof window !== 'undefined') {
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
+      if (refreshToken) {
+        localStorage.setItem('refresh_token', refreshToken);
+      }
     }
   }
 
@@ -69,6 +72,7 @@ class AuthService {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('refresh_token');
       window.location.href = '/login';
     }
   }
