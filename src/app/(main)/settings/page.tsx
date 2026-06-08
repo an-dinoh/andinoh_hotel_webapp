@@ -133,7 +133,7 @@ export default function SettingsPage() {
   return (
     <div className="h-full bg-white flex flex-col">
       {/* Header */}
-      <div className="border-b border-[#E5E7EB] bg-white px-8 py-6">
+      <div className="border-b border-[#E5E7EB] bg-white py-6">
         <h1 className="text-3xl font-bold text-[#1A1A1A]">Settings</h1>
         <p className="text-[#5C5B59] mt-1">Manage your account and hotel preferences</p>
       </div>
@@ -174,7 +174,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide p-8">
+        <div className="flex-1 overflow-y-auto scrollbar-hide py-8 pl-8">
           {/* Profile Tab */}
           {activeTab === "profile" && (
             <div className="max-w-4xl space-y-6">

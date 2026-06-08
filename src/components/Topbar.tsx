@@ -1,17 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Search, ChevronDown, Bell, Calendar, CheckCircle, AlertCircle, User, DollarSign, Clock, X, Settings, LogOut, UserCircle, Building2, Shield } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import NotificationIcon from "@/icons/NotificationIcon";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useNotifications, Notification } from "@/contexts/NotificationContext";
 import GlobalSearchResults from "@/components/search/GlobalSearchResults";
+import { hotelService } from "@/services/hotel.service";
 
 export default function Topbar() {
   const { currencies, activeCurrency, isLoading, setCurrency } = useCurrency();
   const router = useRouter();
+  const pathname = usePathname();
+  const isDashboard = pathname === "/dashboard";
   const [searchQuery, setSearchQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -19,6 +22,19 @@ export default function Topbar() {
   const profileRef = useRef<HTMLDivElement>(null);
 
   const { notifications, unreadCount, markAsRead } = useNotifications();
+  const [isVerified, setIsVerified] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkVerification = async () => {
+      try {
+        const hotel = await hotelService.getMyHotel();
+        setIsVerified(hotel?.is_verified || false);
+      } catch (err) {
+        setIsVerified(false);
+      }
+    };
+    checkVerification();
+  }, []);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -35,38 +51,54 @@ export default function Topbar() {
   }, []);
 
   return (
-    <div className="h-20 bg-white border-b border-[#E5E7EB] px-8 flex items-center justify-between">
-      {/* Search Bar */}
-      <div className="flex-1 max-w-xl">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#8F8E8D]" />
-          <input
-            type="text"
-            placeholder="Search bookings, rooms, guests..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 h-11 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] text-sm focus:outline-none focus:ring-1 focus:ring-[#0F75BD] focus:border-[#0F75BD] text-[#1A1A1A] placeholder:text-[#8F8E8D] transition-colors"
-          />
-          {searchQuery.length >= 3 && (
-            <GlobalSearchResults
-              query={searchQuery}
-              onClose={() => setSearchQuery("")}
+    <div className="h-20 bg-white border-b border-[#E5E7EB] px-12 md:px-16 lg:px-24 flex items-center justify-between">
+      {/* Search Bar — only shown on dashboard */}
+      {isDashboard ? (
+        <div className="flex-1 max-w-xl">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#8F8E8D]" />
+            <input
+              type="text"
+              placeholder="Search bookings, rooms, guests..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 h-11 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] text-sm focus:outline-none focus:ring-1 focus:ring-[#0F75BD] focus:border-[#0F75BD] text-[#1A1A1A] placeholder:text-[#8F8E8D] transition-colors"
             />
-          )}
+            {searchQuery.length >= 3 && (
+              <GlobalSearchResults
+                query={searchQuery}
+                onClose={() => setSearchQuery("")}
+              />
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex-1" />
+      )}
 
       {/* Right Section */}
       <div className="flex items-center gap-4 ml-6">
-        {/* Verified Badge */}
-        <div className="flex items-center gap-2 px-3 py-2 bg-[#F0FDF4] border border-[#A7F3D0] rounded-[16px]">
-          <Shield className="w-4 h-4 text-[#059669]" />
-          <span className="text-sm font-bold text-[#059669]">Verified</span>
-        </div>
+        {/* Verified/Unverified Badge */}
+        {isVerified === null ? (
+          <div className="flex items-center gap-2 px-3 h-11 bg-[#F3F4F6] border border-[#E5E7EB] rounded-[16px] animate-pulse">
+            <div className="w-4 h-4 rounded-full bg-gray-300"></div>
+            <div className="h-4 w-12 bg-gray-300 rounded"></div>
+          </div>
+        ) : isVerified ? (
+          <div className="flex items-center gap-2 px-3 h-11 bg-[#F0FDF4] border border-[#A7F3D0] rounded-[16px]">
+            <Shield className="w-4 h-4 text-[#059669]" />
+            <span className="text-sm font-bold text-[#059669]">Verified</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 px-3 h-11 bg-[#FFFBEB] border border-[#FDE68A] rounded-[16px]">
+            <AlertCircle className="w-4 h-4 text-[#D97706]" />
+            <span className="text-sm font-bold text-[#D97706]">Unverified</span>
+          </div>
+        )}
 
         {/* Currency Switcher */}
         <div className="relative group">
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] hover:bg-[#F3F4F6] transition-all hover:-translate-y-0.5">
+          <button className="flex items-center gap-2 px-4 h-11 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] hover:bg-[#F3F4F6] transition-all hover:-translate-y-0.5">
             <DollarSign className="w-4 h-4 text-[#5C5B59]" />
             <span className="text-sm font-bold text-[#1A1A1A]">
               {activeCurrency?.code || 'NGN'} ({activeCurrency?.symbol || '₦'})
@@ -101,7 +133,7 @@ export default function Topbar() {
         <div className="relative" ref={notificationRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative w-12 h-12 flex items-center justify-center bg-[#FAFAFB] border border-[#E5E7EB] hover:bg-[#F3F4F6] rounded-[16px] transition-all hover:-translate-y-0.5"
+            className="relative w-11 h-11 flex items-center justify-center bg-[#FAFAFB] border border-[#E5E7EB] hover:bg-[#F3F4F6] rounded-[16px] transition-all hover:-translate-y-0.5"
           >
             <NotificationIcon className="w-[1.125rem] h-[1.125rem] text-[#5C5B59]" />
             {unreadCount > 0 && (
@@ -198,7 +230,7 @@ export default function Topbar() {
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center gap-3 bg-[#FAFAFB] border border-[#E5E7EB] hover:bg-[#F3F4F6] rounded-[16px] transition-all hover:-translate-y-0.5 h-12 px-3 pl-1.5"
+            className="flex items-center gap-3 bg-[#FAFAFB] border border-[#E5E7EB] hover:bg-[#F3F4F6] rounded-[16px] transition-all hover:-translate-y-0.5 h-11 px-3 pl-1.5"
           >
             <div className="relative">
               <div className="w-9 h-9 bg-gradient-to-br from-[#0F75BD] to-[#02A5E6] rounded-[12px] flex items-center justify-center">
@@ -207,7 +239,7 @@ export default function Topbar() {
               <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#10B981] border-2 border-white rounded-full"></div>
             </div>
             <div className="text-left hidden sm:block">
-              <p className="text-sm font-bold text-[#1A1A1A] leading-tight">Adeyanju</p>
+              {/* <p className="text-sm font-bold text-[#1A1A1A] leading-tight">Adeyanju</p> */}
               <p className="text-[10px] font-bold tracking-wider uppercase text-[#5C5B59]">Hotel Owner</p>
             </div>
             <ChevronDown className={`w-4 h-4 text-[#5C5B59] transition-transform duration-300 ml-1 ${showProfileMenu ? 'rotate-180' : ''}`} />

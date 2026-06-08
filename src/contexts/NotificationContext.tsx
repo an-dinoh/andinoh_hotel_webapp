@@ -161,14 +161,17 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 webSocketService.connect();
                 isConnected = true;
 
-                // Also fetch hotel ID if we don't have it yet to ensure correct subscriptions
                 try {
                     const hotel = await hotelService.getMyHotel();
                     if (hotel?.id) {
                         setHotelId(hotel.id);
                     }
-                } catch (err) {
-                    console.error('Failed to fetch hotel ID for WebSocket subscriptions:', err);
+                } catch (err: any) {
+                    if (err?.response?.status === 404) {
+                        console.log('No hotel registered for this account yet.');
+                    } else {
+                        console.error('Failed to fetch hotel ID for WebSocket subscriptions:', err);
+                    }
                 }
             } else if (!token && isConnected) {
                 console.log('Disconnecting WebSocket (No token)...');

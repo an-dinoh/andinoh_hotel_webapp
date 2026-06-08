@@ -28,6 +28,7 @@ export default function DashboardPage() {
     trendResponse,
     wallet,
     upcomingBookings,
+    reviews,
     activities,
     isLoading,
     isRefreshing,
@@ -71,22 +72,24 @@ export default function DashboardPage() {
       hoverBgColor: "hover:bg-[#117C35]",
       onClick: () => router.push("/bookings"),
     },
-    /* {
-      title: "Manage Event Spaces",
-      description: "Add or update available venues.",
-      buttonText: "View Spaces",
+    {
+      title: "Manage Rooms",
+      description: "Update availability, pricing, and inventory.",
+      buttonText: "View Rooms",
       bgColor: "bg-[#E6EFF6]",
       borderColor: "border-[#065CA8]",
       textColor: "text-[#065CA8]",
       hoverBgColor: "hover:bg-[#065CA8]",
-      onClick: () => router.push("/event-spaces"),
-    }, */
+      onClick: () => router.push("/rooms"),
+    },
   ];
+
+  const pendingInspectionsCount = upcomingBookings.filter(b => b.booking_status === "confirmed").length;
 
   const bookingStats = [
     { label: "Check-ins Today", count: stats?.today?.check_ins || 0, color: "text-green-600", bgColor: "bg-[#E7F2EB]" },
     { label: "Check-outs Today", count: stats?.today?.check_outs || 0, color: "text-orange-600", bgColor: "bg-[#FFF4DF]" },
-    { label: "Pending Tasks", count: stats?.today?.pending_tasks || 0, color: "text-gray-600", bgColor: "bg-gray-100" },
+    { label: "Pending Room Inspections", count: pendingInspectionsCount, color: "text-gray-600", bgColor: "bg-gray-100" },
   ];
 
   const revenueItems = [
@@ -96,7 +99,7 @@ export default function DashboardPage() {
 
   const activityTabs = [
     { id: "gigs" as const, label: "Occupancy", count: activeBookings },
-    { id: "saved" as const, label: "Tasks", count: stats?.today?.pending_tasks || 0 },
+    { id: "saved" as const, label: "Room Inspections", count: pendingInspectionsCount },
     { id: "posts" as const, label: "Reviews", count: stats?.performance?.average_rating || 0 },
   ];
 
@@ -109,7 +112,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="h-full bg-white flex flex-col lg:flex-row gap-8 px-4 sm:px-6 lg:px-8 py-8 overflow-hidden">
+    <div className="h-full bg-white flex flex-col lg:flex-row gap-8 px-0 py-8 overflow-hidden">
       {/* Main Content Area */}
       <div className="flex-1 space-y-8 max-w-5xl h-full overflow-y-auto scrollbar-hide pb-8">
         <WelcomeHeader
@@ -166,7 +169,13 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <ActivitiesSection tabs={activityTabs} />
+        <ActivitiesSection
+          tabs={activityTabs}
+          bookings={upcomingBookings}
+          reviews={reviews}
+          stats={stats}
+          loading={isLoading}
+        />
       </div>
 
       {/* Right Sidebar - Sticky on Desktop */}
@@ -176,7 +185,7 @@ export default function DashboardPage() {
           userBadge={currentUser?.role === 'hotel_owner' ? "Owner" : "Staff"}
           averageRating={stats?.performance?.average_rating || 0}
           completionPercentage={occupancyRate}
-          points={0}
+          occupiedRooms={stats?.room_stats?.occupied || 0}
           approvedGigs={totalBookings}
           loading={isLoading}
         />
@@ -191,7 +200,7 @@ export default function DashboardPage() {
           loading={isLoading}
         />
 
-        <ReviewsCard loading={isLoading} />
+        <ReviewsCard reviews={reviews} loading={isLoading} />
       </div>
     </div>
   );

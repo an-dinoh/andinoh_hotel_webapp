@@ -40,11 +40,33 @@ export default function WalletPage() {
       try {
         setLoading(true);
         // Only fetch stats on first load to save bandwidth, ledger updates per page
-        const statsPromise = walletStats ? Promise.resolve(walletStats) : hotelService.getWalletStats();
+        const statsPromise = walletStats 
+          ? Promise.resolve(walletStats) 
+          : hotelService.getWalletStats().catch((err: any) => {
+              if (err.message === 'Resource not found' || err.response?.status === 404) {
+                return {
+                  total_lifetime_revenue: 0,
+                  total_withdrawn: 0,
+                  pending_clearance: 0,
+                  available_balance: 0
+                } as WalletStats;
+              }
+              throw err;
+            });
+
+        const ledgerPromise = hotelService.getWalletLedger({ page: currentPage, page_size: itemsPerPage }).catch((err: any) => {
+          if (err.message === 'Resource not found' || err.response?.status === 404) {
+            return {
+              results: [],
+              count: 0
+            };
+          }
+          throw err;
+        });
 
         const [stats, ledger] = await Promise.all([
           statsPromise,
-          hotelService.getWalletLedger({ page: currentPage, page_size: itemsPerPage })
+          ledgerPromise
         ]);
 
         setWalletStats(stats);

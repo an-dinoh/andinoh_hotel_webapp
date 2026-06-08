@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { TabType, Role } from "@/types/staff.types";
 import { hotelService } from "@/services/hotel.service";
@@ -16,6 +16,7 @@ import CreateAdminModal from "@/components/staff/CreateAdminModal";
 
 function StaffContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const tabParam = searchParams.get("tab") as TabType | null;
 
   const [activeTab, setActiveTab] = useState<TabType>(tabParam || "users");
@@ -95,7 +96,7 @@ function StaffContent() {
     } else if (activeTab === "admins") {
       setShowCreateAdminModal(true);
     } else {
-      window.location.href = "/staff/roles/create";
+      router.push("/staff/roles/create");
     }
   };
 

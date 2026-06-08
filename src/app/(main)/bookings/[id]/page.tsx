@@ -183,7 +183,7 @@ export default function BookingDetailPage() {
   if (!booking) {
     return (
       <div className="h-full bg-white overflow-y-auto scrollbar-hide">
-        <div className="h-full bg-[#F9FAFB] px-8 py-8">
+        <div className="h-full bg-white py-8">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
               <div className="w-20 h-20 bg-[#E8F4F8] rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -212,7 +212,7 @@ export default function BookingDetailPage() {
 
   return (
     <div className="h-full bg-white overflow-y-auto scrollbar-hide">
-      <div className="h-full bg-[#F9FAFB] px-8 py-8">
+      <div className="h-full bg-white py-8">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Back Button */}
           <button

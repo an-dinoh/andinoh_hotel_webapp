@@ -5,7 +5,7 @@ interface PerformanceCardProps {
   userBadge: string;
   averageRating: number;
   completionPercentage: number;
-  points: number;
+  occupiedRooms: number;
   approvedGigs: number;
   approvedGigsChange?: string;
   onViewProfile?: () => void;
@@ -17,23 +17,19 @@ export default function PerformanceCard({
   userBadge,
   averageRating,
   completionPercentage,
-  points,
+  occupiedRooms,
   approvedGigs,
   approvedGigsChange = "-%",
   onViewProfile,
   loading = false
 }: PerformanceCardProps) {
-  // Calculate circular progress stroke offset
-  const calculateStrokeOffset = (percentage: number) => {
-    const circumference = 2 * Math.PI * 88;
-    return circumference - (percentage / 100) * circumference;
-  };
-
   return (
     <div className="bg-white border border-gray-200 rounded-3xl p-6">
       <div className="flex items-center gap-2 mb-6">
-        <div className="w-8 h-8 bg-[#F3F4F6] rounded-lg flex items-center justify-center text-gray-600">
-          🎚️
+        <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-[#0F75BD]">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
         </div>
         <h2 className="text-lg font-semibold text-[#1A1A1A]">
           Performance Insight
@@ -45,8 +41,8 @@ export default function PerformanceCard({
         {loading ? (
           <Skeleton width="48px" height="48px" variant="circle" />
         ) : (
-          <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-xl border-2 border-white">
-            👤
+          <div className="w-12 h-12 bg-gradient-to-br from-[#0F75BD] to-[#02A5E6] text-white font-bold rounded-2xl flex items-center justify-center border-2 border-white shadow-sm">
+            {userName ? userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : "HM"}
           </div>
         )}
         <div className="flex-1">
@@ -85,7 +81,7 @@ export default function PerformanceCard({
           </div>
           <div className="flex gap-0.5">
             {[1, 2, 3, 4, 5].map((s) => (
-              <span key={s} className={`text-xs ${s <= Math.round(averageRating || 0) ? 'text-orange-400' : 'text-gray-200'}`}>⭐</span>
+              <span key={s} className={`text-xs ${s <= Math.round(averageRating || 0) ? 'text-orange-400' : 'text-gray-200'}`}>★</span>
             ))}
           </div>
         </div>
@@ -103,7 +99,7 @@ export default function PerformanceCard({
                     cy="80"
                     r="72"
                     stroke="#F1F5F9"
-                    strokeWidth="10"
+                    strokeWidth="8"
                     fill="none"
                   />
                   <circle
@@ -111,7 +107,7 @@ export default function PerformanceCard({
                     cy="80"
                     r="72"
                     stroke="#0F75BD"
-                    strokeWidth="10"
+                    strokeWidth="8"
                     fill="none"
                     strokeDasharray="452.39"
                     strokeDashoffset={452.39 - ((completionPercentage || 0) / 100) * 452.39}
@@ -133,11 +129,11 @@ export default function PerformanceCard({
 
       <div className="grid grid-cols-2 gap-4 mb-8">
         <div className="border border-gray-100 bg-gray-50 rounded-2xl p-4">
-          <p className="text-[10px] font-bold text-[#5C5B59] uppercase mb-1">Total Points</p>
-          {loading ? <Skeleton width="40px" height="24px" /> : <p className="text-2xl font-black text-[#1A1A1A]">{points || 0}</p>}
+          <p className="text-[10px] font-bold text-[#5C5B59] uppercase mb-1">Occupied Rooms</p>
+          {loading ? <Skeleton width="40px" height="24px" /> : <p className="text-2xl font-black text-[#1A1A1A]">{occupiedRooms || 0}</p>}
         </div>
         <div className="border border-gray-100 bg-gray-50 rounded-2xl p-4">
-          <p className="text-[10px] font-bold text-[#5C5B59] uppercase mb-1">Bookings</p>
+          <p className="text-[10px] font-bold text-[#5C5B59] uppercase mb-1">Total Bookings</p>
           {loading ? <Skeleton width="40px" height="24px" /> : <p className="text-2xl font-black text-[#1A1A1A]">{approvedGigs || 0}</p>}
         </div>
       </div>

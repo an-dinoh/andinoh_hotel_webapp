@@ -29,9 +29,9 @@ export default function Button({
     "rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2";
 
   const sizeStyles = {
-    sm: "py-2 px-4 text-xs",
-    md: "py-3.5 px-6 text-sm",
-    lg: "py-6 px-8 text-base",
+    sm: "h-9 px-4 text-xs",
+    md: "h-12 px-6 text-sm",
+    lg: "h-14 px-8 text-base",
   };
 
   const variantStyles = {
@@ -55,7 +55,7 @@ export default function Button({
       className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${widthStyle} ${className}`}
     >
       {loading && (
-        <Loading size="sm" />
+        <Loading size="xs" />
       )}
       {loading ? "Processing..." : (children || text)}
     </button>

@@ -18,52 +18,37 @@ export default function PhysicalRoomCard({ unit, category, onEdit, onStatusChang
             case 'available':
                 return {
                     label: 'Available',
-                    bg: 'bg-emerald-50/50',
-                    text: 'text-emerald-700',
-                    border: 'border-emerald-100',
+                    text: 'text-[#1A1A1A]',
                     icon: CheckCircle2,
                     neon: 'bg-emerald-500',
-                    shadow: 'shadow-emerald-200/50'
                 };
             case 'occupied':
                 return {
                     label: 'Occupied',
-                    bg: 'bg-rose-50/50',
-                    text: 'text-rose-700',
-                    border: 'border-rose-100',
+                    text: 'text-[#1A1A1A]',
                     icon: Clock,
                     neon: 'bg-rose-500',
-                    shadow: 'shadow-rose-200/50'
                 };
             case 'maintenance':
                 return {
                     label: 'Maintenance',
-                    bg: 'bg-amber-50/50',
-                    text: 'text-amber-700',
-                    border: 'border-amber-100',
+                    text: 'text-[#1A1A1A]',
                     icon: Hammer,
                     neon: 'bg-amber-500',
-                    shadow: 'shadow-amber-200/50'
                 };
             case 'out_of_order':
                 return {
                     label: 'Out of Order',
-                    bg: 'bg-slate-50/50',
-                    text: 'text-slate-700',
-                    border: 'border-slate-100',
+                    text: 'text-[#1A1A1A]',
                     icon: Ban,
-                    neon: 'bg-slate-500',
-                    shadow: 'shadow-slate-200/50'
+                    neon: 'bg-slate-400',
                 };
             default:
                 return {
                     label: status,
-                    bg: 'bg-gray-50',
-                    text: 'text-gray-600',
-                    border: 'border-gray-100',
+                    text: 'text-[#1A1A1A]',
                     icon: AlertCircle,
                     neon: 'bg-gray-400',
-                    shadow: 'shadow-gray-200/50'
                 };
         }
     };
@@ -71,11 +56,11 @@ export default function PhysicalRoomCard({ unit, category, onEdit, onStatusChang
     const getHousekeepingConfig = (status: HousekeepingStatus) => {
         switch (status) {
             case 'clean':
-                return { label: 'Clean', color: 'text-emerald-600', icon: Sparkles, bg: 'bg-emerald-50/30' };
+                return { label: 'Clean', color: 'text-[#1A1A1A]', icon: Sparkles };
             case 'dirty':
-                return { label: 'Dirty', color: 'text-rose-600', icon: Droplets, bg: 'bg-rose-50/30' };
+                return { label: 'Dirty', color: 'text-[#1A1A1A]', icon: Droplets };
             default:
-                return { label: status.replace('_', ' '), color: 'text-blue-600', icon: Clock, bg: 'bg-blue-50/30' };
+                return { label: status.replace('_', ' '), color: 'text-[#1A1A1A]', icon: Clock };
         }
     };
 
@@ -90,10 +75,8 @@ export default function PhysicalRoomCard({ unit, category, onEdit, onStatusChang
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ y: -8, transition: { duration: 0.3, ease: "easeOut" } }}
             onClick={() => onEdit?.(unit)}
-            className="group relative bg-white rounded-[32px] border border-[#E5E7EB]/60 hover:border-[#0F75BD] transition-all duration-500 overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_30px_60px_rgba(15,117,189,0.12)] flex flex-col h-full cursor-pointer"
+            className="group relative bg-white rounded-[32px] border border-[#E5E7EB] hover:border-[#0F75BD] transition-all duration-500 overflow-hidden flex flex-col h-full cursor-pointer"
         >
-            {/* Glossy Backdrop Gradient */}
-            <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#0F75BD]/[0.02] to-transparent pointer-events-none" />
 
             <div className="p-8 relative z-10 flex flex-col h-full">
                 {/* Header: Room ID + Category Tag */}
@@ -112,7 +95,7 @@ export default function PhysicalRoomCard({ unit, category, onEdit, onStatusChang
                         </div>
                     </div>
 
-                    <div className="p-3 bg-white border border-[#E5E7EB]/50 rounded-2xl shadow-sm group-hover:bg-[#0F75BD] group-hover:text-white transition-colors duration-500">
+                    <div className="p-3 bg-[#FAFAFB] border border-[#E5E7EB] rounded-2xl group-hover:bg-[#0F75BD] group-hover:text-white transition-colors duration-500">
                         <Key className="w-6 h-6" />
                     </div>
                 </div>
@@ -120,7 +103,7 @@ export default function PhysicalRoomCard({ unit, category, onEdit, onStatusChang
                 {/* Bento Grid: Status & Housekeeping pills */}
                 <div className="grid grid-cols-2 gap-4 mb-8">
                     {/* Status Pill */}
-                    <div className={`flex flex-col p-4 rounded-3xl border ${config.border} ${config.bg} relative overflow-hidden group/pill`}>
+                    <div className="flex flex-col p-4 rounded-3xl border border-[#E5E7EB] bg-[#FAFAFB] relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-2 opacity-10">
                             <StatusIcon className="w-8 h-8" />
                         </div>
@@ -128,7 +111,7 @@ export default function PhysicalRoomCard({ unit, category, onEdit, onStatusChang
                         <div className="flex items-center gap-2">
                             <div className="relative flex h-2.5 w-2.5">
                                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${config.neon} opacity-40`}></span>
-                                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${config.neon} ${config.shadow} border-2 border-white`}></span>
+                                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${config.neon} border-2 border-white`}></span>
                             </div>
                             <span className={`text-[12px] font-black uppercase tracking-wider ${config.text}`}>
                                 {config.label}
@@ -137,7 +120,7 @@ export default function PhysicalRoomCard({ unit, category, onEdit, onStatusChang
                     </div>
 
                     {/* Housekeeping Pill */}
-                    <div className={`flex flex-col p-4 rounded-3xl border border-[#F3F4F6] ${hkConfig.bg} relative overflow-hidden`}>
+                    <div className="flex flex-col p-4 rounded-3xl border border-[#E5E7EB] bg-[#FAFAFB] relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-2 opacity-10">
                             <HKIcon className="w-8 h-8" />
                         </div>
@@ -165,7 +148,7 @@ export default function PhysicalRoomCard({ unit, category, onEdit, onStatusChang
 
                     <button
                         onClick={() => onEdit?.(unit)}
-                        className="group/manage flex items-center gap-2 px-4 py-2 bg-[#1A1A1A] hover:bg-[#0F75BD] rounded-2xl text-white transition-all duration-300 shadow-lg shadow-black/5 hover:shadow-[#0F75BD]/20"
+                        className="group/manage flex items-center gap-2 px-4 py-2 bg-[#1A1A1A] hover:bg-[#0F75BD] rounded-2xl text-white transition-all duration-300"
                     >
                         <span className="text-[11px] font-black uppercase tracking-wider">Manage</span>
                         <ChevronRight className="w-3.5 h-3.5 group-hover/manage:translate-x-1 transition-transform" />

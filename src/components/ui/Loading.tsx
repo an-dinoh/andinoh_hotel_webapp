@@ -3,13 +3,14 @@
 import React from "react";
 
 interface LoadingProps {
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   text?: string;
   fullPage?: boolean;
 }
 
 export default function Loading({ size = "md", text, fullPage = false }: LoadingProps) {
   const sizeMap = {
+    xs: { container: "w-5 h-5", circle: "w-3.5 h-3.5", logo: "0px" },
     sm: { container: "w-10 h-10", circle: "w-6 h-6", logo: "8px" },
     md: { container: "w-20 h-20", circle: "w-12 h-12", logo: "16px" },
     lg: { container: "w-32 h-32", circle: "w-20 h-20", logo: "24px" },
@@ -30,21 +31,23 @@ export default function Loading({ size = "md", text, fullPage = false }: Loading
         <div className="absolute inset-2 rounded-full border-b-2 border-l-2 border-[#FCC317] animate-spin-reverse" style={{ animationDuration: '2s' }} />
 
         {/* Central Logo */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div 
-            className={`${current.circle} rounded-full bg-white flex items-center justify-center shadow-2xl overflow-hidden border-2 border-[#0F75BD]/10 animate-bounce-subtle`}
-          >
-            <img 
-              src="/logos/ANDINOH-FAV.jpg" 
-              alt="Andinoh Logo"
-              className="w-full h-full object-cover p-1"
-            />
+        {size !== "xs" && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div 
+              className={`${current.circle} rounded-full bg-white flex items-center justify-center shadow-2xl overflow-hidden border-2 border-[#0F75BD]/10 animate-bounce-subtle`}
+            >
+              <img 
+                src="/logos/ANDINOH-FAV.jpg" 
+                alt="Andinoh Logo"
+                className="w-full h-full object-cover p-1"
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Elegant Loading Text */}
-      {(text || size !== "sm") && (
+      {(text || (size !== "sm" && size !== "xs")) && (
         <div className="flex flex-col items-center animate-fade-in">
           <span className="text-[#002968] font-medium tracking-[0.2em] text-[10px] uppercase">
             {text || "Loading Experience"}

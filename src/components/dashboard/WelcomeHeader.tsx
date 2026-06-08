@@ -31,7 +31,7 @@ export default function WelcomeHeader({
   });
 
   return (
-    <div className="bg-[#374C3D] text-white space-y-6 border border-gray-200 rounded-3xl max-w-7xl mx-auto px-4 sm:px-6 lg:px-6 py-6">
+    <div className="bg-[#0F75BD] text-white space-y-6 rounded-3xl max-w-7xl mx-auto px-6 py-6 shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex-1">
           {loading ? (

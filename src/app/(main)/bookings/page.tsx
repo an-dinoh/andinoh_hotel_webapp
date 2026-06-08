@@ -7,15 +7,21 @@ import { Booking, BookingStatus } from "@/types/hotel.types";
 import { hotelService } from "@/services/hotel.service";
 import { toast } from "react-hot-toast";
 
+// Module-level cache to persist data across client-side page transitions
+let cachedBookings: Booking[] = [];
+let cachedStats: any = null;
+let cachedTotalItems = 0;
+let hasLoadedOnce = false;
+
 export default function BookingsPage() {
   const router = useRouter();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [stats, setStats] = useState<any>(null); // Using any to avoid strict type issues with DashboardStats during dev
-  const [loading, setLoading] = useState(true);
+  const [bookings, setBookings] = useState<Booking[]>(cachedBookings);
+  const [stats, setStats] = useState<any>(cachedStats); // Using any to avoid strict type issues with DashboardStats during dev
+  const [loading, setLoading] = useState(!hasLoadedOnce);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<BookingStatus | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
+  const [totalItems, setTotalItems] = useState(cachedTotalItems);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -24,7 +30,9 @@ export default function BookingsPage() {
 
   const fetchBookings = async () => {
     try {
-      setLoading(true);
+      if (!hasLoadedOnce) {
+        setLoading(true);
+      }
 
       const filters: any = {
         page: currentPage,
@@ -44,10 +52,16 @@ export default function BookingsPage() {
         hotelService.getDashboardStats()
       ]);
 
-      setBookings(Array.isArray(bookingsRes?.results) ? bookingsRes.results : []);
-      // Use the count from the active API response instead of the global stats
+      const results = Array.isArray(bookingsRes?.results) ? bookingsRes.results : [];
+      setBookings(results);
       setTotalItems(bookingsRes?.count || 0);
       setStats(statsRes);
+
+      // Save to cache
+      cachedBookings = results;
+      cachedStats = statsRes;
+      cachedTotalItems = bookingsRes?.count || 0;
+      hasLoadedOnce = true;
     } catch (error: any) {
       // A 404 means the requested page is out of range (e.g. filter narrowed results).
       // Reset to page 1 silently rather than showing an error toast.
