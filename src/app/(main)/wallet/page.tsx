@@ -117,14 +117,14 @@ export default function WalletPage() {
           <div className="flex gap-3">
             <button
               onClick={() => setShowBankAccountsModal(true)}
-              className="px-4 py-2.5 border border-[#D3D9DD] text-sm text-[#1A1A1A] font-medium rounded-2xl hover:bg-[#FAFAFB] transition-colors flex items-center gap-2"
+              className="px-4 py-2.5 border border-[#D3D9DD] text-sm text-[#1A1A1A] font-medium rounded-[24px] hover:bg-[#FAFAFB] transition-colors flex items-center gap-2"
             >
               <Building2 className="w-4 h-4" />
               Bank Accounts
             </button>
             <button
               onClick={() => setShowExportModal(true)}
-              className="px-4 py-2.5 bg-[#0F75BD] text-sm text-white font-medium rounded-2xl hover:bg-[#0050C8] transition-colors flex items-center gap-2 w-fit"
+              className="px-4 py-2.5 bg-[#0F75BD] text-sm text-white font-medium rounded-[24px] hover:bg-[#0050C8] transition-colors flex items-center gap-2 w-fit"
             >
               <Download className="w-4 h-4" />
               Export Report
@@ -171,7 +171,7 @@ export default function WalletPage() {
           <div className="relative">
             <button
               onClick={() => setShowPeriodDropdown(!showPeriodDropdown)}
-              className="flex items-center gap-2 px-5 py-3 border border-[#E5E7EB] rounded-xl hover:bg-[#FAFAFB] transition-colors"
+              className="flex items-center gap-2 px-5 py-3 border border-[#E5E7EB] rounded-[24px] hover:bg-[#FAFAFB] transition-colors"
             >
               <Calendar className="w-5 h-5 text-[#5C5B59]" />
               <span className="text-sm font-medium text-[#1A1A1A]">{selectedPeriod}</span>
@@ -179,7 +179,7 @@ export default function WalletPage() {
             </button>
 
             {showPeriodDropdown && (
-              <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-[#E5E7EB] rounded-[16px] z-10 py-2">
+              <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-[#E5E7EB] rounded-[24px] z-10 py-2">
                 {["Today", "This Week", "This Month", "This Year", "Custom Range"].map((period) => (
                   <button
                     key={period}
@@ -199,7 +199,7 @@ export default function WalletPage() {
         </div>
 
         {/* Transactions Table */}
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] overflow-hidden">
+        <div className="bg-white rounded-[24px] border border-[#E5E7EB] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
