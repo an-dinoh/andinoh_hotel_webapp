@@ -15,7 +15,11 @@ interface ServerNotification {
 
 class WebSocketService {
     private socket: WebSocket | null = null;
-    private baseUrl = 'wss://andinoh-backend.onrender.com/ws/notifications/';
+    private baseUrl = process.env.NEXT_PUBLIC_WS_URL || (
+        process.env.NEXT_PUBLIC_API_URL 
+            ? process.env.NEXT_PUBLIC_API_URL.replace(/^http/, 'ws').replace(/\/api\/v1\/?$/, '/ws/notifications/')
+            : 'wss://andinoh-backend.onrender.com/ws/notifications/'
+    );
     private listeners: Set<(data: ServerNotification) => void> = new Set();
     private reconnectAttempts = 0;
     private maxReconnectAttempts = 20; // Increased to allow more retries over time

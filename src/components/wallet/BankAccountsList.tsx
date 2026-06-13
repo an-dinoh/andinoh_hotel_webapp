@@ -31,7 +31,12 @@ export default function BankAccountsList({ isOpen, onClose }: BankAccountsListPr
         try {
             setLoading(true);
             const accounts = await hotelService.getBankAccounts();
-            setBankAccounts(accounts || []);
+            const accountsList = Array.isArray(accounts)
+                ? accounts
+                : (accounts as any)?.results && Array.isArray((accounts as any).results)
+                    ? (accounts as any).results
+                    : [];
+            setBankAccounts(accountsList);
         } catch (error: any) {
             console.error("Error fetching bank accounts:", error);
             toast.error(error.message || "Failed to fetch bank accounts");

@@ -31,6 +31,8 @@ export interface Hotel {
   cover_image?: string;
   is_active: boolean;
   is_verified?: boolean;
+  kyc_status?: 'pending' | 'submitted' | 'verified' | 'rejected';
+  kyc_submitted_at?: string;
   created_at: string;
   updated_at: string;
 }

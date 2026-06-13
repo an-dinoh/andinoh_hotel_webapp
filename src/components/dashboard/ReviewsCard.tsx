@@ -1,17 +1,31 @@
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Star } from "lucide-react";
+
+interface Review {
+  id: string;
+  reviewer_name: string;
+  reviewer_email: string;
+  rating: number;
+  title: string;
+  comment: string;
+  is_verified: boolean;
+  created_at: string;
+}
 
 interface ReviewsCardProps {
+  reviews?: Review[];
   emptyStateMessage?: string;
   loading?: boolean;
 }
 
 export default function ReviewsCard({
+  reviews = [],
   emptyStateMessage = "No Reviews & Ratings yet!",
   loading = false
 }: ReviewsCardProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-3xl p-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="bg-white border border-gray-100 rounded-3xl p-6">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center">
             <svg
@@ -41,11 +55,77 @@ export default function ReviewsCard({
             </div>
           ))}
         </div>
+      ) : reviews.length > 0 ? (
+        <div className="space-y-6 divide-y divide-gray-100">
+          {reviews.slice(0, 3).map((review, index) => {
+            const reviewerInitials = review.reviewer_name
+              ? review.reviewer_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+              : "G";
+            
+            const reviewDate = review.created_at
+              ? new Date(review.created_at).toLocaleDateString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric'
+                })
+              : "Recent";
+
+            return (
+              <div key={review.id || index} className={`pt-4 first:pt-0 group transition-all duration-300`}>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-blue-50 text-[#0F75BD] font-bold text-xs rounded-full flex items-center justify-center border border-blue-100 shadow-sm">
+                      {reviewerInitials}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="text-sm font-semibold text-[#1A1A1A] group-hover:text-[#0F75BD] transition-colors">
+                          {review.reviewer_name || "Anonymous Guest"}
+                        </h4>
+                        {review.is_verified && (
+                          <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100 flex items-center gap-0.5">
+                            ✓ Verified
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-0.5">{reviewDate}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Stars */}
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <span
+                        key={s}
+                        className={`text-xs ${
+                          s <= (review.rating || 0) ? "text-orange-400" : "text-gray-200"
+                        }`}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pl-12">
+                  {review.title && (
+                    <h5 className="text-xs font-bold text-[#1A1A1A] mb-1">
+                      {review.title}
+                    </h5>
+                  )}
+                  <p className="text-xs text-[#5C5B59] leading-relaxed">
+                    {review.comment}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       ) : (
         /* Empty State */
         <div className="flex flex-col items-center justify-center py-10">
-          <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mb-4 border border-gray-100 shadow-inner">
-            <span className="text-3xl text-gray-300">⭐</span>
+          <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4 border border-gray-100">
+            <Star className="w-8 h-8 text-gray-300 stroke-[1.5]" />
           </div>
           <p className="text-sm font-medium text-[#5C5B59] mt-2 text-center max-w-[180px]">
             {emptyStateMessage}

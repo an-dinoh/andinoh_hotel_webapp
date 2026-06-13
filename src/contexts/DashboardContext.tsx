@@ -15,6 +15,7 @@ interface DashboardContextType {
     trendResponse: BookingTrendResponse | null;
     wallet: WalletStats | null;
     upcomingBookings: Booking[];
+    reviews: any[];
     activities: any[];
     isLoading: boolean;
     isRefreshing: boolean;
@@ -30,6 +31,7 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     const [trendResponse, setTrendResponse] = useState<BookingTrendResponse | null>(null);
     const [wallet, setWallet] = useState<WalletStats | null>(null);
     const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
+    const [reviews, setReviews] = useState<any[]>([]);
     const [activities, setActivities] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -55,17 +57,19 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
 
             setError(null);
 
-            const [statsData, trendsData, walletData, bookingsData] = await Promise.all([
+            const [statsData, trendsData, walletData, bookingsData, reviewsData] = await Promise.all([
                 hotelService.getDashboardStats().catch(() => null),
                 hotelService.getBookingTrends().catch(() => null),
                 hotelService.getWalletStats().catch(() => null),
                 hotelService.getBookings({ booking_status: 'confirmed' }).catch(() => ({ results: [] })),
+                hotelService.getReviews().catch(() => ({ results: [] })),
             ]);
 
             if (statsData) setStats(statsData);
             if (trendsData) setTrendResponse(trendsData);
             if (walletData) setWallet(walletData);
             if (bookingsData) setUpcomingBookings(bookingsData.results);
+            if (reviewsData) setReviews(reviewsData.results || reviewsData || []);
 
             // Synthesize activities from real bookings
             const realActivities = (bookingsData.results || []).slice(0, 3).map((booking: any, index: number) => {
@@ -104,6 +108,7 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
             trendResponse,
             wallet,
             upcomingBookings,
+            reviews,
             activities,
             isLoading,
             isRefreshing,

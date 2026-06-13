@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, Edit, Trash2, Eye, ChevronDown, Bookmark, MapPin, Star, Bed, Users, Maximize2, Sparkles, Image as ImageIcon, Video, MessageSquare, Box, Key, DollarSign } from "lucide-react";
 import Image from "next/image";
@@ -65,11 +65,33 @@ export default function RoomsPage() {
   const [editingUnit, setEditingUnit] = useState<PhysicalRoom | null>(null);
   const [isUnitModalOpen, setIsUnitModalOpen] = useState(false);
 
+  // Track whether this is the first mount of the component in this session
+  const isMounted = useRef(false);
+
+  // On mount: do a full load if no cached data exists, otherwise do a silent
+  // background refresh so the user sees data instantly when navigating back.
   useEffect(() => {
-    // Fetch data initially
+    const hasRooms = rooms.length > 0;
+    const hasUnits = physicalRooms.length > 0;
+    fetchRoomsData(hasRooms);           // true = background (no shimmer)
+    fetchPhysicalRoomsData(hasUnits);
+    isMounted.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // When the user explicitly changes filters or pagination, always refetch
+  // (background if we already have data so no shimmer flash).
+  useEffect(() => {
+    if (!isMounted.current) return;     // skip the initial run (handled above)
     fetchRoomsData(rooms.length > 0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, filterType]);
+
+  useEffect(() => {
+    if (!isMounted.current) return;
     fetchPhysicalRoomsData(physicalRooms.length > 0);
-  }, [currentPage, filterType, fetchRoomsData, fetchPhysicalRoomsData, currentUnitPage, filterCategoryId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUnitPage, filterCategoryId]);
 
   const filteredRooms = rooms.filter((room) => {
     if (!searchTerm) return true;
@@ -98,26 +120,26 @@ export default function RoomsPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <Skeleton variant="text" className="w-48 h-8 mb-2" />
-              <Skeleton variant="text" className="w-64 h-4" />
+              <div className="w-48 h-8 bg-[#F3F4F6] rounded-[16px] animate-pulse mb-2" />
+              <div className="w-64 h-4 bg-[#F3F4F6] rounded-[12px] animate-pulse" />
             </div>
-            <Skeleton variant="rect" className="w-36 h-10 rounded-2xl" />
+            <div className="w-36 h-11 bg-[#F3F4F6] rounded-[16px] animate-pulse" />
           </div>
 
           <div className="flex items-center gap-4">
-            <Skeleton variant="rect" className="w-full h-10 rounded-xl" />
-            <Skeleton variant="rect" className="w-32 h-10 rounded-xl" />
+            <div className="flex-1 h-11 bg-[#F3F4F6] rounded-[16px] animate-pulse" />
+            <div className="w-32 h-11 bg-[#F3F4F6] rounded-[16px] animate-pulse" />
           </div>
 
           <div>
-            <Skeleton variant="text" className="w-32 h-4 mb-4" />
+            <div className="w-32 h-4 bg-[#F3F4F6] rounded-[12px] animate-pulse mb-4" />
             <div className="flex gap-3">
-              {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} variant="rect" className="w-24 h-10 rounded-xl" />)}
+              {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-24 h-10 bg-[#F3F4F6] rounded-[14px] animate-pulse" />)}
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map(i => <Skeleton key={i} variant="rect" className="w-full h-24 rounded-2xl" />)}
+            {[1, 2, 3, 4].map(i => <div key={i} className="w-full h-24 bg-[#F3F4F6] rounded-[24px] animate-pulse" />)}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -146,7 +168,7 @@ export default function RoomsPage() {
 
     return (
       <div className="h-full bg-white overflow-y-auto scrollbar-hide">
-        <div className="h-full bg-[#F9FAFB] px-8 py-8">
+        <div className="h-full bg-white py-8">
           <div className="max-w-7xl mx-auto space-y-6">
             {/* Back Button */}
             <button
@@ -187,7 +209,7 @@ export default function RoomsPage() {
                   </div>
                 )}
 
-                <div className="relative z-10 bg-black/40 backdrop-blur-xl border border-white/20 p-6 md:p-8 rounded-[24px] shadow-2xl">
+                <div className="relative z-10 bg-black/40 backdrop-blur-xl border border-white/20 p-6 md:p-8 rounded-[24px]">
                   <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                       <div className="flex flex-wrap items-center gap-3 mb-3">
@@ -424,33 +446,33 @@ export default function RoomsPage() {
               {/* Features */}
               <div className="bg-white border border-[#E5E7EB] rounded-[22px] p-8 hover:scale-[1.02] transition-transform duration-300">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-[#F5F3FF] rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-[#F0F9FF] rounded-xl flex items-center justify-center">
                     <Sparkles className="w-6 h-6 text-[#0F75BD]" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-800">Amenities</h3>
                 </div>
                 <div className="space-y-3">
                   {selectedRoom.has_sea_view && (
-                    <div className="flex items-center gap-3 px-4 py-3 bg-[#F0F9FF] border border-[#BFDBFE] rounded-xl">
+                    <div className="flex items-center gap-3 px-4 py-3 bg-[#FAFAFB] border border-[#E5E7EB] rounded-xl">
                       <div className="w-2 h-2 bg-[#0F75BD] rounded-full"></div>
-                      <span className="text-sm font-medium text-[#0F75BD]">Sea View</span>
+                      <span className="text-sm font-medium text-[#1A1A1A]">Sea View</span>
                     </div>
                   )}
                   {selectedRoom.has_city_view && (
-                    <div className="flex items-center gap-3 px-4 py-3 bg-[#F5F3FF] border border-[#E9D5FF] rounded-xl">
-                      <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
-                      <span className="text-sm font-medium text-purple-700">City View</span>
+                    <div className="flex items-center gap-3 px-4 py-3 bg-[#FAFAFB] border border-[#E5E7EB] rounded-xl">
+                      <div className="w-2 h-2 bg-[#1A1A1A] rounded-full"></div>
+                      <span className="text-sm font-medium text-[#1A1A1A]">City View</span>
                     </div>
                   )}
                   {selectedRoom.has_balcony && (
-                    <div className="flex items-center gap-3 px-4 py-3 bg-[#ECFDF5] border border-[#A7F3D0] rounded-xl">
-                      <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                      <span className="text-sm font-medium text-green-700">Balcony</span>
+                    <div className="flex items-center gap-3 px-4 py-3 bg-[#FAFAFB] border border-[#E5E7EB] rounded-xl">
+                      <div className="w-2 h-2 bg-[#1A1A1A] rounded-full"></div>
+                      <span className="text-sm font-medium text-[#1A1A1A]">Balcony</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-3 px-4 py-3 bg-[#FEF3C7] border border-[#FDE68A] rounded-xl">
-                    <div className="w-2 h-2 bg-orange-600 rounded-full"></div>
-                    <span className="text-sm font-medium text-orange-700">Free WiFi</span>
+                  <div className="flex items-center gap-3 px-4 py-3 bg-[#FAFAFB] border border-[#E5E7EB] rounded-xl">
+                    <div className="w-2 h-2 bg-[#1A1A1A] rounded-full"></div>
+                    <span className="text-sm font-medium text-[#1A1A1A]">Free WiFi</span>
                   </div>
                 </div>
               </div>
@@ -458,13 +480,13 @@ export default function RoomsPage() {
               {/* Actions */}
               <div className="bg-white border border-[#E5E7EB] rounded-[22px] p-8 hover:scale-[1.02] transition-transform duration-300">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-[#ECFDF5] rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-[#F0F9FF] rounded-xl flex items-center justify-center">
                     <Users className="w-6 h-6 text-[#0F75BD]" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-800">Quick Actions</h3>
                 </div>
                 <div className="space-y-3">
-                  <button className="w-full py-3.5 bg-[#0F75BD] text-white font-semibold rounded-xl hover:bg-[#0050C8] transition-all hover:shadow-lg flex items-center justify-center gap-2">
+                  <button className="w-full py-3.5 bg-[#0F75BD] text-white font-semibold rounded-xl hover:bg-[#0050C8] transition-all flex items-center justify-center gap-2">
                     <span>Book Now</span>
                   </button>
                   <button className="w-full py-3.5 bg-white border border-[#D3D9DD] text-gray-800 font-semibold rounded-xl hover:bg-gray-50 hover:border-[#0F75BD] transition-all flex items-center justify-center gap-2">
@@ -495,13 +517,13 @@ export default function RoomsPage() {
             <div className="flex bg-[#EEF0F2] p-1 rounded-2xl mr-4 border border-[#E5E7EB]">
               <button
                 onClick={() => setViewMode("units")}
-                className={`px-4 py-2 text-sm font-bold rounded-xl transition-all ${viewMode === "units" ? "bg-white text-[#0F75BD] shadow-sm shadow-black/5" : "text-[#5C5B59] hover:text-[#1A1A1A]"}`}
+                className={`px-4 py-2 text-sm font-bold rounded-xl transition-all ${viewMode === "units" ? "bg-white text-[#0F75BD]" : "text-[#5C5B59] hover:text-[#1A1A1A]"}`}
               >
                 Actual Rooms
               </button>
               <button
                 onClick={() => setViewMode("categories")}
-                className={`px-4 py-2 text-sm font-bold rounded-xl transition-all ${viewMode === "categories" ? "bg-white text-[#0F75BD] shadow-sm shadow-black/5" : "text-[#5C5B59] hover:text-[#1A1A1A]"}`}
+                className={`px-4 py-2 text-sm font-bold rounded-xl transition-all ${viewMode === "categories" ? "bg-white text-[#0F75BD]" : "text-[#5C5B59] hover:text-[#1A1A1A]"}`}
               >
                 Categories
               </button>
@@ -509,7 +531,7 @@ export default function RoomsPage() {
 
             <button
               onClick={() => router.push(viewMode === "units" ? "/rooms/units/create" : "/rooms/create")}
-              className="px-6 py-3 bg-[#0F75BD] text-sm text-white font-bold rounded-2xl hover:bg-[#0050C8] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 shadow-sm"
+              className="px-6 py-3 bg-[#0F75BD] text-sm text-white font-bold rounded-2xl hover:bg-[#0050C8] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
               {viewMode === "units" ? "Add New Room" : "Create Category"}
@@ -527,7 +549,7 @@ export default function RoomsPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search rooms by name or description..."
-              className="w-full pl-12 pr-4 py-3 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] text-sm text-[#1A1A1A] focus:outline-none focus:ring-1 focus:ring-[#0F75BD] focus:border-[#0F75BD] placeholder:text-[#8F8E8D] transition-all shadow-sm shadow-[#00000004]"
+              className="w-full pl-12 pr-4 py-3 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] text-sm text-[#1A1A1A] focus:outline-none focus:ring-1 focus:ring-[#0F75BD] focus:border-[#0F75BD] placeholder:text-[#8F8E8D] transition-all"
             />
           </div>
 
@@ -535,7 +557,7 @@ export default function RoomsPage() {
           <div className="relative">
             <button
               onClick={() => setShowSortDropdown(!showSortDropdown)}
-              className="flex items-center gap-2 px-5 py-3 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] hover:bg-[#F3F4F6] transition-colors shadow-sm shadow-[#00000004]"
+              className="flex items-center gap-2 px-5 py-3 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] hover:bg-[#F3F4F6] transition-colors"
             >
               <Image src="/icons/filter-search.svg" alt="Filter" width={20} height={20} />
               <span className="text-sm font-medium text-gray-800">Sort By</span>
@@ -543,7 +565,7 @@ export default function RoomsPage() {
             </button>
 
             {showSortDropdown && (
-              <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-[#E5E7EB] rounded-[16px] z-10 py-2 shadow-sm">
+              <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-[#E5E7EB] rounded-[16px] z-10 py-2">
                 <div className="px-4 py-2 text-xs font-bold tracking-widest text-[#5C5B59] uppercase">
                   Sort Options
                 </div>
@@ -597,13 +619,13 @@ export default function RoomsPage() {
         {/* Stats Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Total Rooms", value: statsLoading ? "—" : roomStats.total, bg: "bg-[#F8FAFC]", text: "text-slate-600" },
-            { label: "Available", value: statsLoading ? "—" : roomStats.available, bg: "bg-[#F0FDF4]", text: "text-emerald-700" },
-            { label: "Occupied", value: statsLoading ? "—" : roomStats.occupied, bg: "bg-[#FEFCE8]", text: "text-amber-700" },
-            { label: "Average Rate", value: roomStats.avgRate != null ? `₦${roomStats.avgRate}` : "—", bg: "bg-[#FAF5FF]", text: "text-purple-700" },
+            { label: "Total Rooms", value: statsLoading ? "—" : roomStats.total },
+            { label: "Available", value: statsLoading ? "—" : roomStats.available },
+            { label: "Occupied", value: statsLoading ? "—" : roomStats.occupied },
+            { label: "Average Rate", value: roomStats.avgRate != null ? `₦${roomStats.avgRate}` : "—" },
           ].map((stat, index) => (
-            <div key={index} className={`${stat.bg} border border-[#E5E7EB]/50 rounded-[24px] p-6 hover:scale-[1.02] transition-transform duration-300 shadow-[0_4px_20px_rgb(0,0,0,0.03)]`}>
-              <p className={`text-sm font-bold mb-1 uppercase tracking-wider ${stat.text}`}>{stat.label}</p>
+            <div key={index} className="bg-[#FAFAFB] border border-[#E5E7EB] rounded-[24px] p-6 hover:scale-[1.02] transition-transform duration-300">
+              <p className="text-sm font-bold mb-1 uppercase tracking-wider text-[#5C5B59]">{stat.label}</p>
               <p className="text-3xl font-black text-[#1A1A1A] tracking-tight">{stat.value}</p>
             </div>
           ))}
@@ -619,7 +641,13 @@ export default function RoomsPage() {
                 <p className="text-[#5C5B59] mb-8 max-w-sm mx-auto">
                   {searchTerm ? `We couldn't find any room units matching "${searchTerm}". Try a different search term.` : "You haven't added any physical rooms to your inventory yet. Select a category to start provisioning units."}
                 </p>
-                {!searchTerm && <button className="px-6 py-3 bg-[#1A1A1A] text-white font-bold rounded-xl hover:bg-black transition-all">Provision First Room</button>}
+                {!searchTerm && <button
+                  onClick={() => router.push("/rooms/units/create")}
+                  className="px-6 py-3 bg-[#0F75BD] text-white font-bold rounded-[16px] hover:bg-[#0050C8] transition-all flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Provision First Room
+                </button>}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -646,27 +674,20 @@ export default function RoomsPage() {
         ) : (
           <>
             {filteredRooms.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-16 md:p-24 bg-gradient-to-b from-[#FAFAFB] to-white border border-[#E5E7EB]/50 rounded-[32px] text-center relative overflow-hidden">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#0F75BD]/[0.03] rounded-full blur-[40px] pointer-events-none"></div>
-                <div className="relative mb-8">
-                  <div className="absolute inset-0 bg-[#0F75BD]/15 blur-xl rounded-full"></div>
-                  <div className="relative w-24 h-24 bg-white border border-[#E5E7EB] rounded-[28px] flex items-center justify-center rotate-3 hover:rotate-0 transition-transform duration-500">
-                    <Sparkles className="w-10 h-10 text-[#0F75BD]" />
-                  </div>
+              <div className="flex flex-col items-center justify-center p-16 md:p-24 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[32px] text-center">
+                <div className="w-20 h-20 bg-white border border-[#E5E7EB] rounded-[24px] flex items-center justify-center mb-6">
+                  <Sparkles className="w-9 h-9 text-[#0F75BD]" />
                 </div>
-                <h3 className="text-2xl font-black text-[#1A1A1A] mb-3 tracking-tight z-10 relative">No categories found</h3>
-                <p className="text-[#5C5B59] font-medium mb-10 max-w-sm z-10 relative">
+                <h3 className="text-2xl font-black text-[#1A1A1A] mb-3 tracking-tight">No categories found</h3>
+                <p className="text-[#5C5B59] font-medium mb-8 max-w-sm">
                   Your property has no active room listings yet. Start building your portfolio by adding your first distinct room type.
                 </p>
                 <button
                   onClick={() => router.push("/rooms/create")}
-                  className="group relative px-8 py-3.5 bg-[#1A1A1A] text-white font-bold rounded-[16px] hover:bg-black transition-all hover:-translate-y-0.5 overflow-hidden z-10"
+                  className="flex items-center gap-2 px-6 py-3 bg-[#0F75BD] text-white font-bold rounded-[16px] hover:bg-[#0050C8] transition-colors"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[150%] skew-x-[-30deg] group-hover:translate-x-[150%] transition-transform duration-700"></div>
-                  <div className="relative flex items-center gap-2">
-                    <Plus className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" />
-                    <span className="tracking-wide">Add Your First Room</span>
-                  </div>
+                  <Plus className="w-4 h-4" />
+                  Add Your First Room
                 </button>
               </div>
             ) : (
@@ -678,7 +699,7 @@ export default function RoomsPage() {
                     return (
                       <div
                         key={room.id}
-                        className="bg-white rounded-[24px] overflow-hidden border border-[#E5E7EB]/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col"
+                        className="bg-white rounded-[24px] overflow-hidden border border-[#E5E7EB] hover:-translate-y-1 transition-all duration-300 cursor-pointer group flex flex-col"
                         onClick={() => {
                           setSelectedRoom(room);
                           setActiveTab("pictures");

@@ -1,17 +1,21 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Search, ChevronDown, Bell, Calendar, CheckCircle, AlertCircle, User, DollarSign, Clock, X, Settings, LogOut, UserCircle, Building2, Shield } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import NotificationIcon from "@/icons/NotificationIcon";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useNotifications, Notification } from "@/contexts/NotificationContext";
 import GlobalSearchResults from "@/components/search/GlobalSearchResults";
+import { hotelService } from "@/services/hotel.service";
+import SupportTicketModal from "@/components/help/SupportTicketModal";
 
 export default function Topbar() {
   const { currencies, activeCurrency, isLoading, setCurrency } = useCurrency();
   const router = useRouter();
+  const pathname = usePathname();
+  const isDashboard = pathname === "/dashboard";
   const [searchQuery, setSearchQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -19,6 +23,21 @@ export default function Topbar() {
   const profileRef = useRef<HTMLDivElement>(null);
 
   const { notifications, unreadCount, markAsRead } = useNotifications();
+  const [hotel, setHotel] = useState<any | null>(null);
+  const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchHotel = async () => {
+      try {
+        const data = await hotelService.getMyHotel();
+        setHotel(data);
+      } catch (err) {
+        setHotel(null);
+      }
+    };
+    fetchHotel();
+  }, []);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -35,38 +54,62 @@ export default function Topbar() {
   }, []);
 
   return (
-    <div className="h-20 bg-white border-b border-[#E5E7EB] px-8 flex items-center justify-between">
-      {/* Search Bar */}
-      <div className="flex-1 max-w-xl">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#8F8E8D]" />
-          <input
-            type="text"
-            placeholder="Search bookings, rooms, guests..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 h-11 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] text-sm focus:outline-none focus:ring-1 focus:ring-[#0F75BD] focus:border-[#0F75BD] text-[#1A1A1A] placeholder:text-[#8F8E8D] transition-colors"
-          />
-          {searchQuery.length >= 3 && (
-            <GlobalSearchResults
-              query={searchQuery}
-              onClose={() => setSearchQuery("")}
+    <div className="h-20 bg-white border-b border-[#E5E7EB] px-12 md:px-16 lg:px-24 flex items-center justify-between">
+      {/* Search Bar — only shown on dashboard */}
+      {isDashboard ? (
+        <div className="flex-1 max-w-xl">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#8F8E8D]" />
+            <input
+              type="text"
+              placeholder="Search bookings, rooms, guests..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 h-11 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] text-sm focus:outline-none focus:ring-1 focus:ring-[#0F75BD] focus:border-[#0F75BD] text-[#1A1A1A] placeholder:text-[#8F8E8D] transition-colors"
             />
-          )}
+            {searchQuery.length >= 3 && (
+              <GlobalSearchResults
+                query={searchQuery}
+                onClose={() => setSearchQuery("")}
+              />
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex-1" />
+      )}
 
       {/* Right Section */}
       <div className="flex items-center gap-4 ml-6">
-        {/* Verified Badge */}
-        <div className="flex items-center gap-2 px-3 py-2 bg-[#F0FDF4] border border-[#A7F3D0] rounded-[16px]">
-          <Shield className="w-4 h-4 text-[#059669]" />
-          <span className="text-sm font-bold text-[#059669]">Verified</span>
-        </div>
+        {/* Verified/Unverified/Rejected Badge */}
+        {hotel === null ? (
+          <div className="flex items-center gap-2 px-3 h-11 bg-[#F3F4F6] border border-[#E5E7EB] rounded-[16px] animate-pulse">
+            <div className="w-4 h-4 rounded-full bg-gray-300"></div>
+            <div className="h-4 w-12 bg-gray-300 rounded"></div>
+          </div>
+        ) : hotel.kyc_status === 'rejected' ? (
+          <button
+            onClick={() => setIsRejectionModalOpen(true)}
+            className="flex items-center gap-2 px-3 h-11 bg-[#FEF2F2] border border-[#FECACA] rounded-[16px] transition-all hover:bg-[#FEE2E2]"
+          >
+            <AlertCircle className="w-4 h-4 text-[#DC2626]" />
+            <span className="text-sm font-bold text-[#DC2626]">Rejected</span>
+          </button>
+        ) : hotel.is_verified || hotel.kyc_status === 'verified' ? (
+          <div className="flex items-center gap-2 px-3 h-11 bg-[#F0FDF4] border border-[#A7F3D0] rounded-[16px]">
+            <Shield className="w-4 h-4 text-[#059669]" />
+            <span className="text-sm font-bold text-[#059669]">Verified</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 px-3 h-11 bg-[#FFFBEB] border border-[#FDE68A] rounded-[16px]">
+            <AlertCircle className="w-4 h-4 text-[#D97706]" />
+            <span className="text-sm font-bold text-[#D97706]">Unverified</span>
+          </div>
+        )}
 
         {/* Currency Switcher */}
         <div className="relative group">
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] hover:bg-[#F3F4F6] transition-all hover:-translate-y-0.5">
+          <button className="flex items-center gap-2 px-4 h-11 bg-[#FAFAFB] border border-[#E5E7EB] rounded-[16px] hover:bg-[#F3F4F6] transition-all hover:-translate-y-0.5">
             <DollarSign className="w-4 h-4 text-[#5C5B59]" />
             <span className="text-sm font-bold text-[#1A1A1A]">
               {activeCurrency?.code || 'NGN'} ({activeCurrency?.symbol || '₦'})
@@ -101,7 +144,7 @@ export default function Topbar() {
         <div className="relative" ref={notificationRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative w-12 h-12 flex items-center justify-center bg-[#FAFAFB] border border-[#E5E7EB] hover:bg-[#F3F4F6] rounded-[16px] transition-all hover:-translate-y-0.5"
+            className="relative w-11 h-11 flex items-center justify-center bg-[#FAFAFB] border border-[#E5E7EB] hover:bg-[#F3F4F6] rounded-[16px] transition-all hover:-translate-y-0.5"
           >
             <NotificationIcon className="w-[1.125rem] h-[1.125rem] text-[#5C5B59]" />
             {unreadCount > 0 && (
@@ -198,7 +241,7 @@ export default function Topbar() {
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center gap-3 bg-[#FAFAFB] border border-[#E5E7EB] hover:bg-[#F3F4F6] rounded-[16px] transition-all hover:-translate-y-0.5 h-12 px-3 pl-1.5"
+            className="flex items-center gap-3 bg-[#FAFAFB] border border-[#E5E7EB] hover:bg-[#F3F4F6] rounded-[16px] transition-all hover:-translate-y-0.5 h-11 px-3 pl-1.5"
           >
             <div className="relative">
               <div className="w-9 h-9 bg-gradient-to-br from-[#0F75BD] to-[#02A5E6] rounded-[12px] flex items-center justify-center">
@@ -207,7 +250,7 @@ export default function Topbar() {
               <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#10B981] border-2 border-white rounded-full"></div>
             </div>
             <div className="text-left hidden sm:block">
-              <p className="text-sm font-bold text-[#1A1A1A] leading-tight">Adeyanju</p>
+              {/* <p className="text-sm font-bold text-[#1A1A1A] leading-tight">Adeyanju</p> */}
               <p className="text-[10px] font-bold tracking-wider uppercase text-[#5C5B59]">Hotel Owner</p>
             </div>
             <ChevronDown className={`w-4 h-4 text-[#5C5B59] transition-transform duration-300 ml-1 ${showProfileMenu ? 'rotate-180' : ''}`} />
@@ -287,6 +330,83 @@ export default function Topbar() {
           )}
         </div>
       </div>
+
+      {/* KYC Rejection Info Modal */}
+      {isRejectionModalOpen && (
+        <div className="fixed inset-0 bg-[#1A1A1A]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200" onClick={() => setIsRejectionModalOpen(false)}>
+          <div
+            className="bg-white rounded-3xl max-w-md w-full border border-gray-100 p-6 relative overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-[#1A1A1A]">KYC Verification Rejected</h3>
+              <button
+                onClick={() => setIsRejectionModalOpen(false)}
+                className="p-1.5 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-gray-100"
+              >
+                <X className="w-4 h-4 text-[#5C5B59]" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-[#DC2626] shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-[#DC2626]">Application Status: Rejected</p>
+                  <p className="text-xs text-red-700/80 mt-1 leading-relaxed">
+                    Your Know Your Customer (KYC) documentation did not pass our system or manual review verification.
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider mb-2">Common Rejection Reasons</h4>
+                <ul className="text-xs text-[#5C5B59] space-y-2 list-disc pl-4 leading-relaxed">
+                  <li>Blurred or low-quality uploads of business licenses or identity cards.</li>
+                  <li>Discrepancies in the registered business name or tax identification numbers.</li>
+                  <li>Incomplete submission of required supporting information.</li>
+                  <li>Expired document validity dates.</li>
+                </ul>
+              </div>
+
+              <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4">
+                <p className="text-xs font-semibold text-[#0F75BD] mb-1">What can you do?</p>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  You can submit a reconsideration request to clarify your details, or get support guidance on which documents are required.
+                </p>
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <button
+                  onClick={() => setIsRejectionModalOpen(false)}
+                  className="flex-1 py-3 border border-gray-200 text-gray-700 font-bold text-sm rounded-2xl hover:bg-gray-50 transition-all cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setIsRejectionModalOpen(false);
+                    setIsTicketModalOpen(true);
+                  }}
+                  className="flex-1 py-3 bg-[#0F75BD] text-white font-bold text-sm rounded-2xl hover:bg-[#0050C8] transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                >
+                  Seek Reconsideration
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Support Ticket Modal for Reconsideration */}
+      <SupportTicketModal
+        isOpen={isTicketModalOpen}
+        onClose={() => setIsTicketModalOpen(false)}
+        initialSubject={`KYC Reconsideration Request - ${hotel?.name || "My Hotel"}`}
+        initialCategory="account"
+        initialMessage={`Dear Support Team,\n\nI am writing to request a reconsideration of the KYC verification rejection for my property, "${hotel?.name || "My Hotel"}". Please let me know what documents or details need to be updated.\n\nThank you.`}
+        initialPriority="high"
+      />
     </div>
   );
 }

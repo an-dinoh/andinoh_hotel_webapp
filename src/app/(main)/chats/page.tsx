@@ -103,8 +103,11 @@ export default function ChatsPage() {
         if (hotel?.id) {
           setHotelId(hotel.id);
         }
-      } catch (err) {
-        console.error("Failed to fetch hotel data:", err);
+      } catch (err: any) {
+        // 404 is expected for new accounts without a hotel yet — suppress it
+        if (err?.message !== 'Resource not found') {
+          console.error("Failed to fetch hotel data:", err);
+        }
       }
     };
     fetchHotel();

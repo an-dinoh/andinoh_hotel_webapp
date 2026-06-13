@@ -3,96 +3,87 @@
 import React from "react";
 
 interface LoadingProps {
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   text?: string;
   fullPage?: boolean;
 }
 
-export default function Loading({ size = "md", text, fullPage = false }: LoadingProps) {
-  const sizeMap = {
-    sm: { container: "w-10 h-10", circle: "w-6 h-6", logo: "8px" },
-    md: { container: "w-20 h-20", circle: "w-12 h-12", logo: "16px" },
-    lg: { container: "w-32 h-32", circle: "w-20 h-20", logo: "24px" },
-  };
+/** Number of skeleton rows per size */
+const rowsMap = { xs: 1, sm: 2, md: 4, lg: 6 };
 
-  const current = sizeMap[size];
+/** Width presets to make the skeleton feel natural */
+const rowWidths = [
+  ["w-3/4", "w-1/2"],
+  ["w-full", "w-2/3"],
+  ["w-5/6", "w-1/3"],
+  ["w-2/3", "w-1/2"],
+  ["w-full", "w-3/4"],
+  ["w-4/5", "w-2/5"],
+];
 
-  const loaderContent = (
-    <div className="flex flex-col items-center justify-center gap-6">
-      <div className={`relative ${current.container}`}>
-        {/* Pulsing Glow */}
-        <div className="absolute inset-0 rounded-full bg-[#0F75BD]/20 blur-xl animate-pulse" />
-
-        {/* Outer Rotating Ring */}
-        <div className="absolute inset-0 rounded-full border-t-2 border-r-2 border-[#0F75BD] animate-spin" style={{ animationDuration: '1.5s' }} />
-
-        {/* Inner Counter-Rotating Ring */}
-        <div className="absolute inset-2 rounded-full border-b-2 border-l-2 border-[#FCC317] animate-spin-reverse" style={{ animationDuration: '2s' }} />
-
-        {/* Central Logo */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div 
-            className={`${current.circle} rounded-full bg-white flex items-center justify-center shadow-2xl overflow-hidden border-2 border-[#0F75BD]/10 animate-bounce-subtle`}
-          >
-            <img 
-              src="/logos/ANDINOH-FAV.jpg" 
-              alt="Andinoh Logo"
-              className="w-full h-full object-cover p-1"
-            />
-          </div>
-        </div>
+/** Full-page Andinoh loader — white background, brand cursor */
+function FullPageLoader() {
+  return (
+    <div className="fixed inset-0 bg-white flex items-center justify-center z-[9999]">
+      <div className="flex items-center">
+        {/* Brand wordmark */}
+        <span
+          className="text-[#1A1A1A] font-black text-xl tracking-tight select-none"
+          style={{ fontFamily: "system-ui, sans-serif", letterSpacing: "-0.02em" }}
+        >
+          andinoh
+        </span>
+        {/* Blinking brand-blue cursor */}
+        <span
+          className="inline-block w-[2px] h-[1.1em] bg-[#0F75BD] ml-[3px] translate-y-[1px]"
+          style={{ animation: "blink 1.1s step-start infinite" }}
+        />
       </div>
 
-      {/* Elegant Loading Text */}
-      {(text || size !== "sm") && (
-        <div className="flex flex-col items-center animate-fade-in">
-          <span className="text-[#002968] font-medium tracking-[0.2em] text-[10px] uppercase">
-            {text || "Loading Experience"}
-          </span>
-          <div className="h-0.5 bg-[#FCC317] mt-2 rounded-full w-12 animate-shimmer-width" />
-        </div>
-      )}
-
-      <style jsx>{`
-        @keyframes spin-reverse {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(-360deg); }
-        }
-        .animate-spin-reverse {
-          animation: spin-reverse linear infinite;
-        }
-        @keyframes bounce-subtle {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
-        }
-        .animate-bounce-subtle {
-          animation: bounce-subtle 2s ease-in-out infinite;
-        }
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.8s ease-out forwards;
-        }
-        @keyframes shimmer-width {
-          0%, 100% { width: 10px; opacity: 0.5; }
-          50% { width: 48px; opacity: 1; }
-        }
-        .animate-shimmer-width {
-          animation: shimmer-width 2s ease-in-out infinite;
+      <style>{`
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0; }
         }
       `}</style>
     </div>
   );
+}
 
+export default function Loading({ size = "md", text, fullPage = false }: LoadingProps) {
   if (fullPage) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-white/80 backdrop-blur-md z-[9999] animate-fade-in">
-        {loaderContent}
-      </div>
-    );
+    return <FullPageLoader />;
   }
 
-  return loaderContent;
+  const rows = rowsMap[size];
+
+  return (
+    <div className="w-full space-y-3">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3">
+          {(size === "md" || size === "lg") && (
+            <div className="w-9 h-9 rounded-full bg-[#EBEBEB] animate-pulse flex-shrink-0" />
+          )}
+          <div className="flex-1 space-y-2">
+            <div
+              className={`h-3.5 bg-[#EBEBEB] rounded-[10px] animate-pulse ${rowWidths[i % rowWidths.length][0]}`}
+              style={{ animationDelay: `${i * 80}ms` }}
+            />
+            {size !== "xs" && (
+              <div
+                className={`h-2.5 bg-[#F3F4F6] rounded-[10px] animate-pulse ${rowWidths[i % rowWidths.length][1]}`}
+                style={{ animationDelay: `${i * 80 + 40}ms` }}
+              />
+            )}
+          </div>
+        </div>
+      ))}
+
+      {text && (
+        <p className="text-xs font-semibold text-[#8F8E8D] uppercase tracking-widest text-center pt-1">
+          {text}
+        </p>
+      )}
+    </div>
+  );
 }

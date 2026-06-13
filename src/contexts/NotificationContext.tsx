@@ -157,22 +157,32 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             const user = authService.getUser();
 
             if (token && user && !isConnected) {
-                console.log('Connecting WebSocket from NotificationProvider...');
                 webSocketService.connect();
                 isConnected = true;
 
-                // Also fetch hotel ID if we don't have it yet to ensure correct subscriptions
+                // Use sessionStorage so getMyHotel is only called ONCE per browser session
+                const cached = sessionStorage.getItem('andinoh_hotel_id');
+                if (cached) {
+                    setHotelId(cached);
+                    return;
+                }
+
                 try {
                     const hotel = await hotelService.getMyHotel();
                     if (hotel?.id) {
+                        sessionStorage.setItem('andinoh_hotel_id', hotel.id);
                         setHotelId(hotel.id);
                     }
-                } catch (err) {
-                    console.error('Failed to fetch hotel ID for WebSocket subscriptions:', err);
+                } catch (err: any) {
+                    const status = err?.response?.status;
+                    // 404 = no hotel yet, 429 = rate limited — both are safe to ignore
+                    if (status !== 404 && status !== 429 && err?.message !== 'Resource not found' && !err?.message?.includes('throttled')) {
+                        console.error('Failed to fetch hotel ID for WebSocket subscriptions:', err);
+                    }
                 }
             } else if (!token && isConnected) {
-                console.log('Disconnecting WebSocket (No token)...');
                 webSocketService.disconnect();
+                sessionStorage.removeItem('andinoh_hotel_id');
                 isConnected = false;
                 setHotelId(null);
             }
@@ -181,7 +191,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         // Check immediately
         handleConnect();
 
-        // Check periodically for login/logout events if they don't trigger a re-render
+        // Poll only for login/logout state changes — hotel fetch is guarded by sessionStorage cache
         checkInterval = setInterval(handleConnect, 2000);
 
         const removeListener = webSocketService.addListener((data) => {
