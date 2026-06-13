@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Star } from "lucide-react";
 
 interface Review {
   id: string;
@@ -23,7 +24,7 @@ export default function ReviewsCard({
   loading = false
 }: ReviewsCardProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-3xl p-6">
+    <div className="bg-white border border-gray-100 rounded-3xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center">
@@ -123,8 +124,8 @@ export default function ReviewsCard({
       ) : (
         /* Empty State */
         <div className="flex flex-col items-center justify-center py-10">
-          <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mb-4 border border-gray-100 shadow-inner">
-            <span className="text-3xl text-gray-300">⭐</span>
+          <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4 border border-gray-100">
+            <Star className="w-8 h-8 text-gray-300 stroke-[1.5]" />
           </div>
           <p className="text-sm font-medium text-[#5C5B59] mt-2 text-center max-w-[180px]">
             {emptyStateMessage}

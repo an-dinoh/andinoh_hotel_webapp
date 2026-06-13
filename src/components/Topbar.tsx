@@ -9,6 +9,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useNotifications, Notification } from "@/contexts/NotificationContext";
 import GlobalSearchResults from "@/components/search/GlobalSearchResults";
 import { hotelService } from "@/services/hotel.service";
+import SupportTicketModal from "@/components/help/SupportTicketModal";
 
 export default function Topbar() {
   const { currencies, activeCurrency, isLoading, setCurrency } = useCurrency();
@@ -22,18 +23,20 @@ export default function Topbar() {
   const profileRef = useRef<HTMLDivElement>(null);
 
   const { notifications, unreadCount, markAsRead } = useNotifications();
-  const [isVerified, setIsVerified] = useState<boolean | null>(null);
+  const [hotel, setHotel] = useState<any | null>(null);
+  const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
 
   useEffect(() => {
-    const checkVerification = async () => {
+    const fetchHotel = async () => {
       try {
-        const hotel = await hotelService.getMyHotel();
-        setIsVerified(hotel?.is_verified || false);
+        const data = await hotelService.getMyHotel();
+        setHotel(data);
       } catch (err) {
-        setIsVerified(false);
+        setHotel(null);
       }
     };
-    checkVerification();
+    fetchHotel();
   }, []);
 
   // Close dropdowns when clicking outside
@@ -78,13 +81,21 @@ export default function Topbar() {
 
       {/* Right Section */}
       <div className="flex items-center gap-4 ml-6">
-        {/* Verified/Unverified Badge */}
-        {isVerified === null ? (
+        {/* Verified/Unverified/Rejected Badge */}
+        {hotel === null ? (
           <div className="flex items-center gap-2 px-3 h-11 bg-[#F3F4F6] border border-[#E5E7EB] rounded-[16px] animate-pulse">
             <div className="w-4 h-4 rounded-full bg-gray-300"></div>
             <div className="h-4 w-12 bg-gray-300 rounded"></div>
           </div>
-        ) : isVerified ? (
+        ) : hotel.kyc_status === 'rejected' ? (
+          <button
+            onClick={() => setIsRejectionModalOpen(true)}
+            className="flex items-center gap-2 px-3 h-11 bg-[#FEF2F2] border border-[#FECACA] rounded-[16px] transition-all hover:bg-[#FEE2E2]"
+          >
+            <AlertCircle className="w-4 h-4 text-[#DC2626]" />
+            <span className="text-sm font-bold text-[#DC2626]">Rejected</span>
+          </button>
+        ) : hotel.is_verified || hotel.kyc_status === 'verified' ? (
           <div className="flex items-center gap-2 px-3 h-11 bg-[#F0FDF4] border border-[#A7F3D0] rounded-[16px]">
             <Shield className="w-4 h-4 text-[#059669]" />
             <span className="text-sm font-bold text-[#059669]">Verified</span>
@@ -319,6 +330,83 @@ export default function Topbar() {
           )}
         </div>
       </div>
+
+      {/* KYC Rejection Info Modal */}
+      {isRejectionModalOpen && (
+        <div className="fixed inset-0 bg-[#1A1A1A]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200" onClick={() => setIsRejectionModalOpen(false)}>
+          <div
+            className="bg-white rounded-3xl max-w-md w-full border border-gray-100 p-6 relative overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-[#1A1A1A]">KYC Verification Rejected</h3>
+              <button
+                onClick={() => setIsRejectionModalOpen(false)}
+                className="p-1.5 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-gray-100"
+              >
+                <X className="w-4 h-4 text-[#5C5B59]" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-[#DC2626] shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-[#DC2626]">Application Status: Rejected</p>
+                  <p className="text-xs text-red-700/80 mt-1 leading-relaxed">
+                    Your Know Your Customer (KYC) documentation did not pass our system or manual review verification.
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold text-[#1A1A1A] uppercase tracking-wider mb-2">Common Rejection Reasons</h4>
+                <ul className="text-xs text-[#5C5B59] space-y-2 list-disc pl-4 leading-relaxed">
+                  <li>Blurred or low-quality uploads of business licenses or identity cards.</li>
+                  <li>Discrepancies in the registered business name or tax identification numbers.</li>
+                  <li>Incomplete submission of required supporting information.</li>
+                  <li>Expired document validity dates.</li>
+                </ul>
+              </div>
+
+              <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4">
+                <p className="text-xs font-semibold text-[#0F75BD] mb-1">What can you do?</p>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  You can submit a reconsideration request to clarify your details, or get support guidance on which documents are required.
+                </p>
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <button
+                  onClick={() => setIsRejectionModalOpen(false)}
+                  className="flex-1 py-3 border border-gray-200 text-gray-700 font-bold text-sm rounded-2xl hover:bg-gray-50 transition-all cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setIsRejectionModalOpen(false);
+                    setIsTicketModalOpen(true);
+                  }}
+                  className="flex-1 py-3 bg-[#0F75BD] text-white font-bold text-sm rounded-2xl hover:bg-[#0050C8] transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                >
+                  Seek Reconsideration
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Support Ticket Modal for Reconsideration */}
+      <SupportTicketModal
+        isOpen={isTicketModalOpen}
+        onClose={() => setIsTicketModalOpen(false)}
+        initialSubject={`KYC Reconsideration Request - ${hotel?.name || "My Hotel"}`}
+        initialCategory="account"
+        initialMessage={`Dear Support Team,\n\nI am writing to request a reconsideration of the KYC verification rejection for my property, "${hotel?.name || "My Hotel"}". Please let me know what documents or details need to be updated.\n\nThank you.`}
+        initialPriority="high"
+      />
     </div>
   );
 }

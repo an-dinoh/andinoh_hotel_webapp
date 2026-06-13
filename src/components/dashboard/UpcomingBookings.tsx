@@ -1,6 +1,7 @@
 import React from 'react';
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Booking } from "@/types/hotel.types";
+import { Calendar } from "lucide-react";
 
 interface UpcomingBookingsProps {
     bookings: any[];
@@ -35,8 +36,8 @@ export default function UpcomingBookings({ bookings, loading = false }: Upcoming
                     ))
                 ) : bookings.length === 0 ? (
                     <div className="text-center py-8">
-                        <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <span className="text-2xl text-gray-400">📅</span>
+                        <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 border border-gray-100">
+                            <Calendar className="w-6 h-6 text-gray-300 stroke-[1.5]" />
                         </div>
                         <p className="text-sm text-[#5C5B59]">No upcoming check-ins for now.</p>
                     </div>

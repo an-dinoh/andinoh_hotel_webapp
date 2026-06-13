@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, AlertCircle, Loader2, MessageSquare } from "lucide-react";
 import { hotelService } from "@/services/hotel.service";
 import { toast } from "react-hot-toast";
@@ -8,16 +8,39 @@ interface SupportTicketModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  initialSubject?: string;
+  initialCategory?: string;
+  initialMessage?: string;
+  initialPriority?: string;
 }
 
-export default function SupportTicketModal({ isOpen, onClose, onSuccess }: SupportTicketModalProps) {
+export default function SupportTicketModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  initialSubject = "",
+  initialCategory = "technical",
+  initialMessage = "",
+  initialPriority = "medium",
+}: SupportTicketModalProps) {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<CreateSupportTicketRequest>({
-    subject: "",
-    category: "technical",
-    message: "",
-    priority: "medium",
+    subject: initialSubject,
+    category: initialCategory as any,
+    message: initialMessage,
+    priority: initialPriority as any,
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      setForm({
+        subject: initialSubject,
+        category: initialCategory as any,
+        message: initialMessage,
+        priority: initialPriority as any,
+      });
+    }
+  }, [isOpen, initialSubject, initialCategory, initialMessage, initialPriority]);
 
   if (!isOpen) return null;
 
