@@ -28,33 +28,18 @@ export default function ReportsPage() {
   // Hovered data point index for tooltip
   const [hoveredPointIndex, setHoveredPointIndex] = useState<number | null>(null);
 
-  // Default values to prevent crashes and provide elegant visual fallbacks
+  // Default zeroed stats to prevent crashes when loading or when API returns empty
   const defaultStats: DashboardStats = {
     today: { check_ins: 0, check_outs: 0, revenue: 0, pending_tasks: 0 },
-    performance: { adr: 0, revpar: 0, occupancy_rate: 0, average_rating: 4.5 },
+    performance: { adr: 0, revpar: 0, occupancy_rate: 0, average_rating: 0 },
     volume: { total_bookings: 0, total_revenue: 0, total_reviews: 0 },
     room_stats: { total: 0, available: 0, occupied: 0 }
   };
 
-  const defaultTrends: BookingTrendResponse = {
-    series: [
-      { date: "Mon", label: "Mon", count: 3, value: 65000 },
-      { date: "Tue", label: "Tue", count: 7, value: 140000 },
-      { date: "Wed", label: "Wed", count: 5, value: 105000 },
-      { date: "Thu", label: "Thu", count: 9, value: 230000 },
-      { date: "Fri", label: "Fri", count: 14, value: 380000 },
-      { date: "Sat", label: "Sat", count: 18, value: 540000 },
-      { date: "Sun", label: "Sun", count: 11, value: 310000 },
-    ],
-    summary: { current_period_total: 68, previous_period_total: 58, percentage_change: 17.2 }
+  const emptyTrends: BookingTrendResponse = {
+    series: [],
+    summary: { current_period_total: 0, previous_period_total: 0, percentage_change: 0 }
   };
-
-  const defaultRevenueRooms: RevenueByRoomType[] = [
-    { room_type: "Deluxe Suite", revenue: 850000, bookings_count: 18 },
-    { room_type: "Standard Room", revenue: 420000, bookings_count: 24 },
-    { room_type: "Executive Penthouse", revenue: 1250000, bookings_count: 10 },
-    { room_type: "Single Budget", revenue: 180000, bookings_count: 12 }
-  ];
 
   const fetchAnalyticsData = useCallback(async (silent = false) => {
     if (!silent) setAnalyticsLoading(true);
@@ -62,18 +47,18 @@ export default function ReportsPage() {
       const [dashboardStats, trends, roomRev] = await Promise.all([
         hotelService.getDashboardStats().catch(() => defaultStats),
         hotelService.getBookingTrends().catch((err) => {
-          console.warn("Booking trends API failed, using fallback data", err);
-          return defaultTrends;
+          console.warn("Booking trends API fetch failed", err);
+          return emptyTrends;
         }),
         hotelService.getRevenueByRoomType().catch((err) => {
-          console.warn("Revenue by room type API failed, using fallback data", err);
-          return defaultRevenueRooms;
+          console.warn("Revenue by room type API fetch failed", err);
+          return [];
         })
       ]);
 
       setStats(dashboardStats);
-      setBookingTrends(trends);
-      setRevenueByRoomType(roomRev || defaultRevenueRooms);
+      setBookingTrends(trends || emptyTrends);
+      setRevenueByRoomType(roomRev || []);
     } catch (error) {
       console.error("Error loading analytics data", error);
       toast.error("Failed to sync latest analytics data");

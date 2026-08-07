@@ -169,8 +169,6 @@ export default function SettingsPage() {
   const handleSavePreferences = async () => {
     setSavingPreferences(true);
     try {
-      // Mock API delay for saving preferences
-      await new Promise(resolve => setTimeout(resolve, 800));
       toast.success("Notification preferences saved successfully");
     } catch (error) {
       toast.error("Failed to save preferences");

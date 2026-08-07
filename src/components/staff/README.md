@@ -62,31 +62,21 @@ All type definitions are located in `/src/types/staff.types.ts`:
 - `Admin` - Admin object interface
 - `Role` - Role object interface
 
-## Mock Data
-
-Mock data for development is located in `/src/data/mockStaffData.ts`:
-- `mockUsers` - Sample user data
-- `mockAdmins` - Sample admin data
-- `mockRoles` - Sample role data
-- `mockStats` - Sample statistics
-
 ## File Structure
 
 ```
 src/
 ├── app/(main)/staff/
-│   └── page.tsx (Main page - 144 lines)
+│   └── page.tsx (Main page)
 ├── components/staff/
-│   ├── StatsCard.tsx (17 lines)
-│   ├── UsersTable.tsx (133 lines)
-│   ├── AdminsTable.tsx (96 lines)
-│   ├── RolesList.tsx (68 lines)
-│   ├── CreateUserModal.tsx (85 lines)
-│   └── CreateAdminModal.tsx (76 lines)
-├── types/
-│   └── staff.types.ts (28 lines)
-└── data/
-    └── mockStaffData.ts (88 lines)
+│   ├── StatsCard.tsx
+│   ├── UsersTable.tsx
+│   ├── AdminsTable.tsx
+│   ├── RolesList.tsx
+│   ├── CreateUserModal.tsx
+│   └── CreateAdminModal.tsx
+└── types/
+    └── staff.types.ts
 ```
 
 ## Benefits of This Structure
