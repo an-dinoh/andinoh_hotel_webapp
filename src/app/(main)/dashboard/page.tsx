@@ -92,8 +92,12 @@ export default function DashboardPage() {
     { label: "Pending Room Inspections", count: pendingInspectionsCount, color: "text-gray-600", bgColor: "bg-gray-100" },
   ];
 
+  const trendPercentage = trendResponse?.summary?.percentage_change !== undefined
+    ? `${trendResponse.summary.percentage_change >= 0 ? '+' : ''}${trendResponse.summary.percentage_change.toFixed(1)}%`
+    : "Live";
+
   const revenueItems = [
-    { label: "Today's Revenue", amount: stats?.today?.revenue?.toLocaleString() || "0", percentage: "+12%" },
+    { label: "Today's Revenue", amount: stats?.today?.revenue?.toLocaleString() || "0", percentage: trendPercentage },
     { label: "Available Balance", amount: wallet?.available_balance?.toLocaleString() || "0", percentage: "Live" },
   ];
 

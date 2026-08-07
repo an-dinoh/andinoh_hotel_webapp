@@ -180,7 +180,7 @@ export default function ReportsPage() {
   const chartWidth = svgWidth - paddingLeft - paddingRight;
   const chartHeight = svgHeight - paddingTop - paddingBottom;
 
-  const currentSeries = bookingTrends?.series || defaultTrends.series;
+  const currentSeries = bookingTrends?.series || [];
   const maxMetricVal = Math.max(
     ...currentSeries.map(d => chartMetric === 'revenue' ? d.value : d.count),
     1
