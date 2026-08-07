@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Configuration
-const BASE_URL = 'https://andinoh-backend.onrender.com/api/v1';
+const BASE_URL = 'http://127.0.0.1:8000/api/v1';
 const OWNER_EMAIL = 'hotel_owner_1_5fceeb2a@example.com';
 const STAFF_EMAIL = 'staff_test@example.com';
 const PASSWORD = 'password123';

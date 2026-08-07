@@ -2,21 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Calendar as CalendarIcon, LogIn, LogOut, CheckCircle, XCircle, Clock, ChevronDown, Loader2 } from "lucide-react";
-import { Booking, BookingStatus } from "@/types/hotel.types";
+import { Plus, Search, Calendar as CalendarIcon, LogIn, LogOut, CheckCircle, XCircle, Clock, ChevronDown, Loader2, LayoutList } from "lucide-react";
+import { Booking, BookingStatus, PhysicalRoom, Room } from "@/types/hotel.types";
 import { hotelService } from "@/services/hotel.service";
 import { toast } from "react-hot-toast";
+import BookingCalendar from "@/components/bookings/BookingCalendar";
 
 // Module-level cache to persist data across client-side page transitions
 let cachedBookings: Booking[] = [];
 let cachedStats: any = null;
 let cachedTotalItems = 0;
 let hasLoadedOnce = false;
+let cachedPhysicalRooms: PhysicalRoom[] = [];
+let cachedRoomCategories: Room[] = [];
 
 export default function BookingsPage() {
   const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>(cachedBookings);
   const [stats, setStats] = useState<any>(cachedStats); // Using any to avoid strict type issues with DashboardStats during dev
+  const [physicalRooms, setPhysicalRooms] = useState<PhysicalRoom[]>(cachedPhysicalRooms);
+  const [roomCategories, setRoomCategories] = useState<Room[]>(cachedRoomCategories);
+  const [viewMode, setViewMode] = useState<"table" | "calendar">("table");
   const [loading, setLoading] = useState(!hasLoadedOnce);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<BookingStatus | "all">("all");
@@ -26,7 +32,7 @@ export default function BookingsPage() {
 
   useEffect(() => {
     fetchBookings();
-  }, [statusFilter, searchTerm, currentPage]);
+  }, [statusFilter, searchTerm, currentPage, viewMode]);
 
   const fetchBookings = async () => {
     try {
@@ -35,8 +41,8 @@ export default function BookingsPage() {
       }
 
       const filters: any = {
-        page: currentPage,
-        page_size: itemsPerPage,
+        page: viewMode === "table" ? currentPage : 1,
+        page_size: viewMode === "table" ? itemsPerPage : 200,
       };
 
       if (statusFilter !== "all") {
@@ -47,15 +53,32 @@ export default function BookingsPage() {
         filters.search = searchTerm;
       }
 
-      const [bookingsRes, statsRes] = await Promise.all([
+      const promises: Promise<any>[] = [
         hotelService.getBookings(filters),
         hotelService.getDashboardStats()
-      ]);
+      ];
+
+      const shouldFetchMetadata = viewMode === "calendar" && (physicalRooms.length === 0 || roomCategories.length === 0);
+      if (shouldFetchMetadata) {
+        promises.push(hotelService.getAllPhysicalRooms({ page_size: 100 }));
+        promises.push(hotelService.getRooms({ page_size: 100 }));
+      }
+
+      const [bookingsRes, statsRes, physicalRoomsRes, categoriesRes] = await Promise.all(promises);
 
       const results = Array.isArray(bookingsRes?.results) ? bookingsRes.results : [];
       setBookings(results);
       setTotalItems(bookingsRes?.count || 0);
       setStats(statsRes);
+
+      if (shouldFetchMetadata) {
+        const roomsList = physicalRoomsRes?.results || [];
+        const catsList = categoriesRes?.results || [];
+        setPhysicalRooms(roomsList);
+        setRoomCategories(catsList);
+        cachedPhysicalRooms = roomsList;
+        cachedRoomCategories = catsList;
+      }
 
       // Save to cache
       cachedBookings = results;
@@ -110,7 +133,7 @@ export default function BookingsPage() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, viewMode]);
 
   return (
     <div className="h-full bg-white overflow-y-auto scrollbar-hide pt-8 pb-8">
@@ -121,13 +144,41 @@ export default function BookingsPage() {
             <h1 className="text-3xl font-bold text-[#1A1A1A]">Bookings</h1>
             <p className="text-[#5C5B59] mt-1">Manage your hotel bookings and reservations</p>
           </div>
-          <button
-            onClick={() => router.push("/bookings/create")}
-            className="px-4 py-2.5 bg-[#0F75BD] text-sm text-white font-regular rounded-2xl hover:bg-[#0050C8] transition-colors flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add New Booking
-          </button>
+          <div className="flex items-center gap-3">
+            {/* View Mode Toggle */}
+            <div className="flex bg-[#FAFAFB] border border-[#E5E7EB] rounded-2xl p-1 shadow-sm">
+              <button
+                onClick={() => setViewMode("table")}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                  viewMode === "table"
+                    ? "bg-[#0F75BD] text-white shadow-sm"
+                    : "text-[#5C5B59] hover:text-[#1A1A1A] hover:bg-[#EEF0F2]"
+                }`}
+              >
+                <LayoutList className="w-4 h-4" />
+                Table View
+              </button>
+              <button
+                onClick={() => setViewMode("calendar")}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                  viewMode === "calendar"
+                    ? "bg-[#0F75BD] text-white shadow-sm"
+                    : "text-[#5C5B59] hover:text-[#1A1A1A] hover:bg-[#EEF0F2]"
+                }`}
+              >
+                <CalendarIcon className="w-4 h-4" />
+                Calendar View
+              </button>
+            </div>
+
+            <button
+              onClick={() => router.push("/bookings/create")}
+              className="px-4 py-2.5 bg-[#0F75BD] text-sm text-white font-regular rounded-2xl hover:bg-[#0050C8] transition-colors flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add New Booking
+            </button>
+          </div>
         </div>
 
         {/* Stats Bar */}
@@ -180,7 +231,7 @@ export default function BookingsPage() {
           </select>
         </div>
 
-        {/* Bookings List */}
+        {/* Bookings Content */}
         {loading ? (
           <div className="bg-white rounded-[24px] border border-[#E5E7EB] overflow-hidden">
             <div className="divide-y divide-[#E5E7EB]">
@@ -198,6 +249,13 @@ export default function BookingsPage() {
               ))}
             </div>
           </div>
+        ) : viewMode === "calendar" ? (
+          <BookingCalendar
+            bookings={bookings}
+            physicalRooms={physicalRooms}
+            roomCategories={roomCategories}
+            onRefresh={fetchBookings}
+          />
         ) : bookings.length === 0 ? (
           <div className="bg-[#FAFAFB] border border-[#E5E7EB] rounded-3xl p-16 text-center">
             <div className="w-16 h-16 bg-[#0F75BD]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
