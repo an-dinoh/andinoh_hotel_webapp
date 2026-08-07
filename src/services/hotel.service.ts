@@ -248,6 +248,14 @@ class HotelService {
     return apiClient.post<void>(`hotels/bookings/${bookingId}/process-payment/`, data);
   }
 
+  async initiatePayment(bookingId: string, redirectUrl: string): Promise<any> {
+    return apiClient.post<any>(`bookings/${bookingId}/pay/`, { redirect_url: redirectUrl });
+  }
+
+  async verifyPayment(bookingId: string, data: { transaction_id?: string; tx_ref?: string }): Promise<any> {
+    return apiClient.post<any>(`bookings/${bookingId}/verify-payment/`, data);
+  }
+
   async getFolio(id: string): Promise<BookingFolio> {
     return apiClient.get<BookingFolio>(`hotels/bookings/${id}/folio/`);
   }

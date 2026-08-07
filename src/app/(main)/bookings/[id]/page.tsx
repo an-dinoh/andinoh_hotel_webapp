@@ -34,6 +34,13 @@ import {
 } from "lucide-react";
 import { Booking, BookingStatus } from "@/types/hotel.types";
 import BookingFolio from "@/components/bookings/BookingFolio";
+import Script from "next/script";
+
+declare global {
+  interface Window {
+    FlutterwaveCheckout: any;
+  }
+}
 
 type BookingDetailTab = "overview" | "guest" | "payment" | "folio" | "activity";
 
@@ -122,6 +129,68 @@ export default function BookingDetailPage() {
     e.preventDefault();
     if (!paymentAmount) {
       toast.error("Please enter an amount");
+      return;
+    }
+
+    if (paymentMethod === "online") {
+      try {
+        setIsProcessingPayment(true);
+        const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/bookings/${bookingId}` : '';
+        const response = await hotelService.initiatePayment(bookingId, redirectUrl);
+
+        const flutterwaveKey = process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY;
+        if (!flutterwaveKey) {
+          throw new Error("Flutterwave public key is not configured");
+        }
+
+        const txRef = response?.data?.tx_ref || `ANDINOH-${booking?.booking_reference}-${Date.now()}`;
+
+        window.FlutterwaveCheckout({
+          public_key: flutterwaveKey,
+          tx_ref: txRef,
+          amount: parseFloat(paymentAmount),
+          currency: "NGN",
+          payment_options: "card, banktransfer, ussd",
+          customer: {
+            email: booking?.guest_details?.email || "",
+            phone_number: booking?.guest_details?.phone_number || "",
+            name: booking?.guest_details?.full_name || "",
+          },
+          customizations: {
+            title: "Andinoh Hotels",
+            description: `Booking Payment for Ref: ${booking?.booking_reference}`,
+            logo: "https://res.cloudinary.com/andinoh/image/upload/v1/assets/logo_wide.png",
+          },
+          callback: async (data: any) => {
+            try {
+              const verificationRes = await hotelService.verifyPayment(bookingId, {
+                transaction_id: data.transaction_id.toString(),
+                tx_ref: data.tx_ref,
+              });
+
+              if (verificationRes?.status === "success") {
+                toast.success("Payment verified and completed successfully!");
+                setShowPaymentModal(false);
+                setPaymentAmount("");
+                setPaymentTxId("");
+                fetchBooking();
+              } else {
+                toast.error("Payment verification failed. Please contact support.");
+              }
+            } catch (verifyError: any) {
+              toast.error(verifyError.message || "Failed to verify payment");
+            } finally {
+              setIsProcessingPayment(false);
+            }
+          },
+          onclose: () => {
+            setIsProcessingPayment(false);
+          },
+        });
+      } catch (error: any) {
+        toast.error(error.message || "Payment initiation failed");
+        setIsProcessingPayment(false);
+      }
       return;
     }
 
@@ -1040,20 +1109,23 @@ export default function BookingDetailPage() {
                     <option value="transfer">Bank Transfer</option>
                     <option value="cash">Cash</option>
                     <option value="pos">POS Terminal</option>
-                    <option value="card_online">Online Card</option>
+                    <option value="card_online">Online Card (Manual)</option>
+                    <option value="online">Online Payment (Flutterwave Inline)</option>
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Transaction ID/Reference</label>
-                  <input
-                    type="text"
-                    value={paymentTxId}
-                    onChange={(e) => setPaymentTxId(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="e.g. TRX-12345678"
-                  />
-                </div>
+                {paymentMethod !== "online" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Transaction ID/Reference</label>
+                    <input
+                      type="text"
+                      value={paymentTxId}
+                      onChange={(e) => setPaymentTxId(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="e.g. TRX-12345678"
+                    />
+                  </div>
+                )}
 
                 <div className="pt-4 flex gap-3">
                   <button
@@ -1076,6 +1148,7 @@ export default function BookingDetailPage() {
           </div>
         )
       }
+      <Script src="https://checkout.flutterwave.com/v3.js" strategy="lazyOnload" />
     </div >
   );
 }
