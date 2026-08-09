@@ -29,18 +29,16 @@ export default function AnalyticsChart({
   const drawingWidth = width - paddingLeft - paddingRight;
   const drawingHeight = height - paddingTop - paddingBottom;
 
-  // Generate active chart data (dynamic fallback representing current week if database response series is empty)
+  // Use real backend series data or default to zeroed days when series is empty
   const chartData = series && series.length > 0 ? series : Array.from({ length: 7 }).map((_, idx) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - idx));
     const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const counts = [4, 6, 5, 8, 12, 14, 9];
-    const values = [180000, 290000, 240000, 420000, 680000, 850000, 490000];
     return {
       date: d.toISOString().split('T')[0],
       label: labels[d.getDay()],
-      count: counts[idx],
-      value: values[idx]
+      count: 0,
+      value: 0
     };
   });
 

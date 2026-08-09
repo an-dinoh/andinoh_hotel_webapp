@@ -177,7 +177,7 @@ authService.hasPermission('manage_bookings')
 ## 📡 API Integration
 
 ### API Gateway
-Base URL: `https://hotel-api-gateway.onrender.com`
+Base URL: `https://api.andinoh.com/api/v1`
 
 ### Service Routes
 - **Auth**: `/auth/api/auth/*`
@@ -220,7 +220,7 @@ npm install
 cp .env.example .env.local
 
 # Edit .env.local
-NEXT_PUBLIC_API_URL=https://hotel-api-gateway.onrender.com
+NEXT_PUBLIC_API_URL=https://api.andinoh.com/api/v1
 
 # Run development server
 npm run dev

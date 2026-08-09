@@ -1,7 +1,7 @@
 
 import axios from 'axios';
 
-const BASE_URL = 'https://hotel-api-gateway.onrender.com';
+const BASE_URL = 'https://api.andinoh.com/api/v1';
 const TEST_EMAIL = `debug_rooms_${Date.now()}@andinoh.com`;
 const TEST_PASSWORD = 'Password123!';
 

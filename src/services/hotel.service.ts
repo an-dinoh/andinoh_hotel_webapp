@@ -183,7 +183,7 @@ class HotelService {
 
         await this.bulkUpdatePhysicalRooms(bulkPayload);
 
-        // Return a mock object since bulk-update doesn't return the instance
+        // Return updated object instance since bulk-update response body is empty
         return { id, ...data } as PhysicalRoom;
       }
       throw error;

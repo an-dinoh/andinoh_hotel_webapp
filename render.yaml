@@ -6,6 +6,6 @@ services:
     startCommand: npm run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://hotel-api-gateway.onrender.com/api/v1
+        value: https://api.andinoh.com/api/v1
       - key: NODE_VERSION
         value: 20

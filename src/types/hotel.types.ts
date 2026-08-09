@@ -189,6 +189,8 @@ export interface Booking {
   number_of_children: number;
   total_amount: string;
   room_charges: string; // Explicitly mentioned as fixed/dynamic now
+  room_type?: any;
+  rooms?: any[];
   amount_paid: string;
   balance_due: string;
   booking_status: BookingStatus;

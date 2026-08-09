@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://andinoh-backend.onrender.com/api/v1';
+const BASE_URL = 'https://api.andinoh.com/api/v1';
 const EMAIL = 'test_hotel_1781527395697@andinoh.com';
 const PASSWORD = 'Password123!';
 

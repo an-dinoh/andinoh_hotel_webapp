@@ -83,12 +83,7 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
                 };
             });
 
-            const staticActivities = [
-                { id: 'sys-1', type: 'system', title: 'Daily Report Ready', timestamp: '1 hour ago', description: 'The performance report for today is now available.' },
-                { id: 'sys-2', type: 'system', title: 'Inventory Check', timestamp: '2 hours ago', description: 'All room statuses have been synchronized with the live grid.' },
-            ];
-
-            setActivities([...realActivities, ...staticActivities]);
+            setActivities(realActivities);
 
             setLastFetched(Date.now());
         } catch (err: any) {
