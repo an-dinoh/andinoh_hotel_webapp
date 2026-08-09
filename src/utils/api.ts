@@ -16,7 +16,7 @@ class ApiClient {
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 60000, // 60 seconds (Render free tier can be slow on cold start)
+      timeout: 60000, // 60 seconds
     });
 
     this.setupInterceptors();
@@ -164,7 +164,7 @@ class ApiClient {
 
         // Better error message for timeouts
         if (error.code === 'ECONNABORTED' || message.includes('timeout')) {
-          message = 'Request timed out. The server might be starting up (this can take 30-60 seconds on first request). Please try again.';
+          message = 'Request timed out. Please check your connection and try again.';
           if (typeof window !== 'undefined') {
             const { toast } = require('react-hot-toast');
             toast.error(message, { id: 'api-timeout' }); // deduplicate with id
@@ -173,7 +173,7 @@ class ApiClient {
 
         // Better error message for network errors
         if (error.code === 'ERR_NETWORK' || !error.response) {
-          message = 'Network error. The API server might be unreachable. Please wait 30-60 seconds for it to wake up, then try again.';
+          message = 'Network error. The API server might be unreachable. Please try again.';
           if (typeof window !== 'undefined') {
             const { toast } = require('react-hot-toast');
             toast.error(message, { id: 'api-network-error' });

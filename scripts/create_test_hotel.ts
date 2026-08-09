@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://andinoh-backend.onrender.com/api/v1';
+const BASE_URL = 'https://api.andinoh.com/api/v1';
 const TIMESTAMP = Date.now();
 const EMAIL = `test_hotel_${TIMESTAMP}@andinoh.com`;
 const PASSWORD = 'Password123!';

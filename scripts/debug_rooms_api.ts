@@ -2,9 +2,7 @@
 import axios from 'axios';
 
 const BACKENDS = [
-    'https://andinoh-backend.onrender.com/api/v1',
-    'https://hotel-api-gateway.onrender.com/api/v1',
-    'https://hotel-api-gateway.onrender.com'
+    'https://api.andinoh.com/api/v1'
 ];
 
 const CREDENTIALS = {

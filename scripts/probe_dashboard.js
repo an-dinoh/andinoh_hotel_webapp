@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const API_URL = 'https://andinoh-backend.onrender.com/api/v1';
+const API_URL = 'https://api.andinoh.com/api/v1';
 
 const loginData = {
     email: 'owner3@andinoh.com',

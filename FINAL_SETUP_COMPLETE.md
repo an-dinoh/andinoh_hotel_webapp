@@ -94,7 +94,7 @@ Use your registered email and password.
 
 ### **API Gateway URL:**
 ```
-https://hotel-api-gateway.onrender.com
+https://api.andinoh.com/api/v1
 ```
 
 ### **Registration Payload:**
@@ -189,7 +189,7 @@ src/
 - ✅ Axios-based with interceptors
 - ✅ Auto token injection (Bearer token)
 - ✅ Global error handling
-- ✅ 60-second timeout (handles Render cold starts)
+- ✅ 60-second request timeout
 - ✅ Methods: `get()`, `post()`, `put()`, `patch()`, `delete()`, `uploadFile()`
 
 ### **Services:**
@@ -218,12 +218,11 @@ src/
 
 ## ⚠️ Important Notes
 
-### **Render Free Tier (API Gateway):**
+### **Live Production API:**
 
-The API is hosted on Render's free tier, which means:
-- ⏱️ First request after inactivity takes 30-60 seconds (cold start)
-- ⚡ Subsequent requests are fast (< 1 second)
-- 💡 Solution: Just wait or retry if first request times out
+The API is hosted on `api.andinoh.com`:
+- ⚡ Fast response times
+- 🔒 SSL Secured & Domain Configured
 
 **Error Handling:**
 - ✅ 60-second timeout configured

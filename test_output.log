@@ -3,7 +3,7 @@ Reparsing as ES module because module syntax was detected. This incurs a perform
 To eliminate this warning, add "type": "module" to /Users/travis/Software/andinoh_hotel_webapp/package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
 🚀 Starting Comprehensive Hotel Manager Profile API Test Suite
-Target: https://andinoh-backend.onrender.com/api/v1
+Target: https://api.andinoh.com/api/v1
 Using Verified Owner: hotel_owner_1_5fceeb2a@example.com
 
 1️⃣  Logging in as Owner...

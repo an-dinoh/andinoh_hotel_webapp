@@ -3,7 +3,7 @@
 ## 🚀 Application Status
 
 ✅ **Frontend Application**: Fully built and running on `http://localhost:3001`
-✅ **API Integration**: Configured to use `https://hotel-api-gateway.onrender.com`
+✅ **API Integration**: Configured to use `https://api.andinoh.com/api/v1`
 ✅ **All Pages**: Implemented and functional
 ✅ **UI Components**: Complete with loading states and error handling
 
@@ -13,17 +13,17 @@
 
 ### API Gateway URL
 ```
-https://hotel-api-gateway.onrender.com
+https://api.andinoh.com/api/v1
 ```
 
 ### Health Check
 The API Gateway is **CONFIRMED WORKING**:
 ```bash
-curl https://hotel-api-gateway.onrender.com/health
+curl https://api.andinoh.com/api/v1/health/
 # Response: {"status":"healthy","service":"api-gateway"}
 ```
 
-### Important Notes About Render Free Tier
+### Server & API Performance
 
 ⚠️ **Cold Start Issue**: Render's free tier puts services to sleep after inactivity. The first request can take 30-60 seconds to wake up the server.
 
@@ -150,11 +150,7 @@ Once logged in, test these pages:
    - Status badges (color-coded)
    - Icons throughout
 
-### ⚠️ Cold Start Behavior (Render Free Tier)
-
-**Symptom**: First request times out or takes 30-60 seconds
-
-**Why**: Render free tier sleeps services after inactivity
+### API Connection Status
 
 **Solution**:
 - Wait 30-60 seconds on first request
@@ -320,9 +316,8 @@ Before deploying to production:
 
 ## 💡 Tips for Testing
 
-1. **First Request Slow?**
-   - This is normal for Render free tier
-   - Just wait or retry
+1. **Connection Timeout?**
+   - Check network connectivity and retry.
    - Subsequent requests will be fast
 
 2. **401 Errors?**
@@ -355,6 +350,4 @@ The Hotel Management System frontend is **100% complete and functional**:
 ✅ Fully responsive design
 ✅ Clean, maintainable code
 
-**Ready for testing with the live Render API!**
-
-Just remember: **First request might be slow** due to Render's free tier cold start. Be patient and retry if needed!
+**Ready for testing with the live API (`api.andinoh.com`)!**

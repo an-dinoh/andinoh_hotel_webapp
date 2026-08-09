@@ -42,9 +42,9 @@ ROLE_CHOICES = [
 
 #### Option 2: Check API Documentation
 If you have Swagger/OpenAPI docs enabled, visit:
-- `https://hotel-api-gateway.onrender.com/swagger/`
-- `https://hotel-api-gateway.onrender.com/docs/`
-- `https://hotel-api-gateway.onrender.com/redoc/`
+- `https://api.andinoh.com/swagger/`
+- `https://api.andinoh.com/docs/`
+- `https://api.andinoh.com/redoc/`
 
 #### Option 3: Ask Backend Developer
 Contact whoever developed the backend API and ask:
@@ -83,7 +83,7 @@ If you already have a test account in the backend, you can skip registration and
 The login endpoint works perfectly:
 
 ```bash
-curl -X POST 'https://hotel-api-gateway.onrender.com/auth/api/auth/login' \
+curl -X POST 'https://api.andinoh.com/api/v1/auth/login/' \
   -H 'Content-Type: application/json' \
   -d '{"email":"your@email.com","password":"yourpassword"}'
 ```

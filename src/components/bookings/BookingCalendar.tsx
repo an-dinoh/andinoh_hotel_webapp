@@ -103,7 +103,7 @@ export default function BookingCalendar({
       const hasRoom = b.rooms && b.rooms.length > 0;
       if (!hasRoom) return true;
       // If all rooms are TBD, it is unassigned
-      return b.rooms.every((r: any) => !r.room_number || r.room_number.includes("TBD"));
+      return b.rooms?.every((r: any) => !r.room_number || r.room_number.includes("TBD")) ?? false;
     });
   }, [bookings]);
 

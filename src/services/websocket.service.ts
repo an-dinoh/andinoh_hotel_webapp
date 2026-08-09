@@ -18,7 +18,7 @@ class WebSocketService {
     private baseUrl = process.env.NEXT_PUBLIC_WS_URL || (
         process.env.NEXT_PUBLIC_API_URL 
             ? process.env.NEXT_PUBLIC_API_URL.replace(/^http/, 'ws').replace(/\/api\/v1\/?$/, '/ws/notifications/')
-            : 'wss://andinoh-backend.onrender.com/ws/notifications/'
+            : 'wss://api.andinoh.com/ws/notifications/'
     );
     private listeners: Set<(data: ServerNotification) => void> = new Set();
     private reconnectAttempts = 0;
