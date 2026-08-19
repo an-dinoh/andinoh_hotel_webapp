@@ -135,6 +135,7 @@ export default function ImageUpload({ images, onChange, error, maxFiles = 10 }: 
                                 whileHover={{ y: -5 }}
                                 className="relative aspect-square rounded-2xl overflow-hidden border border-[#C8CFD5] bg-white group/item"
                             >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                     src={URL.createObjectURL(file)}
                                     alt={`Preview ${index}`}

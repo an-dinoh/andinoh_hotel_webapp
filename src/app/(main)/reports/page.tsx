@@ -8,38 +8,51 @@ import {
 import { hotelService } from "@/services/hotel.service";
 import { ReportJob, DashboardStats, BookingTrend, BookingTrendResponse, RevenueByRoomType } from "@/types/hotel.types";
 import { toast } from "react-hot-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
+
+// Default zeroed stats to prevent crashes when loading or when API returns empty
+const defaultStats: DashboardStats = {
+  today: { check_ins: 0, check_outs: 0, revenue: 0, pending_tasks: 0 },
+  performance: { adr: 0, revpar: 0, occupancy_rate: 0, average_rating: 0 },
+  volume: { total_bookings: 0, total_revenue: 0, total_reviews: 0 },
+  room_stats: { total: 0, available: 0, occupied: 0 }
+};
+
+const emptyTrends: BookingTrendResponse = {
+  series: [],
+  summary: { current_period_total: 0, previous_period_total: 0, percentage_change: 0 }
+};
 
 export default function ReportsPage() {
+  const { activeCurrency } = useCurrency();
   const [loading, setLoading] = useState(false);
-  const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [form, setForm] = useState({
     report_type: "revenue_monthly",
     start_date: "",
     end_date: "",
     format: "pdf",
   });
-  const [recentJobs, setRecentJobs] = useState<ReportJob[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [bookingTrends, setBookingTrends] = useState<BookingTrendResponse | null>(null);
   const [revenueByRoomType, setRevenueByRoomType] = useState<RevenueByRoomType[]>([]);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [selectedReportType, setSelectedReportType] = useState<string>("revenue");
+  const [exportFormat, setExportFormat] = useState<"pdf" | "excel" | "csv">("pdf");
 
-  // Metric toggle for SVG chart: 'revenue' | 'bookings'
+  // Date range state
+  const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "1y" | "custom">("30d");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+
+  // Pending background jobs state
+  const [recentJobs, setRecentJobs] = useState<ReportJob[]>([]);
+  const [pendingJobs, setPendingJobs] = useState<ReportJob[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
+
+  // SVG chart: 'revenue' | 'bookings'
   const [chartMetric, setChartMetric] = useState<'revenue' | 'bookings'>('revenue');
   // Hovered data point index for tooltip
   const [hoveredPointIndex, setHoveredPointIndex] = useState<number | null>(null);
-
-  // Default zeroed stats to prevent crashes when loading or when API returns empty
-  const defaultStats: DashboardStats = {
-    today: { check_ins: 0, check_outs: 0, revenue: 0, pending_tasks: 0 },
-    performance: { adr: 0, revpar: 0, occupancy_rate: 0, average_rating: 0 },
-    volume: { total_bookings: 0, total_revenue: 0, total_reviews: 0 },
-    room_stats: { total: 0, available: 0, occupied: 0 }
-  };
-
-  const emptyTrends: BookingTrendResponse = {
-    series: [],
-    summary: { current_period_total: 0, previous_period_total: 0, percentage_change: 0 }
-  };
 
   const fetchAnalyticsData = useCallback(async (silent = false) => {
     if (!silent) setAnalyticsLoading(true);
@@ -73,34 +86,39 @@ export default function ReportsPage() {
 
   // Simple polling mechanism for pending jobs
   const updatePendingJobs = useCallback(async () => {
-    const pendingJobs = recentJobs.filter(
-      job => job.status === "pending" || job.status === "processing"
-    );
+    setRecentJobs(prevJobs => {
+      const hasPending = prevJobs.some(
+        job => job.status === "pending" || job.status === "processing"
+      );
+      if (!hasPending) return prevJobs;
 
-    if (pendingJobs.length === 0) return;
+      (async () => {
+        let updated = false;
+        const newJobs = [...prevJobs];
 
-    let updated = false;
-    const newJobs = [...recentJobs];
-
-    for (let i = 0; i < newJobs.length; i++) {
-      const job = newJobs[i];
-      if (job.status === "pending" || job.status === "processing") {
-        try {
-          const status = await hotelService.getReportJob(job.id);
-          if (status.status !== job.status) {
-            newJobs[i] = status;
-            updated = true;
+        for (let i = 0; i < newJobs.length; i++) {
+          const job = newJobs[i];
+          if (job.status === "pending" || job.status === "processing") {
+            try {
+              const status = await hotelService.getReportJob(job.id);
+              if (status.status !== job.status) {
+                newJobs[i] = status;
+                updated = true;
+              }
+            } catch (error) {
+              console.error("Failed to fetch job status", error);
+            }
           }
-        } catch (error) {
-          console.error("Failed to fetch job status", error);
         }
-      }
-    }
 
-    if (updated) {
-      setRecentJobs(newJobs);
-    }
-  }, [recentJobs]);
+        if (updated) {
+          setRecentJobs(newJobs);
+        }
+      })();
+
+      return prevJobs;
+    });
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {

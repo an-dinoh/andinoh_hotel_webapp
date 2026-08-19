@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ChevronDown, Plus, Download, TrendingUp, TrendingDown, Calendar, DollarSign, X, FileText, FileSpreadsheet, File, Building2 } from "lucide-react";
 import Image from "next/image";
 import { hotelService } from "@/services/hotel.service";
@@ -79,10 +79,10 @@ export default function WalletPage() {
       }
     };
     fetchWalletData();
-  }, [currentPage]);
+  }, [currentPage, walletStats]);
 
   // Map backend transactions to UI Transaction interface
-  const transactions: Transaction[] = realTransactions.map(tx => ({
+  const transactions: Transaction[] = useMemo(() => realTransactions.map(tx => ({
     id: tx.id.substring(0, 8).toUpperCase(),
     type: tx.transaction_type === 'credit' ? 'Revenue Credit' : 'Withdrawal/Debit',
     guest: tx.description || (tx.booking ? `Booking ${tx.booking.substring(0, 8)}` : "System Transaction"),
@@ -93,7 +93,7 @@ export default function WalletPage() {
     paymentMethod: tx.gateway_reference ? "Gateway" : "Wallet",
     time: new Date(tx.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     description: tx.description
-  }));
+  })), [realTransactions]);
 
   // Server-side pagination total
   const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;

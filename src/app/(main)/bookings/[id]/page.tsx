@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { hotelService } from "@/services/hotel.service";
@@ -61,22 +61,25 @@ export default function BookingDetailPage() {
   const [paymentMethod, setPaymentMethod] = useState("transfer");
   const [paymentTxId, setPaymentTxId] = useState("");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (bookingId) {
-      fetchBooking();
-    }
-  }, [bookingId]);
-
-  const fetchBooking = async () => {
+  const fetchBooking = useCallback(async () => {
     try {
       const data = await hotelService.getBooking(bookingId);
       setBooking(data);
     } catch (error: any) {
       console.error("Error fetching booking:", error);
       toast.error(error.message || "Failed to fetch booking details");
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [bookingId]);
+
+  useEffect(() => {
+    if (bookingId) {
+      fetchBooking();
+    }
+  }, [bookingId, fetchBooking]);
 
   const handleCheckIn = async () => {
     try {
