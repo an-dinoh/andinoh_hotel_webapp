@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, Calendar as CalendarIcon, LogIn, LogOut, CheckCircle, XCircle, Clock, ChevronDown, Loader2, LayoutList } from "lucide-react";
 import { Booking, BookingStatus, PhysicalRoom, Room } from "@/types/hotel.types";
@@ -30,11 +30,7 @@ export default function BookingsPage() {
   const [totalItems, setTotalItems] = useState(cachedTotalItems);
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    fetchBookings();
-  }, [statusFilter, searchTerm, currentPage, viewMode]);
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       if (!hasLoadedOnce) {
         setLoading(true);
@@ -103,7 +99,7 @@ export default function BookingsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [viewMode, currentPage, statusFilter, searchTerm, physicalRooms.length, roomCategories.length]);
 
   // Stats from backend
   const arrivalsToday = stats?.today?.check_ins || 0;

@@ -127,12 +127,10 @@ function ResetPasswordForm() {
         otp,
         new_password: form.password
       });
-      toast.success("Password reset successfully!");
       setIsSubmitted(true);
     } catch (error: any) {
       const message = error.response?.data?.message || "Failed to reset password. Please try again.";
       setErrors((prev) => ({ ...prev, global: message }));
-      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -227,13 +225,13 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="rounded-2xl p-8">
+    <div>
       <Link
         href="/verify-otp"
-        className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-[#0F75BD] hover:bg-gray-50 transition-colors mb-6"
+        className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors mb-5"
       >
         <svg
-          className="w-6 h-6 text-[#0F75BD]"
+          className="w-5 h-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -247,17 +245,16 @@ function ResetPasswordForm() {
         </svg>
       </Link>
 
-      <div className="text-left mb-8">
-        <h1 className="text-4xl font-semibold text-gray-800 mb-4">
+      <div className="text-left mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1.5">
           Reset Your Password
         </h1>
-        <p className="text-gray-500 text-sm">
-          Enter your new password for{" "}
-          <span className="font-semibold text-gray-700">{email}</span>
+        <p className="text-slate-500 text-xs sm:text-sm font-normal leading-relaxed">
+          Enter your new password for {email}
         </p>
       </div>
 
-      <form className="space-y-5" onSubmit={handleSubmit}>
+      <form className="space-y-4" onSubmit={handleSubmit}>
         <InputField
           label="New Password"
           type="password"
@@ -280,16 +277,28 @@ function ResetPasswordForm() {
         />
 
         {errors.global && (
-          <p className="text-red-600 text-sm">{errors.global}</p>
+          <p className="text-red-500 text-xs font-medium bg-red-50 p-2.5 rounded-lg border border-red-100">{errors.global}</p>
         )}
 
-        <Button
-          text="Reset Password"
-          onClick={handleSubmit}
-          loading={loading}
-          disabled={!isFormValid || loading}
-        />
+        <div className="pt-2">
+          <Button
+            text="Reset Password"
+            onClick={handleSubmit}
+            loading={loading}
+            disabled={!isFormValid || loading}
+          />
+        </div>
       </form>
+
+      <p className="text-left text-xs text-slate-500 mt-5 pt-3.5 border-t border-slate-100">
+        Remember your password?{" "}
+        <Link
+          href="/login"
+          className="text-[#0F75BD] hover:text-[#0050C8] hover:underline font-semibold transition-colors"
+        >
+          Login
+        </Link>
+      </p>
     </div>
   );
 }

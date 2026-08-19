@@ -1,6 +1,13 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.andinoh.com/api/v1';
+const getApiBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  return typeof window !== 'undefined' ? '/api/v1' : 'https://api.andinoh.com/api/v1';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // DEBUG logs muted for production
 
@@ -16,7 +23,7 @@ class ApiClient {
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 60000, // 60 seconds
+      timeout: 15000, // 15 seconds fast timeout
     });
 
     this.setupInterceptors();
@@ -47,14 +54,14 @@ class ApiClient {
       async (error) => {
         const config = error.config;
 
-        // Implementation of basic retry logic
-        if (config && (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK' || !error.response)) {
+        // Implementation of basic retry logic (skip retrying CORS / network errors on public endpoints)
+        const isPublicEndpoint = config?.url?.includes('/shared/currencies') || config?.url?.includes('currencies');
+        if (config && !isPublicEndpoint && (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK') && error.response) {
           config.__retryCount = config.__retryCount || 0;
 
           if (config.__retryCount < 2) {
             config.__retryCount += 1;
-            // Exponential backoff or just a delay to let the server wake up
-            const delay = config.__retryCount * 2000;
+            const delay = config.__retryCount * 1000;
             await new Promise(resolve => setTimeout(resolve, delay));
             return this.client(config);
           }
@@ -186,6 +193,11 @@ class ApiClient {
             const { toast } = require('react-hot-toast');
             toast.error('Internal server error. Our team has been notified.', { id: 'server-error' });
           }
+        }
+
+        if (error && typeof error === 'object') {
+          (error as any).message = message;
+          return Promise.reject(error);
         }
 
         const apiError = new Error(message) as Error & { response?: unknown };

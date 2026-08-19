@@ -54,7 +54,7 @@ export default function DashboardPage() {
     return () => {
       removeListener();
     };
-  }, [fetchDashboardData]);
+  }, [fetchDashboardData, stats]);
 
   const totalBookings = stats?.volume?.total_bookings || 0;
   const activeBookings = stats?.room_stats?.occupied || 0;

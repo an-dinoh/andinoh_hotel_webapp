@@ -57,8 +57,12 @@ import {
 class HotelService {
   // ==================== HOTEL MANAGEMENT ====================
 
-  async getMyHotel(): Promise<Hotel> {
-    return apiClient.get<Hotel>('hotels/my-hotel/');
+  async getMyHotel(): Promise<Hotel | null> {
+    try {
+      return await apiClient.get<Hotel>('hotels/my-hotel/');
+    } catch {
+      return null;
+    }
   }
 
   async getFeed(latitude?: number, longitude?: number): Promise<HotelFeed> {
@@ -491,17 +495,29 @@ class HotelService {
   }
 
   async getBookingTrends(startDate?: string, endDate?: string): Promise<BookingTrendResponse> {
-    return apiClient.get<BookingTrendResponse>('hotels/analytics/booking-trends/', {
-      params: { start_date: startDate, end_date: endDate }
-    });
+    try {
+      return await apiClient.get<BookingTrendResponse>('hotels/analytics/booking-trends/', {
+        params: { start_date: startDate, end_date: endDate }
+      });
+    } catch {
+      return { total_bookings: 0, trends: [] } as unknown as BookingTrendResponse;
+    }
   }
 
   async getRevenueByRoomType(): Promise<RevenueByRoomType[]> {
-    return apiClient.get<RevenueByRoomType[]>('hotels/analytics/revenue-by-room-type/');
+    try {
+      return await apiClient.get<RevenueByRoomType[]>('hotels/analytics/revenue-by-room-type/');
+    } catch {
+      return [] as unknown as RevenueByRoomType[];
+    }
   }
 
   async getSegmentation(): Promise<SegmentationResponse> {
-    return apiClient.get<SegmentationResponse>('hotels/analytics/segmentation/');
+    try {
+      return await apiClient.get<SegmentationResponse>('hotels/analytics/segmentation/');
+    } catch {
+      return { direct: 0, ota: 0, corporate: 0, walk_in: 0 } as unknown as SegmentationResponse;
+    }
   }
 
   async generateReport(data: { report_type: string; start_date: string; end_date: string; format: string; }): Promise<any> {
@@ -513,8 +529,18 @@ class HotelService {
   }
 
   async getWalletStats(): Promise<WalletStats> {
-    // Per API guide: wallet balance is at /api/v1/hotels/wallet/ (not /hotels/wallet/stats/)
-    return apiClient.get<WalletStats>('hotels/wallet/');
+    try {
+      return await apiClient.get<WalletStats>('hotels/wallet/');
+    } catch {
+      return {
+        balance: '0.00',
+        currency: 'NGN',
+        total_earnings: '0.00',
+        pending_withdrawals: '0.00',
+        account_number: '',
+        bank_name: '',
+      } as unknown as WalletStats;
+    }
   }
 
   async getBankAccounts(): Promise<BankAccount[]> {

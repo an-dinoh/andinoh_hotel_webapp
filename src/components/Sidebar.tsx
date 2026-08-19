@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Hotel, ChevronLeft, Menu, Building2 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { authService } from "@/services/auth.service";
+import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
 
 import LogoutIcon from "@/icons/LogoutIcon";
@@ -16,7 +16,6 @@ import CalendarIcon from "@/icons/CalendarIcon";
 import DashboardIcon from "@/icons/DashboardIcon";
 import DangerIcon from "@/icons/DangerIcon";
 import HelpIcon from "@/icons/HelpIcon";
-// import EventIcon from "@/icons/EventIcon";
 
 import ArrowRightIcon from "@/icons/ArrowRightIcon";
 import ArrowLeftIcon from "@/icons/ArrowLeftIcon";
@@ -27,7 +26,6 @@ import MessageIcon from "@/icons/MessageIcon";
 const navigationMain = [
   { name: "Dashboard", href: "/dashboard", icon: DashboardIcon, badge: null },
   { name: "Rooms", href: "/rooms", icon: BookingIcon, badge: null },
-  // { name: "Event Spaces", href: "/event-spaces", icon: EventIcon, badge: null },
   { name: "Bookings", href: "/bookings", icon: CalendarIcon, badge: null },
   { name: "Wallet", href: "/wallet", icon: WalletIcon, badge: null },
   { name: "Chats", href: "/chats", icon: MessageIcon, badge: null },
@@ -43,30 +41,26 @@ const navigationSecondary = [
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [user, setUser] = useState<{ email: string } | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { notifications, totalUnreadChats } = useNotifications();
 
   // Use global totalUnreadChats for the badge, but hide it if on the chats page
   const chatBadgeCount = pathname === "/chats" ? 0 : totalUnreadChats;
 
-  useEffect(() => {
-    const userData = authService.getUser();
-    setUser(userData);
-  }, []);
-
   const handleLogout = () => {
     setShowLogoutModal(true);
   };
 
   const confirmLogout = () => {
-    authService.logout();
+    logout();
     setShowLogoutModal(false);
+    router.push("/login");
   };
 
-  const SidebarContent = () => (
+  const renderSidebarContent = () => (
     <div className="flex flex-col h-full bg-white relative">
       {/* Collapse Button - Positioned at top right edge */}
       <button
@@ -264,7 +258,7 @@ export default function Sidebar() {
           }`}
       >
         <div className="h-screen sticky top-0">
-          <SidebarContent />
+          {renderSidebarContent()}
         </div>
       </aside>
 
@@ -281,7 +275,7 @@ export default function Sidebar() {
         className={`lg:hidden fixed top-0 left-0 h-full w-64 bg-gray-900 transform transition-transform duration-300 ease-out z-50 ${mobileOpen ? "translate-x-0" : "-translate-x-full"
           }`}
       >
-        <SidebarContent />
+        {renderSidebarContent()}
       </aside>
 
       {/* Mobile Menu Button */}

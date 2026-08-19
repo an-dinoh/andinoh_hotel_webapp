@@ -6,6 +6,7 @@ import InputField from "@/components/ui/InputField";
 import Button from "@/components/ui/Button";
 import { useState, useMemo } from "react";
 import { authService } from "@/services/auth.service";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
 
 interface LoginFormState {
@@ -15,6 +16,7 @@ interface LoginFormState {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [form, setForm] = useState<LoginFormState>({
     email: "",
     password: "",
@@ -90,8 +92,8 @@ export default function LoginPage() {
       });
 
       if (response && response.access_token) {
-        // Save auth data
-        authService.saveAuth(response.access_token, response.user, response.refresh_token);
+        // Save auth data and update global AuthContext
+        login(response.access_token, response.user, response.refresh_token);
 
         toast.success("Login successful!");
 
@@ -104,24 +106,23 @@ export default function LoginPage() {
       console.error("Login error:", error);
       const errorMessage = error.response?.data?.message || error.message || "Failed to log in. Please check your credentials.";
       setErrors((prev: any) => ({ ...prev, global: errorMessage }));
-      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="rounded-2xl p-8">
-      <div className="text-left mb-8">
-        <h1 className="text-4xl font-semibold text-gray-800 mb-4">
-          Welcome Back
+    <div>
+      <div className="text-left mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1.5">
+          Login
         </h1>
-        <p className="text-gray-500 text-sm">
-          Sign in to your account to manage your hotel
+        <p className="text-slate-500 text-sm font-normal leading-relaxed">
+          Log in to your account to manage your hotel
         </p>
       </div>
 
-      <form className="space-y-5" onSubmit={handleSubmit}>
+      <form className="space-y-4" onSubmit={handleSubmit}>
         <InputField
           label="Email"
           type="email"
@@ -138,34 +139,36 @@ export default function LoginPage() {
           onChange={(e) => handleChange("password", e.target.value)}
         />
 
-        <div className="flex flex-row-reverse items-center justify-between text-sm">
+        <div className="flex justify-end text-xs pt-1">
           <Link
             href="/forgot-password"
-            className="text-[#0F75BD] hover:underline font-sm font-medium"
+            className="text-[#0F75BD] hover:text-[#0050C8] hover:underline font-normal transition-colors"
           >
             Forgot password?
           </Link>
         </div>
 
         {errors.global && (
-          <p className="text-red-600 text-sm">{errors.global}</p>
+          <p className="text-red-500 text-xs font-medium bg-red-50 p-2.5 rounded-lg border border-red-100">{errors.global}</p>
         )}
 
-        <Button
-          text="Sign In"
-          onClick={handleSubmit}
-          loading={loading}
-          disabled={!isFormValid || loading}
-        />
+        <div className="pt-2">
+          <Button
+            text="Login"
+            onClick={handleSubmit}
+            loading={loading}
+            disabled={!isFormValid || loading}
+          />
+        </div>
       </form>
 
-      <p className="text-left text-sm text-gray-600 mt-4">
+      <p className="text-left text-xs text-slate-500 mt-5 pt-3.5 border-t border-slate-100">
         Don&apos;t have an account?{" "}
         <Link
           href="/register"
-          className="text-[#0F75BD] hover:underline font-semibold"
+          className="text-[#0F75BD] hover:text-[#0050C8] hover:underline font-semibold transition-colors"
         >
-          Sign up
+          Register
         </Link>
       </p>
     </div>

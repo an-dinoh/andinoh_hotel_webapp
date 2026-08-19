@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { GlobalErrorBoundary } from "@/components/ui/GlobalErrorBoundary";
-import { CurrencyProvider } from "@/contexts/CurrencyContext";
-import { NotificationProvider } from "@/contexts/NotificationContext";
-import { Toaster } from "react-hot-toast";
+import Providers from "@/components/Providers";
 
 const rational = localFont({
   src: [
@@ -73,14 +70,12 @@ const rational = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Hotel Manager App",
-  description: "Manage hotel rooms, bookings, and staff efficiently",
+  title: "Andinoh | Hotel Management Platform",
+  description: "Manage hotel rooms, bookings, staff, and analytics efficiently",
   icons: {
     icon: "/logos/ANDINOH-FAV.jpg",
   },
 };
-
-import { Providers } from "@/components/Providers";
 
 export default function RootLayout({
   children,

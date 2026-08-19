@@ -55,12 +55,12 @@ export default function Button({
   className = "",
 }: ButtonProps) {
   const baseStyles =
-    "rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 select-none overflow-hidden whitespace-nowrap";
+    "rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 select-none whitespace-nowrap";
 
   const sizeStyles = {
-    sm: "h-9 px-4 text-xs",
-    md: "h-12 px-6 text-sm",
-    lg: "h-14 px-8 text-base",
+    sm: "h-8 px-3 text-xs",
+    md: "h-10 px-3.5 sm:px-4 text-xs sm:text-sm",
+    lg: "h-12 px-6 text-sm sm:text-base",
   };
 
   const variantStyles = {

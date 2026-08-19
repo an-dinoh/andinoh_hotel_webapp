@@ -88,7 +88,7 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
             setLastFetched(Date.now());
         } catch (err: any) {
             console.error("Error fetching dashboard data:", err);
-            if (!stats) {
+            if (!statsRef.current) {
                 setError(err.message || "Failed to load dashboard statistics");
             }
         } finally {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Plus, Receipt, Coffee, Car, Wifi, Wine, Utensils, AlertCircle, Save, X, Activity } from "lucide-react";
 import { BookingFolio as IBookingFolio, IncidentalCharge } from "@/types/hotel.types";
 import { hotelService } from "@/services/hotel.service";
@@ -17,11 +17,7 @@ export default function BookingFolio({ bookingId }: { bookingId: string }) {
     const [chargeType, setChargeType] = useState<string>("room_service");
     const [isPaid, setIsPaid] = useState(false);
 
-    useEffect(() => {
-        fetchFolio();
-    }, [bookingId]);
-
-    const fetchFolio = async () => {
+    const fetchFolio = useCallback(async () => {
         try {
             setLoading(true);
             const data = await hotelService.getFolio(bookingId);
@@ -32,7 +28,11 @@ export default function BookingFolio({ bookingId }: { bookingId: string }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [bookingId]);
+
+    useEffect(() => {
+        fetchFolio();
+    }, [fetchFolio]);
 
     const handleAddIncidental = async (e: React.FormEvent) => {
         e.preventDefault();

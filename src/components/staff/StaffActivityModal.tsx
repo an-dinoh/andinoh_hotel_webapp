@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X, Activity, Clock, ShieldAlert, FileText, UserCircle, Plus } from "lucide-react";
 import { StaffActivity } from "@/types/hotel.types";
 import { hotelService } from "@/services/hotel.service";
@@ -16,13 +16,7 @@ export default function StaffActivityModal({ isOpen, onClose, staffId, staffName
     const [activities, setActivities] = useState<StaffActivity[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (isOpen && staffId) {
-            fetchActivity();
-        }
-    }, [isOpen, staffId]);
-
-    const fetchActivity = async () => {
+    const fetchActivity = useCallback(async () => {
         try {
             setLoading(true);
             const data = await hotelService.getStaffActivity(staffId);
@@ -33,7 +27,13 @@ export default function StaffActivityModal({ isOpen, onClose, staffId, staffName
         } finally {
             setLoading(false);
         }
-    };
+    }, [staffId]);
+
+    useEffect(() => {
+        if (isOpen && staffId) {
+            fetchActivity();
+        }
+    }, [isOpen, staffId, fetchActivity]);
 
     const getActionIcon = (action: string) => {
         switch (action?.toLowerCase()) {

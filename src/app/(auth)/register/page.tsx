@@ -10,10 +10,12 @@ import { useState, useMemo } from "react";
 import { FormValidator, FormState } from "@/utils/FormValidator";
 
 import { authService } from "@/services/auth.service";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [form, setForm] = useState<FormState>({
     hotelName: "",
@@ -93,8 +95,8 @@ export default function RegisterPage() {
       } as any);
 
       if (response && response.access_token) {
-        // Save auth data
-        authService.saveAuth(response.access_token, response.user, response.refresh_token);
+        // Save auth data and update global AuthContext
+        login(response.access_token, response.user, response.refresh_token);
 
         toast.success("Account created successfully!");
 
@@ -107,25 +109,23 @@ export default function RegisterPage() {
       console.error("Registration error:", error);
       const errorMessage = error.response?.data?.message || error.message || "Failed to register. Please try again.";
       setErrors((prev: any) => ({ ...prev, global: errorMessage }));
-      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="rounded-2xl p-8">
-      <div className="text-left mb-8">
-        <h1 className="text-4xl font-semibold text-gray-800 mb-4">
-          Register Your Hotel
+    <div>
+      <div className="text-left mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1.5">
+          Register
         </h1>
-        <p className="text-gray-500 text-sm">
-          Create your hotel account to manage bookings, rooms, and staff
-          effortlessly.
+        <p className="text-slate-500 text-sm font-normal leading-relaxed">
+          Create your hotel account to manage bookings, rooms, and staff.
         </p>
       </div>
 
-      <form className="space-y-5" onSubmit={handleSubmit}>
+      <form className="space-y-4" onSubmit={handleSubmit}>
         <InputField
           label="Hotel Name"
           placeholder="e.g., Grand View"
@@ -152,7 +152,6 @@ export default function RegisterPage() {
           }}
           error={emailError}
         />
-
 
         <InputField
           label="Hotel License Number"
@@ -194,31 +193,32 @@ export default function RegisterPage() {
           error={confirmPasswordError}
         />
 
-        {/* ✅ Terms Section */}
         <TermsAndConditions
           accepted={acceptedTerms}
           onChange={setAcceptedTerms}
         />
 
-        <Button
-          text="Register Hotel"
-          onClick={handleSubmit}
-          loading={loading}
-          disabled={!isFormValid || loading} // ✅ Disable until valid
-        />
+        <div className="pt-2">
+          <Button
+            text="Register"
+            onClick={handleSubmit}
+            loading={loading}
+            disabled={!isFormValid || loading}
+          />
+        </div>
       </form>
 
       {errors.global && (
-        <p className="text-red-600 text-sm mt-2">{errors.global}</p>
+        <p className="text-red-500 text-xs font-medium bg-red-50 p-2.5 rounded-lg border border-red-100 mt-3">{errors.global}</p>
       )}
 
-      <p className="text-left text-sm text-gray-600 mt-4">
+      <p className="text-left text-xs text-slate-500 mt-5 pt-3.5 border-t border-slate-100">
         Already have an account?{" "}
         <Link
           href="/login"
-          className="text-[#0F75BD] hover:underline font-semibold"
+          className="text-[#0F75BD] hover:text-[#0050C8] hover:underline font-semibold transition-colors"
         >
-          Log in
+          Login
         </Link>
       </p>
     </div>

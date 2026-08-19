@@ -19,13 +19,13 @@ export default function TermsAndConditions({
         onChange={() => onChange(!accepted)}
       />
 
-      <label htmlFor="terms" className="text-sm text-[#5C5B59] leading-snug">
+      <label htmlFor="terms" className="text-xs text-slate-500 leading-relaxed cursor-pointer select-none">
         I agree to the{" "}
         <a
           href="/terms"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#0F75BD] hover:underline font-medium"
+          className="text-[#0F75BD] hover:text-[#0050C8] font-medium hover:underline transition-colors"
         >
           Terms of Service
         </a>{" "}
@@ -34,7 +34,7 @@ export default function TermsAndConditions({
           href="/privacy"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#0F75BD] font-medium hover:underline"
+          className="text-[#0F75BD] hover:text-[#0050C8] font-medium hover:underline transition-colors"
         >
           Privacy Policy
         </a>

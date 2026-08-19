@@ -158,7 +158,7 @@ export default function ChatsPage() {
       }
     });
     return () => { removeListener(); };
-  }, [selectedChat]);
+  }, [selectedChat, fetchConversations]);
 
   const handleSelectChat = (chat: ChatConversation) => {
     setSelectedChat(chat);

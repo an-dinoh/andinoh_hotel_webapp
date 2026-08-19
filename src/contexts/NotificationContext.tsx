@@ -32,41 +32,44 @@ interface NotificationContextType {
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [totalUnreadChats, setTotalUnreadChats] = useState(0);
-    const { activities } = useDashboard();
-    const isFirstMount = useRef(true);
-
-    // PERSISTENCE: Load from localStorage on initial mount
-    useEffect(() => {
+    const [notifications, setNotifications] = useState<Notification[]>(() => {
+        if (typeof window === 'undefined') return [];
         const saved = localStorage.getItem('andinoh_notifications');
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
-                setNotifications(parsed.map((n: any) => ({
+                return parsed.map((n: any) => ({
                     ...n,
                     timestamp: new Date(n.timestamp)
-                })));
+                }));
             } catch (e) {
                 console.error('Failed to parse saved notifications:', e);
             }
         }
-    }, []);
+        return [];
+    });
+    const [totalUnreadChats, setTotalUnreadChats] = useState(0);
+    const { activities } = useDashboard();
+    const isFirstMount = useRef(true);
 
     // SEEDING: If empty and we have dashboard activities, seed some
     useEffect(() => {
-        if (notifications.length === 0 && activities.length > 0) {
-            const initialNotifications: Notification[] = activities.map((act: any) => ({
-                id: act.id,
-                type: act.type === 'booking' ? 'booking_update' : 'reception_alert',
-                title: act.title,
-                message: act.description,
-                timestamp: new Date(),
-                read: true, // Seeded are marked as read
-            }));
-            setNotifications(initialNotifications);
+        if (activities.length > 0) {
+            Promise.resolve().then(() => {
+                setNotifications(prev => {
+                    if (prev.length > 0) return prev;
+                    return activities.map((act: any) => ({
+                        id: act.id,
+                        type: act.type === 'booking' ? 'booking_update' : 'reception_alert',
+                        title: act.title,
+                        message: act.description,
+                        timestamp: new Date(),
+                        read: true,
+                    }));
+                });
+            });
         }
-    }, [activities, notifications.length]);
+    }, [activities]);
 
     // PERSISTENCE: Save to localStorage whenever notifications change
     useEffect(() => {
@@ -191,8 +194,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         // Check immediately
         handleConnect();
 
-        // Poll only for login/logout state changes — hotel fetch is guarded by sessionStorage cache
-        checkInterval = setInterval(handleConnect, 2000);
+        // Check for login/logout state changes periodically
+        checkInterval = setInterval(handleConnect, 15000);
 
         const removeListener = webSocketService.addListener((data) => {
             addNotification(data);
@@ -212,7 +215,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Initial fetch of unread count when hotelId is ready
     useEffect(() => {
         if (hotelId) {
-            refreshUnreadCount();
+            Promise.resolve().then(() => refreshUnreadCount());
         }
     }, [hotelId, refreshUnreadCount]);
 

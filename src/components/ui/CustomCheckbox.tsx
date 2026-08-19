@@ -12,15 +12,17 @@ export default function CustomCheckbox({
     <button
       type="button"
       onClick={() => onChange(!accepted)}
-      className={`h-4 w-4 flex items-center justify-center rounded-sm border transition-all duration-200
+      aria-checked={accepted}
+      role="checkbox"
+      className={`h-4 w-4 shrink-0 flex items-center justify-center rounded-md border transition-all duration-150 cursor-pointer select-none mt-0.5
         ${
           accepted
-            ? "bg-[#002968] border-[#002968]"
-            : "border-gray-400 bg-transparent hover:border-[#002968]"
+            ? "bg-[#0F75BD] border-[#0F75BD] text-white shadow-sm"
+            : "border-slate-300 bg-white hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F75BD]/20"
         }
       `}
     >
-      {accepted && <Check className="h-3.5 w-3.5 text-white" />}
+      {accepted && <Check className="h-3 w-3 text-white stroke-[3]" />}
     </button>
   );
 }

@@ -55,7 +55,6 @@ export interface CreateHotelRequest {
   total_rooms: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateHotelRequest extends Partial<CreateHotelRequest> { }
 
 // Room Types
@@ -141,7 +140,6 @@ export interface CreateRoomRequest {
   total_rooms?: number; // Optional: calculated by backend from physical units
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateRoomRequest extends Partial<CreateRoomRequest> { }
 
 export interface RoomFilters {
@@ -256,7 +254,6 @@ export interface CreateBookingRequest {
   created_by_staff_id?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateBookingRequest extends Partial<CreateBookingRequest> { }
 
 export interface BookingFilters {
@@ -630,7 +627,6 @@ export interface CreateEventSpaceRequest {
   supported_setups?: { style: string; max_capacity: number; }[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateEventSpaceRequest extends Partial<CreateEventSpaceRequest> { }
 
 export interface EventSpaceFilters {
