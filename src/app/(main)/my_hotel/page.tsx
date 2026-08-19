@@ -59,24 +59,26 @@ export default function MyHotelPage() {
       setLoading(true);
       const data = await hotelService.getMyHotel();
 
-      setHotel(data);
-      setForm({
-        name: data.name,
-        description: data.description,
-        hotel_type: data.hotel_type,
-        star_rating: data.star_rating,
-        address: data.address,
-        city: data.city,
-        state: data.state,
-        country: data.country,
-        postal_code: data.postal_code,
-        phone: data.phone,
-        email: data.email,
-        website: data.website || "",
-        check_in_time: data.check_in_time,
-        check_out_time: data.check_out_time,
-        total_rooms: data.total_rooms,
-      });
+      if (data) {
+        setHotel(data);
+        setForm({
+          name: data.name || "",
+          description: data.description || "",
+          hotel_type: data.hotel_type,
+          star_rating: data.star_rating,
+          address: data.address || "",
+          city: data.city || "",
+          state: data.state || "",
+          country: data.country || "",
+          postal_code: data.postal_code || "",
+          phone: data.phone || "",
+          email: data.email || "",
+          website: data.website || "",
+          check_in_time: data.check_in_time || "14:00",
+          check_out_time: data.check_out_time || "11:00",
+          total_rooms: data.total_rooms || 0,
+        });
+      }
     } catch (error: any) {
       console.error("Error fetching hotel:", error);
       if (

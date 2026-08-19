@@ -154,7 +154,9 @@ export default function CreateRoomPage() {
     const fetchHotel = async () => {
       try {
         const hotel = await hotelService.getMyHotel();
-        setHotelId(hotel.id);
+        if (hotel?.id) {
+          setHotelId(hotel.id);
+        }
       } catch (error) {
         console.error("Failed to fetch hotel info:", error);
         setErrors({ submit: "Failed to load hotel information. Please refresh." });

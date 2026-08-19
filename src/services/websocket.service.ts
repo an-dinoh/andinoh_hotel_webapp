@@ -31,7 +31,6 @@ class WebSocketService {
 
         const token = authService.getToken();
         if (!token) {
-            console.warn('Cannot connect to WebSocket: No auth token found.');
             return;
         }
 

@@ -11,7 +11,10 @@ import GlobalSearchResults from "@/components/search/GlobalSearchResults";
 import { hotelService } from "@/services/hotel.service";
 import SupportTicketModal from "@/components/help/SupportTicketModal";
 
+import { useAuth } from "@/contexts/AuthContext";
+
 export default function Topbar() {
+  const { user } = useAuth();
   const { currencies, activeCurrency, isLoading, setCurrency } = useCurrency();
   const router = useRouter();
   const pathname = usePathname();
@@ -21,6 +24,10 @@ export default function Topbar() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+
+  const displayName = user?.full_name || (user as any)?.first_name || user?.email?.split("@")[0] || "Partner";
+  const displayEmail = user?.email || "";
+  const initials = (displayName.slice(0, 2) || "AN").toUpperCase();
 
   const { notifications, unreadCount, markAsRead } = useNotifications();
   const [hotel, setHotel] = useState<any | null>(null);
@@ -245,13 +252,13 @@ export default function Topbar() {
           >
             <div className="relative">
               <div className="w-9 h-9 bg-gradient-to-br from-[#0F75BD] to-[#02A5E6] rounded-[12px] flex items-center justify-center">
-                <span className="text-white text-sm font-black text-center ml-0.5">AP</span>
+                <span className="text-white text-xs font-bold text-center">{initials}</span>
               </div>
               <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-[#10B981] border-2 border-white rounded-full"></div>
             </div>
             <div className="text-left hidden sm:block">
-              {/* <p className="text-sm font-bold text-[#1A1A1A] leading-tight">Adeyanju</p> */}
-              <p className="text-[10px] font-bold tracking-wider uppercase text-[#5C5B59]">Hotel Owner</p>
+              <p className="text-xs font-semibold text-[#1A1A1A] leading-tight truncate max-w-[100px]">{displayName}</p>
+              <p className="text-[10px] font-medium tracking-wider uppercase text-[#5C5B59]">{user?.role || "Partner"}</p>
             </div>
             <ChevronDown className={`w-4 h-4 text-[#5C5B59] transition-transform duration-300 ml-1 ${showProfileMenu ? 'rotate-180' : ''}`} />
           </button>
@@ -265,13 +272,13 @@ export default function Topbar() {
                 <div className="flex items-center gap-4 relative z-10">
                   <div className="relative">
                     <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-[18px] flex items-center justify-center border border-white/30">
-                      <span className="text-white text-xl font-black text-center ml-0.5">AP</span>
+                      <span className="text-white text-lg font-bold text-center">{initials}</span>
                     </div>
                     <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#10B981] border-2 border-white/20 rounded-full"></div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-black text-white tracking-tight">Adeyanju</h3>
-                    <p className="text-[11px] font-bold tracking-wider text-white/80 mt-0.5">adeyanju@andinoh.com</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base font-bold text-white tracking-tight truncate">{displayName}</h3>
+                    <p className="text-xs font-normal tracking-wider text-white/80 mt-0.5 truncate">{displayEmail}</p>
                   </div>
                 </div>
               </div>

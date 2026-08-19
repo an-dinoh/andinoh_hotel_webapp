@@ -194,8 +194,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         // Check immediately
         handleConnect();
 
-        // Poll only for login/logout state changes — hotel fetch is guarded by sessionStorage cache
-        checkInterval = setInterval(handleConnect, 2000);
+        // Check for login/logout state changes periodically
+        checkInterval = setInterval(handleConnect, 15000);
 
         const removeListener = webSocketService.addListener((data) => {
             addNotification(data);

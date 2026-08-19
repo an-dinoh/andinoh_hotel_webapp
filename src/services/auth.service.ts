@@ -46,6 +46,8 @@ class AuthService {
       if (refreshToken) {
         localStorage.setItem('refresh_token', refreshToken);
       }
+      // Set auth_token cookie for Next.js middleware route protection
+      document.cookie = `auth_token=${token}; path=/; max-age=604800; SameSite=Lax`;
     }
   }
 
@@ -73,7 +75,7 @@ class AuthService {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('refresh_token');
-      window.location.href = '/login';
+      document.cookie = 'auth_token=; path=/; max-age=0';
     }
   }
 

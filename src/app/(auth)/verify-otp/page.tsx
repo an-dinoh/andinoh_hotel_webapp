@@ -15,7 +15,7 @@ function VerifyOTPForm() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
 
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
   const [isResending, setIsResending] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
@@ -50,7 +50,7 @@ function VerifyOTPForm() {
     if (error) setError("");
 
     // Auto-focus next input
-    if (value && index < 5) {
+    if (value && index < 3) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -63,17 +63,17 @@ function VerifyOTPForm() {
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData("text").slice(0, 6);
+    const pastedData = e.clipboardData.getData("text").slice(0, 4);
     if (!/^\d+$/.test(pastedData)) return;
 
     const newOtp = [...otp];
     pastedData.split("").forEach((char, index) => {
-      if (index < 6) newOtp[index] = char;
+      if (index < 4) newOtp[index] = char;
     });
     setOtp(newOtp);
 
     // Focus the next empty input or the last input
-    const nextIndex = Math.min(pastedData.length, 5);
+    const nextIndex = Math.min(pastedData.length, 3);
     inputRefs.current[nextIndex]?.focus();
   };
 
@@ -82,8 +82,8 @@ function VerifyOTPForm() {
 
     const otpValue = otp.join("");
 
-    if (otpValue.length !== 6) {
-      setError("Please enter the complete 6-digit code.");
+    if (otpValue.length !== 4) {
+      setError("Please enter the complete 4-digit code.");
       return;
     }
 
@@ -93,8 +93,7 @@ function VerifyOTPForm() {
     setError("");
 
     try {
-      // With the new backend flow, we don't verify OTP standalone.
-      // We just pass it to the next page to be submitted with the new password.
+      // Pass email and 4-digit OTP to reset-password page
       router.push(
         `/reset-password?email=${encodeURIComponent(email)}&otp=${otpValue}&verified=true`
       );
@@ -120,13 +119,13 @@ function VerifyOTPForm() {
   };
 
   return (
-    <div className="rounded-2xl p-8">
+    <div>
       <Link
         href="/forgot-password"
-        className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-[#0F75BD] hover:bg-gray-50 transition-colors mb-6"
+        className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors mb-5"
       >
         <svg
-          className="w-6 h-6 text-[#0F75BD]"
+          className="w-5 h-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -140,16 +139,15 @@ function VerifyOTPForm() {
         </svg>
       </Link>
 
-      <div className="text-left mb-8">
-        <h1 className="text-4xl font-semibold text-gray-800 mb-4">Verify OTP</h1>
-        <p className="text-gray-500 text-sm">
-          Enter the 6-digit code sent to{" "}
-          <span className="font-semibold text-gray-700">{email}</span>
+      <div className="text-left mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1.5">Verify OTP</h1>
+        <p className="text-slate-500 text-xs sm:text-sm font-normal leading-relaxed">
+          Enter the 4-digit code sent to {email}
         </p>
       </div>
 
-      <form className="space-y-6" onSubmit={handleSubmit}>
-        <div className="flex gap-3 justify-between">
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <div className="flex gap-3 justify-center max-w-[280px] mx-auto py-1">
           {otp.map((digit, index) => (
             <input
               key={index}
@@ -162,43 +160,48 @@ function VerifyOTPForm() {
               onKeyDown={(e) => handleKeyDown(index, e)}
               onPaste={index === 0 ? handlePaste : undefined}
               className={`
-                w-full h-14 text-center text-2xl font-semibold
-                border-2 rounded-lg
-                focus:outline-none focus:ring-2 focus:ring-[#0F75BD]
-                transition-all
-                ${error ? "border-red-500" : "border-gray-300"}
-                ${digit ? "border-[#0F75BD]" : ""}
+                w-11 h-11 sm:w-12 sm:h-12 text-center text-lg font-medium text-slate-900 bg-white
+                border rounded-xl outline-none focus:outline-none focus:ring-0
+                transition-colors duration-150
+                ${error
+                  ? "border-red-400 focus:border-red-500"
+                  : digit
+                    ? "border-[#0F75BD] text-[#0F75BD]"
+                    : "border-slate-200 hover:border-slate-300 focus:border-[#0F75BD]"
+                }
               `}
             />
           ))}
         </div>
 
-        {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+        {error && (
+          <p className="text-red-500 text-xs font-medium bg-red-50 p-2.5 rounded-lg border border-red-100">{error}</p>
+        )}
 
-        <Button
-          text="Verify OTP"
-          onClick={handleSubmit}
-          loading={loading}
-          disabled={!isFormValid || loading}
-        />
+        <div className="pt-2">
+          <Button
+            text="Verify OTP"
+            onClick={handleSubmit}
+            loading={loading}
+            disabled={!isFormValid || loading}
+          />
+        </div>
       </form>
 
-      <div className="mt-4 text-left">
-        <p className="text-sm text-gray-600">
-          Didn&apos;t receive the code?{" "}
-          {resendTimer > 0 ? (
-            <span className="text-gray-500">Resend in {resendTimer}s</span>
-          ) : (
-            <button
-              onClick={handleResend}
-              disabled={isResending}
-              className="text-[#0F75BD] font-semibold hover:underline disabled:opacity-50"
-            >
-              {isResending ? "Sending..." : "Resend OTP"}
-            </button>
-          )}
-        </p>
-      </div>
+      <p className="text-left text-xs text-slate-500 mt-5 pt-3.5 border-t border-slate-100">
+        Didn&apos;t receive the code?{" "}
+        {resendTimer > 0 ? (
+          <span className="text-slate-400 font-medium">Resend in {resendTimer}s</span>
+        ) : (
+          <button
+            onClick={handleResend}
+            disabled={isResending}
+            className="text-[#0F75BD] hover:text-[#0050C8] hover:underline font-semibold transition-colors disabled:opacity-50"
+          >
+            {isResending ? "Sending..." : "Resend OTP"}
+          </button>
+        )}
+      </p>
     </div>
   );
 }

@@ -24,6 +24,14 @@ const nextConfig: NextConfig = {
     });
     return config;
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: 'https://api.andinoh.com/api/v1/:path*',
+      },
+    ];
+  },
   async headers() {
     return [
       {
