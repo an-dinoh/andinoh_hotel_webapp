@@ -478,7 +478,7 @@ export default function CreateRoomPage() {
                         }`}
                       placeholder="Tell the story of this room. What makes it unforgettable?"
                     />
-                    {errors.description && <p className="mt-2 text-xs text-red-500 font-bold px-1">{errors.description}</p>}
+                    {errors.description && <p className="mt-2 text-xs text-red-500 font-normal px-1">{errors.description}</p>}
                   </div>
                 </div>
               </div>

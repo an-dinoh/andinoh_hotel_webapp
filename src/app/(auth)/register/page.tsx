@@ -10,6 +10,7 @@ import { useState, useMemo } from "react";
 import { FormValidator, FormState } from "@/utils/FormValidator";
 
 import { authService } from "@/services/auth.service";
+import { extractErrorMessage } from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
 
@@ -107,7 +108,7 @@ export default function RegisterPage() {
       }
     } catch (error: any) {
       console.error("Registration error:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Failed to register. Please try again.";
+      const errorMessage = extractErrorMessage(error, "Failed to register. Please try again.");
       setErrors((prev: any) => ({ ...prev, global: errorMessage }));
     } finally {
       setLoading(false);
@@ -209,7 +210,7 @@ export default function RegisterPage() {
       </form>
 
       {errors.global && (
-        <p className="text-red-500 text-xs font-medium bg-red-50 p-2.5 rounded-lg border border-red-100 mt-3">{errors.global}</p>
+        <p className="text-red-500 text-xs font-normal bg-red-50 p-2.5 rounded-lg border border-red-100 mt-3">{errors.global}</p>
       )}
 
       <p className="text-left text-xs text-slate-500 mt-5 pt-3.5 border-t border-slate-100">

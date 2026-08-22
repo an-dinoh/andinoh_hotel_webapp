@@ -11,6 +11,7 @@ import { useSearchParams } from "next/navigation";
 import { FormValidator } from "@/utils/FormValidator";
 
 import { authService } from "@/services/auth.service";
+import { extractErrorMessage } from "@/utils/api";
 import { toast } from "react-hot-toast";
 
 function ResetPasswordForm() {
@@ -129,7 +130,7 @@ function ResetPasswordForm() {
       });
       setIsSubmitted(true);
     } catch (error: any) {
-      const message = error.response?.data?.message || "Failed to reset password. Please try again.";
+      const message = extractErrorMessage(error, "Failed to reset password. Please check your OTP and try again.");
       setErrors((prev) => ({ ...prev, global: message }));
     } finally {
       setLoading(false);
@@ -250,7 +251,8 @@ function ResetPasswordForm() {
           Reset Your Password
         </h1>
         <p className="text-slate-500 text-xs sm:text-sm font-normal leading-relaxed">
-          Enter your new password for {email}
+          Enter your new password for{" "}
+          <span className="font-semibold text-slate-800">{email}</span>
         </p>
       </div>
 
@@ -277,7 +279,7 @@ function ResetPasswordForm() {
         />
 
         {errors.global && (
-          <p className="text-red-500 text-xs font-medium bg-red-50 p-2.5 rounded-lg border border-red-100">{errors.global}</p>
+          <p className="text-red-500 text-xs font-normal bg-red-50 p-2.5 rounded-lg border border-red-100">{errors.global}</p>
         )}
 
         <div className="pt-2">

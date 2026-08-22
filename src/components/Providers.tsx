@@ -15,7 +15,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         <NotificationProvider>
           <CurrencyProvider>
             <RoomsProvider>
-              <Toaster position="top-right" />
+              <Toaster position="bottom-right" toastOptions={{ style: { borderRadius: '12px', fontSize: '13px' } }} />
               {children}
             </RoomsProvider>
           </CurrencyProvider>

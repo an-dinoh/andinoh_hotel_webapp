@@ -80,7 +80,7 @@ export default function InputField({
         <p className="mt-1.5 text-xs text-slate-500 font-normal">{helpText}</p>
       )}
       {error && (
-        <p className="mt-1.5 text-xs text-red-500 font-medium">{error}</p>
+        <p className="mt-1.5 text-xs text-red-500 font-normal">{error}</p>
       )}
     </div>
   );

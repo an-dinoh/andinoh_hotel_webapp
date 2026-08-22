@@ -117,12 +117,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         };
 
         setNotifications(prev => [newNotification, ...prev]);
-
-        // Show toast for important notifications
-        toast(newNotification.message, {
-            icon: getIconByType(payload.type),
-            duration: 5000,
-        });
     }, []);
 
     const markAsRead = (id: string) => {

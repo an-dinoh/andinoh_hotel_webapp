@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 
 import { authService } from "@/services/auth.service";
+import { extractErrorMessage } from "@/utils/api";
 import { toast } from "react-hot-toast";
 
 function VerifyOTPForm() {
@@ -93,12 +94,15 @@ function VerifyOTPForm() {
     setError("");
 
     try {
-      // Pass email and 4-digit OTP to reset-password page
+      // Actually verify OTP against backend before navigating
+      await authService.verifyOTP({ email, otp: otpValue });
+
       router.push(
         `/reset-password?email=${encodeURIComponent(email)}&otp=${otpValue}&verified=true`
       );
-    } catch {
-      setError("An error occurred. Please try again.");
+    } catch (error: any) {
+      const errorMessage = extractErrorMessage(error, "Invalid or expired reset code.");
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -142,7 +146,8 @@ function VerifyOTPForm() {
       <div className="text-left mb-6">
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1.5">Verify OTP</h1>
         <p className="text-slate-500 text-xs sm:text-sm font-normal leading-relaxed">
-          Enter the 4-digit code sent to {email}
+          Enter the 4-digit code sent to{" "}
+          <span className="font-semibold text-slate-800">{email}</span>
         </p>
       </div>
 
@@ -175,7 +180,7 @@ function VerifyOTPForm() {
         </div>
 
         {error && (
-          <p className="text-red-500 text-xs font-medium bg-red-50 p-2.5 rounded-lg border border-red-100">{error}</p>
+          <p className="text-red-500 text-xs font-normal bg-red-50 p-2.5 rounded-lg border border-red-100">{error}</p>
         )}
 
         <div className="pt-2">

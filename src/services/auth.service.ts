@@ -14,10 +14,12 @@ class AuthService {
   // ==================== AUTHENTICATION ====================
 
   async register(data: RegisterRequest): Promise<AuthResponse> {
+    this.logout();
     return apiClient.post<AuthResponse>('auth/register/', data);
   }
 
   async login(data: LoginRequest): Promise<AuthResponse> {
+    this.logout();
     return apiClient.post<AuthResponse>('auth/login/', data);
   }
 
@@ -31,6 +33,10 @@ class AuthService {
 
   async forgotPassword(data: ForgotPasswordRequest): Promise<MessageResponse> {
     return apiClient.post<MessageResponse>('auth/password-reset/request/', data);
+  }
+
+  async verifyOTP(data: VerifyOtpRequest): Promise<MessageResponse> {
+    return apiClient.post<MessageResponse>('auth/password-reset/verify-otp/', data);
   }
 
   async resetPassword(data: ResetPasswordRequest): Promise<MessageResponse> {
@@ -89,7 +95,7 @@ class AuthService {
 
   isOwner(): boolean {
     const role = this.getUserRole();
-    return role === 'owner' || role === 'hotel_owner';
+    return role === 'owner' || role === 'hotel_owner' || role === 'hotel';
   }
 
   isManager(): boolean {

@@ -107,7 +107,8 @@ export default function ForgotPasswordPage() {
             Check Your Email
           </h1>
           <p className="text-slate-500 text-xs sm:text-sm font-normal leading-relaxed">
-            We&apos;ve sent a 4-digit reset code to {email}.
+            We&apos;ve sent a 4-digit reset code to{" "}
+            <span className="font-semibold text-slate-800">{email}</span>.
           </p>
         </div>
 
@@ -173,7 +174,7 @@ export default function ForgotPasswordPage() {
         />
 
         {errors.global && (
-          <p className="text-red-500 text-xs font-medium bg-red-50 p-2.5 rounded-lg border border-red-100">{errors.global}</p>
+          <p className="text-red-500 text-xs font-normal bg-red-50 p-2.5 rounded-lg border border-red-100">{errors.global}</p>
         )}
 
         <div className="pt-2">

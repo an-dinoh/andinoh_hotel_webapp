@@ -6,6 +6,7 @@ import InputField from "@/components/ui/InputField";
 import Button from "@/components/ui/Button";
 import { useState, useMemo } from "react";
 import { authService } from "@/services/auth.service";
+import { extractErrorMessage } from "@/utils/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-hot-toast";
 
@@ -104,7 +105,7 @@ export default function LoginPage() {
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Failed to log in. Please check your credentials.";
+      const errorMessage = extractErrorMessage(error, "Failed to log in. Please check your credentials.");
       setErrors((prev: any) => ({ ...prev, global: errorMessage }));
     } finally {
       setLoading(false);
@@ -149,7 +150,7 @@ export default function LoginPage() {
         </div>
 
         {errors.global && (
-          <p className="text-red-500 text-xs font-medium bg-red-50 p-2.5 rounded-lg border border-red-100">{errors.global}</p>
+          <p className="text-red-500 text-xs font-normal bg-red-50 p-2.5 rounded-lg border border-red-100">{errors.global}</p>
         )}
 
         <div className="pt-2">
