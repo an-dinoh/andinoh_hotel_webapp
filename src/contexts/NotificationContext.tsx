@@ -82,8 +82,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const unreadCount = notifications.filter(n => !n.read).length;
 
     const addNotification = useCallback((payload: any) => {
+        const effectiveType = (payload.type === 'send_notification' && payload.notification_type)
+            ? payload.notification_type
+            : (payload.type || payload.notification_type);
+
         // Filter out technical messages (e.g., subscription confirmations or status ok)
-        if (!payload.type) {
+        if (!effectiveType) {
             console.log('Technical WebSocket message received:', payload);
             return;
         }
@@ -100,6 +104,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             return 'New notification received';
         })();
 
+        // Handle hotel verification status real-time update
+        if (effectiveType === 'hotel_status_update' && typeof payload.message?.is_verified === 'boolean') {
+            const currentUser = authService.getUser();
+            if (currentUser) {
+                currentUser.is_verified = payload.message.is_verified;
+                localStorage.setItem('user', JSON.stringify(currentUser));
+            }
+        }
+
         // SILENCE TECHNICAL MESSAGES: Do not show nor save subscription confirmations
         if (message.toLowerCase().includes('subscribed to')) {
             console.log('Suppressed technical notification:', message);
@@ -108,12 +121,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         const newNotification: Notification = {
             id: Math.random().toString(36).substring(7),
-            type: payload.type,
-            title: getTitleByType(payload.type),
+            type: effectiveType,
+            title: getTitleByType(effectiveType),
             message,
             timestamp: new Date(),
             read: false,
-            data: payload.data,
+            data: payload.data || payload.message,
         };
 
         setNotifications(prev => [newNotification, ...prev]);

@@ -48,9 +48,20 @@ class WebSocketService {
         this.socket.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-                // Silently drop subscription confirmations — they have no 'type' field
-                if (!data.type) return;
-                this.listeners.forEach(listener => listener(data as ServerNotification));
+                // Silently drop subscription confirmations — they have no 'type' or 'notification_type' field
+                if (!data.type && !data.notification_type) return;
+
+                // Normalize Django Channels wrapper format (type: "send_notification", notification_type: "hotel_status_update")
+                const effectiveType = (data.type === 'send_notification' && data.notification_type)
+                    ? data.notification_type
+                    : (data.type || data.notification_type);
+
+                const normalizedData = {
+                    ...data,
+                    type: effectiveType,
+                };
+
+                this.listeners.forEach(listener => listener(normalizedData as ServerNotification));
             } catch (error) {
                 console.error('Error parsing WebSocket message:', error);
             }

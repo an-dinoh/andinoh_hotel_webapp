@@ -156,6 +156,10 @@ class HotelService {
           previous: null
         };
       }
+      if (error.response?.status === 429 || error.message?.toLowerCase().includes('throttled')) {
+        console.warn('Global physical-rooms endpoint throttled (429). Returning empty list fallback.');
+        return { count: 0, results: [], next: null, previous: null };
+      }
       throw error;
     }
   }
@@ -477,7 +481,7 @@ class HotelService {
           adr: totalBookings > 0 ? totalRevenue / totalBookings : 0,
           revpar: totalUnits > 0 ? totalRevenue / totalUnits : 0,
           occupancy_rate: totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0,
-          average_rating: 4.5 // Default placeholder
+          average_rating: 0
         },
         volume: {
           total_bookings: totalBookings,

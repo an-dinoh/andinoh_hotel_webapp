@@ -9,6 +9,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useNotifications, Notification } from "@/contexts/NotificationContext";
 import GlobalSearchResults from "@/components/search/GlobalSearchResults";
 import { hotelService } from "@/services/hotel.service";
+import { webSocketService } from "@/services/websocket.service";
 import SupportTicketModal from "@/components/help/SupportTicketModal";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,16 +36,48 @@ export default function Topbar() {
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
 
   useEffect(() => {
-    const fetchHotel = async () => {
+    let isMounted = true;
+
+    const loadHotel = async () => {
       try {
         const data = await hotelService.getMyHotel();
-        setHotel(data);
-      } catch (err) {
-        setHotel(null);
+        if (isMounted) setHotel(data);
+      } catch {
+        if (isMounted && user) {
+          setHotel({
+            is_verified: user.is_verified || false,
+            kyc_status: user.is_verified ? 'verified' : 'unverified',
+          });
+        }
       }
     };
-    fetchHotel();
-  }, []);
+
+    loadHotel();
+
+    // Active real-time WebSocket listener for status updates broadcast by backend
+    const removeWSListener = webSocketService.addListener((payload: any) => {
+      const effectiveType = (payload.type === 'send_notification' && payload.notification_type)
+        ? payload.notification_type
+        : (payload.type || payload.notification_type);
+
+      if (effectiveType === 'hotel_status_update') {
+        if (payload.message && typeof payload.message === 'object') {
+          setHotel((prev: any) => ({
+            ...prev,
+            ...payload.message,
+            is_verified: payload.message.is_verified ?? prev?.is_verified,
+            kyc_status: payload.message.kyc_status || (payload.message.is_verified ? 'verified' : prev?.kyc_status),
+          }));
+        }
+        loadHotel();
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      removeWSListener();
+    };
+  }, [user]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -88,31 +121,65 @@ export default function Topbar() {
 
       {/* Right Section */}
       <div className="flex items-center gap-4 ml-6">
-        {/* Verified/Unverified/Rejected Badge */}
-        {hotel === null ? (
-          <div className="flex items-center gap-2 px-3 h-11 bg-[#F3F4F6] border border-[#E5E7EB] rounded-[16px] animate-pulse">
-            <div className="w-4 h-4 rounded-full bg-gray-300"></div>
-            <div className="h-4 w-12 bg-gray-300 rounded"></div>
-          </div>
-        ) : hotel.kyc_status === 'rejected' ? (
-          <button
-            onClick={() => setIsRejectionModalOpen(true)}
-            className="flex items-center gap-2 px-3 h-11 bg-[#FEF2F2] border border-[#FECACA] rounded-[16px] transition-all hover:bg-[#FEE2E2]"
-          >
-            <AlertCircle className="w-4 h-4 text-[#DC2626]" />
-            <span className="text-sm font-bold text-[#DC2626]">Rejected</span>
-          </button>
-        ) : hotel.is_verified || hotel.kyc_status === 'verified' ? (
-          <div className="flex items-center gap-2 px-3 h-11 bg-[#F0FDF4] border border-[#A7F3D0] rounded-[16px]">
-            <Shield className="w-4 h-4 text-[#059669]" />
-            <span className="text-sm font-bold text-[#059669]">Verified</span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 px-3 h-11 bg-[#FFFBEB] border border-[#FDE68A] rounded-[16px]">
-            <AlertCircle className="w-4 h-4 text-[#D97706]" />
-            <span className="text-sm font-bold text-[#D97706]">Unverified</span>
-          </div>
-        )}
+        {/* Verified / Unverified / Pending / Rejected Status Section */}
+        {(() => {
+          const isVerified = hotel?.is_verified || hotel?.kyc_status === 'verified' || user?.is_verified;
+          const kycStatus = hotel?.kyc_status || (isVerified ? 'verified' : 'unverified');
+
+          if (kycStatus === 'rejected') {
+            return (
+              <button
+                type="button"
+                onClick={() => setIsRejectionModalOpen(true)}
+                title="KYC Rejection — Click to view details and request reconsideration"
+                className="flex items-center gap-2 px-3.5 h-11 bg-[#FEF2F2] border border-[#FECACA] rounded-[16px] transition-all hover:bg-[#FEE2E2] active:scale-[0.98] cursor-pointer"
+              >
+                <AlertCircle className="w-4 h-4 text-[#DC2626]" />
+                <span className="text-sm font-semibold text-[#DC2626]">Rejected</span>
+              </button>
+            );
+          }
+
+          if (kycStatus === 'pending' || kycStatus === 'under_review') {
+            return (
+              <button
+                type="button"
+                onClick={() => router.push('/settings')}
+                title="KYC Under Review — Click to manage settings"
+                className="flex items-center gap-2 px-3.5 h-11 bg-[#FEF3C7]/60 border border-[#FDE68A] rounded-[16px] transition-all hover:bg-[#FEF3C7] active:scale-[0.98] cursor-pointer"
+              >
+                <Clock className="w-4 h-4 text-[#D97706]" />
+                <span className="text-sm font-semibold text-[#D97706]">Under Review</span>
+              </button>
+            );
+          }
+
+          if (isVerified) {
+            return (
+              <button
+                type="button"
+                onClick={() => router.push('/settings')}
+                title="Verified Hotel Listing — Click to manage settings"
+                className="flex items-center gap-2 px-3.5 h-11 bg-[#F0FDF4] border border-[#A7F3D0] rounded-[16px] transition-all hover:bg-[#DCFCE7] active:scale-[0.98] cursor-pointer"
+              >
+                <Shield className="w-4 h-4 text-[#059669]" />
+                <span className="text-sm font-semibold text-[#059669]">Verified</span>
+              </button>
+            );
+          }
+
+          return (
+            <button
+              type="button"
+              onClick={() => router.push('/settings')}
+              title="Unverified Hotel Listing — Click to complete KYC verification"
+              className="flex items-center gap-2 px-3.5 h-11 bg-[#FFFBEB] border border-[#FDE68A] rounded-[16px] transition-all hover:bg-[#FEF3C7] active:scale-[0.98] cursor-pointer"
+            >
+              <AlertCircle className="w-4 h-4 text-[#D97706]" />
+              <span className="text-sm font-semibold text-[#D97706]">Unverified</span>
+            </button>
+          );
+        })()}
 
         {/* Currency Switcher */}
         <div className="relative group">

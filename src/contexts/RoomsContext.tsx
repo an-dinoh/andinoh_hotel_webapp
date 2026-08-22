@@ -166,7 +166,10 @@ export const RoomsProvider = ({ children }: { children: ReactNode }) => {
             const filters: any = { page: currentUnitPage, page_size: PAGE_SIZE };
             if (filterCategoryId !== "all") filters.room_type_id = filterCategoryId;
 
-            const response = await hotelService.getAllPhysicalRooms(filters);
+            const response = await hotelService.getAllPhysicalRooms(filters).catch((err) => {
+                console.warn("Failed to fetch physical rooms:", err);
+                return { count: 0, results: [], next: null, previous: null };
+            });
 
             // DEBUG CHECK FOR DB MISMATCH
             const expectedSum = dataRef.current.rooms.reduce((sum, r) => sum + (r.total_rooms || 0), 0);
